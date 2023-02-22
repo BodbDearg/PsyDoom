@@ -23,7 +23,7 @@ static void patchMap_Hangar() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines which should not show around the central courtyard's exit (non-visible sky)
-        addFlagsToLines(ML_DONTDRAW, 234, 236, 237);
+        hideLines(234, 236, 237);
     }
 }
 
@@ -35,7 +35,7 @@ static void patchMap_Plant() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines in the east courtyard which should not show (non-visible sky)
-        addFlagsToLines(ML_DONTDRAW, 935, 936, 937);
+        hideLines(935, 936, 937);
 
         // Fix the wrong texture being used in the opening behind red key
         gpSides[gpLines[943].sidenum[0]].midtexture = R_TextureNumForName("LITE01");
@@ -50,7 +50,7 @@ static void patchMap_ToxinRefinery() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide a map line which should not show in the hallway beside the secret exit
-        addFlagsToLines(ML_DONTDRAW, 646);
+        hideLines(646);
 
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
@@ -82,7 +82,7 @@ static void patchMap_CommandControl() noexcept {
         gpSides[253].rowoffset.snap();
 
         // Hide map lines which should not show
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // Hallway to the east of the center circular area
             692,
             // Maze
@@ -99,7 +99,7 @@ static void patchMap_PhobosLab() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines past the window beside the east slime pit
-        addFlagsToLines(ML_DONTDRAW, 503, 504);
+        hideLines(503, 504);
     }
 }
 
@@ -283,7 +283,7 @@ static void patchMap_SpawningVats() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide skybox map lines for the north west hallway windows
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // North window
             624, 625, 626, 627, 628, 629, 630, 631, 632, 633,
             // South window
@@ -300,7 +300,7 @@ static void patchMap_HellGate() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines past the window near the start (sky)
-        addFlagsToLines(ML_DONTDRAW, 27, 28, 29, 30, 31, 32, 33, 34, 35, 42);
+        hideLines(27, 28, 29, 30, 31, 32, 33, 34, 35, 42);
 
         modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
@@ -323,7 +323,7 @@ static void patchMap_HellKeep() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix map lines that shouldn't be hidden in the room north of the start room
-        removeFlagsFromLines(ML_DONTDRAW, 41, 42, 77, 78, 83, 84);
+        unhideLines(41, 42, 77, 78, 83, 84);
     }
 }
 
@@ -361,7 +361,7 @@ static void patchMap_HouseOfPain() noexcept {
         }
 
         // Hide some map lines which aren't needed
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // Near the other side of the start teleporter
             90, 91,
             // Some lines that aren't needed near the exit (outdoors)
@@ -477,7 +477,7 @@ static void patchMap_MtErebus() noexcept {
         );
 
         // Unhide map lines that shouldn't be hidden
-        removeFlagsFromLines(ML_DONTDRAW,
+        unhideLines(
             // Near the entrance/exit of the Y shaped building
             385, 396, 407,
             // At the entrance to the exit building
@@ -635,7 +635,7 @@ static void patchMap_UntoTheCruel() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Unhide map lines that don't need to be hidden
-        removeFlagsFromLines(ML_DONTDRAW, 
+        unhideLines(
             // Bridge area (except bridge itself)
             581, 582, 583, 585, 601, 602,
             // Final area stairs (north)
@@ -664,7 +664,7 @@ static void patchMap_TwilightDescends() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Unhide map lines that don't need to be hidden
-        removeFlagsFromLines(ML_DONTDRAW,
+        unhideLines(
             // Secret doorway in north hallway
             853, 871,
             // South tunnels
@@ -676,7 +676,7 @@ static void patchMap_TwilightDescends() noexcept {
         );
 
         // Hide map lines that should be hidden
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // North tunnel (hide remaining structures to match the rest that are already hidden)
             502, 503, 504, 505, 506, 507, 508, 511, 515, 516, 520, 523, 634, 644, 645, 813, 814,
             815, 816, 817, 818, 819, 820, 823, 824, 825, 826, 828, 829, 830, 1237, 1239
@@ -831,7 +831,7 @@ static void patchMap_RefuelingBase() noexcept {
         );
 
         // Hide monster only teleport lines near the exit area
-        addFlagsToLines(ML_DONTDRAW, 894, 895, 897, 1060);
+        hideLines(894, 895, 897, 1060);
     }
 }
 
@@ -865,7 +865,7 @@ static void patchMap_TheFactory() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix map lines which should not be hidden
-        removeFlagsFromLines(ML_DONTDRAW,
+        unhideLines(
             // Pedestal with Arachnotron (beside blue key)
             260,
             // Dark room with the BFG
@@ -876,7 +876,7 @@ static void patchMap_TheFactory() noexcept {
         removeFlagsFromLines(ML_DONTPEGBOTTOM, 113, 114);
 
         // Hide lines around the perimeter of map
-        addFlagsToLines(ML_DONTDRAW, 63, 64, 65, 66);
+        hideLines(63, 64, 65, 66);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
@@ -905,7 +905,7 @@ static void patchMap_Suburbs() noexcept {
         removeFlagsFromLines(ML_DONTPEGBOTTOM, 598);
 
         // Hide map lines in the west and southwest perimeter
-        addFlagsToLines(ML_DONTDRAW, 537, 538, 539);
+        hideLines(537, 538, 539);
 
         // Change the floor texture in the southwest monster closet since you can see through the opening in the wall
         gpSectors[14].floorpic = R_FlatNumForName("SLIME01");
@@ -1018,7 +1018,7 @@ static void patchMap_TheCourtyard() noexcept {
         );
 
         // Hide map lines in various places
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // At the west side of the indoor glowing rock tunnels
             413, 647,
             // Near the '+' shaped building
@@ -1059,7 +1059,7 @@ static void patchMap_TheCitadel() noexcept {
         addFlagsToLines(ML_DONTPEGBOTTOM, 922, 923);
 
         // Hide map lines which shouldn't show
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // On the north side of the citadel, beside the elevator leading down to lots of Demons outside
             1130,
             // Beside the exit building (non visible sky lines)
@@ -1096,7 +1096,7 @@ static void patchMap_BarrelsOfFun() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines which should not show
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // Starting hallway: left side
             394, 395, 396, 397,
             // Starting hallway: center side
@@ -1148,7 +1148,7 @@ static void patchMap_MonsterCondo() noexcept {
         );
 
         // Fix map lines in the northeast room (with all the hooks) which should not be drawn
-        addFlagsToLines(ML_DONTDRAW, 
+        hideLines(
             // Secret elevator
             490, 491, 492, 493, 494,
             // North elevator
@@ -1180,7 +1180,7 @@ static void patchMap_RedemptionDenied() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide lines that activate platforms beside south teleporter
-        addFlagsToLines(ML_DONTDRAW, 299, 300, 301);
+        hideLines(299, 300, 301);
 
         // Flag the exit door as secret so that it renders on the map as a solid wall
         addFlagsToLines(ML_SECRET, 160);
@@ -1202,7 +1202,7 @@ static void patchMap_TheMansion() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines which should not show
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // Secret exit room
             1236, 1237, 1240, 1243, 1244, 1250, 1251, 1252, 1254, 1264, 1265, 1266, 1267,
             // North hallway window skybox
@@ -1224,7 +1224,7 @@ static void patchMap_TheMansion() noexcept {
         );
 
         // Unhide map lines for the north hallway window
-        removeFlagsFromLines(ML_DONTDRAW, 1019, 1020, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066);
+        unhideLines(1019, 1020, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066);
 
         // Fix some bookshelf lines in the start library room (southeast corner) appearing like a solid wall
         removeFlagsFromLines(ML_SECRET, 7, 1229);

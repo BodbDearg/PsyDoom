@@ -127,7 +127,7 @@ static void patchMap_Vesperas() noexcept {
         gpSides[gpLines[696].sidenum[0]].rowoffset = 31 * FRACUNIT;
 
         // Hide various map lines which should not show
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // Hell Knight monster closet in the blue key room
             1165, 1522, 1523, 1524,
             // Dummy sector in the northeast blood room (with the SSG)
@@ -202,7 +202,7 @@ static void patchMap_Wormhole() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide 2 linedefs from the automap in the starting room to match those in the alternate version
-        addFlagsToLines(ML_DONTDRAW, 1425, 1426);
+        hideLines(1425, 1426);
 
         // Fix the brightness for half of the central weapon pedestal in the starting room and alternate version.
         // Should be the same brightness as the surrounding areas and also the other half of the pedestal.
@@ -219,7 +219,7 @@ static void patchMap_NukageProcessing() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide multiplayer-only areas from computer map to match others of the same type
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // Closets attached to the blue Armor room
             1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079,
             // A nukage tank in the north area (near the exit)
@@ -253,7 +253,7 @@ static void patchMap_DeepestReaches() noexcept {
         gpSides[gpLines[776].sidenum[0]].rowoffset = 63 * FRACUNIT;
 
         // Unhide map lines that shouldn't be hidden
-        removeFlagsFromLines(ML_DONTDRAW,
+        unhideLines(
             // Near the entrance to the secret area with the Megasphere
             706, 707,
             // In the cave/rock area with the yellow key
@@ -291,7 +291,7 @@ static void patchMap_ProcessingArea() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide a map line on the east wall of the south courtyard which should not show
-        addFlagsToLines(ML_DONTDRAW, 953);
+        hideLines(953);
 
         // Fix texture alignment on the door leading from the top-of-wall secret area in the south courtyard
         removeFlagsFromLines(ML_DONTPEGTOP, 202);
@@ -321,7 +321,7 @@ static void patchMap_LunarMiningProject() noexcept {
         gpSectors[162].floorheight = 0 * FRACUNIT;
 
         // Hide teleport destination sectors in the central courtyard
-        addFlagsToLines(ML_DONTDRAW, 972, 973, 974, 975, 976, 977, 978, 979, 980, 981, 982, 983);
+        hideLines(972, 973, 974, 975, 976, 977, 978, 979, 980, 981, 982, 983);
 
         // Fix the texture of a co-op only closet door to make it blend in better with the surrounding environment.
         // This closet is in the room with the red key (north west side).
@@ -329,7 +329,7 @@ static void patchMap_LunarMiningProject() noexcept {
 
         // Hide a monster closet on the north side of the map (beside the blue key)
         addFlagsToLines(ML_SECRET | ML_MIDMASKED, 919);
-        addFlagsToLines(ML_DONTDRAW, 1051, 1052);
+        hideLines(1051, 1052);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
@@ -370,14 +370,14 @@ static void patchMap_Quarry() noexcept {
         addFlagsToLines(ML_SECRET, 167, 191);
 
         // Unhide a map line which should be shown in the SE tunnel (near the Chaingun)
-        removeFlagsFromLines(ML_DONTDRAW, 276);
+        unhideLines(276);
 
         // Hide zero height sectors in the eastern lava cavern
-        addFlagsToLines(ML_DONTDRAW, 846, 847, 849, 850, 851, 852);
+        hideLines(846, 847, 849, 850, 851, 852);
         addFlagsToLines(ML_SECRET, 716, 720, 726, 799);
 
         // Hide west (outside) elevator walk-over lines
-        addFlagsToLines(ML_DONTDRAW, 111, 112);
+        hideLines(111, 112);
     }
 }
 
@@ -423,7 +423,7 @@ static void patchMap_Ballistyx() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide a monster closet (containing imps) beside the first set of stairs at the start of the map
-        addFlagsToLines(ML_DONTDRAW, 1098, 1101, 1102);
+        hideLines(1098, 1101, 1102);
         addFlagsToLines(ML_SECRET | ML_MIDMASKED | ML_DONTPEGTOP, 1100);
         gpSides[gpLines[1100].sidenum[0]].midtexture = R_TextureNumForName("SUPPORT3");
         gpSides[gpLines[1100].sidenum[0]].textureoffset = 8 * FRACUNIT;
@@ -480,7 +480,7 @@ static void patchMap_Heck() noexcept {
         gpSides[gpLines[550].sidenum[0]].rowoffset = 64 * FRACUNIT;
 
         // Hide lines in front of teleporters in the starting area
-        addFlagsToLines(ML_DONTDRAW, 1128, 1129, 1130, 1131, 1132, 1133, 1134, 1135);
+        hideLines(1128, 1129, 1130, 1131, 1132, 1133, 1134, 1135);
 
         // Remove all chain hook with blood decorations.
         // These were Arch-viles carried over from PC Doom and all (except one) only appear in deathmatch.
@@ -595,7 +595,7 @@ static void patchMap_BaronsLair() noexcept {
             572         // North west closet (eastmost)
         );
 
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             // North east closet
             1219, 1220, 1221, 1222, 1223, 1226,
             // South east closet
@@ -616,7 +616,7 @@ static void patchMap_BaronsLair() noexcept {
 
         // From the map, hide pillars in the starting area which lower in deathmatch.
         // Also fix their textures not moving as they lower and adjust coordinates accordingly.
-        addFlagsToLines(ML_DONTDRAW,
+        hideLines(
             704,    // South (west side)
             705,    // South (east side)
             706,    // West (south side)
@@ -657,7 +657,7 @@ static void patchMap_BaronsLair() noexcept {
 
         // Hide monster closet tunnels connected to Imp pedestals beside the northmost room
         addFlagsToLines(ML_SECRET, 295, 1097);
-        addFlagsToLines(ML_DONTDRAW, 1089, 1090, 1091, 1098, 1099, 1100);
+        hideLines(1089, 1090, 1091, 1098, 1099, 1100);
     }
 }
 
