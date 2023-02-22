@@ -191,7 +191,7 @@ static void patchMap_DeimosLab() noexcept {
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
         removeLineActions(
             // Pillar room with the two crushed bodies (G1 Floor Raise to Lowest Ceiling, WR Crusher Start with Slow Damage)
-            187, 200,
+            200,
             // Corridor to the west of the oval slime room (WR Crusher Stop)
             267, 641,
             // Slime corridor to the west of the oval slime room (WR Crusher Stop)
@@ -206,6 +206,18 @@ static void patchMap_DeimosLab() noexcept {
 
         // Room to the west of the oval slime room: fix a missing texture on the platform that raises up when you step off of it
         gpSides[gpLines[297].sidenum[1]].bottomtexture = R_TextureNumForName("METAL01");
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Pillar room with the two crushed bodies: fix a line having the wrong tag and action (should be 'GR Door Open Stay').
+        // The tag and action be the same as other similar lines nearby it.
+        modifyLines(
+            [](line_t& line) noexcept {
+                line.special = 46;
+                line.tag = 4;
+            },
+            187
+        );
     }
 }
 
@@ -598,7 +610,7 @@ static void patchMap_TwilightDescends() noexcept {
             // Secret doorway in north hallway
             853, 871,
             // South tunnels
-            297, 304, 302, 316,
+            297, 316,
             // West stairs
             69, 71, 73, 75, 77, 79, 81,
             // West building doorway
@@ -709,9 +721,6 @@ static void patchMap_TricksAndTraps() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        // Fix the texture on the two gun activated doors
-        removeFlagsFromLines(ML_DONTPEGTOP, 281, 282, 286, 287);
-
         // Flag the southeast corner wall in the southeast room as secret (to display it as a solid wall on the map)
         addFlagsToLines(ML_SECRET, 263, 645, 646);
     }
@@ -754,7 +763,7 @@ static void patchMap_RefuelingBase() noexcept {
 static void patchMap_OofDestruction() noexcept {
     applyOriginalMapCommonPatches();
 
-    if (shouldApplyMapPatches_Visual()) {
+    if (shouldApplyMapPatches_GamePlay()) {
         // Fix a dummy sector (hack to work around sector height limits) on the south wall, close it up and adjust the map lines:
         addFlagsToLines(ML_SECRET, 374, 375, 376, 377, 378, 793);
         addFlagsToLines(ML_DONTDRAW, 788, 789, 790, 791, 792, 794);
@@ -821,6 +830,7 @@ static void patchMap_Suburbs() noexcept {
 
         // Change the floor texture in the southwest monster closet since you can see through the opening in the wall
         gpSectors[14].floorpic = R_FlatNumForName("SLIME01");
+        gpSectors[16].floorpic = R_FlatNumForName("SLIME01");
 
         // Change the ceiling texture in the southwest slime pit inlets since you can see these ceilings when you die
         gpSectors[12].ceilingpic = R_FlatNumForName("ROK02");
@@ -900,9 +910,7 @@ static void patchMap_TheCourtyard() noexcept {
             // Northwest buildings
             480, 486, 497, 502,
             // Southwest outdoor monster closet
-            543, 547,
-            // Southwest blue armor area
-            742, 743
+            543, 547
         );
 
         // Hide map lines in various places
@@ -937,6 +945,15 @@ static void patchMap_TheCitadel() noexcept {
             mobj_t* const pTeleportDest = P_SpawnMobj(-912 * FRACUNIT, -880 * FRACUNIT, INT32_MIN, MT_TELEPORTMAN);
             pTeleportDest->angle = ANG270;
         }
+
+        // Fix a Medikit floating in the air in the central courtyard when the switch beside the rocket launcher is pressed
+        moveMobj(0, MT_MISC11, 560, 496, 572, {});
+
+        // The cacodemon (hard skill) is stuck in the ceiling in the northwest building.
+        // Fix by making the room the same height as the PC version.
+        gpSectors[91].ceilingheight += 12 * FRACUNIT;
+        gpSectors[92].ceilingheight += 12 * FRACUNIT;
+        gpSectors[92].floorheight -= 16 * FRACUNIT;
     }
 
     if (shouldApplyMapPatches_Visual()) {
@@ -953,12 +970,6 @@ static void patchMap_TheCitadel() noexcept {
             // Beside the exit building (non visible sky lines)
             1218, 1219, 1220
         );
-    }
-
-    if (shouldApplyMapPatches_GamePlay()) {
-        // The Cacodemon (hard skill) is stuck in the ceiling in the northwest building; raise the ceiling to fix.
-        gpSectors[91].ceilingheight = 328 * FRACUNIT;
-        gpSectors[92].ceilingheight = 328 * FRACUNIT;
     }
 }
 
@@ -993,7 +1004,7 @@ static void patchMap_BarrelsOfFun() noexcept {
             404, 405, 408
         );
 
-        // Fix textures on the large door in the east outdoor area
+        // Fix door tracks moving on the large door in the east outdoor area
         addFlagsToLines(ML_DONTPEGBOTTOM, 144, 161);
     }
 }
@@ -1006,7 +1017,7 @@ static void patchMap_TheAbandonedMines() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix the texture for the lava room monster closet door not moving
-        removeFlagsFromLines(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 803);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 803, 809);
 
         // Fix the door tracks for the lava room monster closet moving
         addFlagsToLines(ML_DONTPEGBOTTOM, 805, 808);

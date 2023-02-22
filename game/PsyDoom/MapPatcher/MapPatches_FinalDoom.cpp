@@ -3,12 +3,10 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapPatches.h"
 
-#include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_mobj.h"
-#include "Doom/Game/p_telept.h"
 #include "Doom/Renderer/r_data.h"
 #include "MapPatcherUtils.h"
 
@@ -105,8 +103,8 @@ static void patchMap_Subspace() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Shift textures on secret doors to make them possible to discover by observation instead of by chance only
-        gpSides[gpLines[196].sidenum[0]].rowoffset += 16 * FRACUNIT;
-        gpSides[gpLines[198].sidenum[0]].rowoffset += 16 * FRACUNIT;
+        gpSides[gpLines[196].sidenum[0]].rowoffset += 8 * FRACUNIT;
+        gpSides[gpLines[198].sidenum[0]].rowoffset += 8 * FRACUNIT;
     }
 }
 
@@ -398,6 +396,10 @@ static void patchMap_Ballistyx() noexcept {
         // Add back the missing 'W1 Door Open Stay (fast)' action.
         gpLines[637].special = 109;
         gpLines[637].tag = 18;
+
+        // Remove unintended line actions from door tracks for a monster closet in the south cave (near the blood pool and blue key).
+        // This closet is in the south east corner of the cavern containing the blue key.
+        removeLineActions(862, 864);
     }
 
     if (shouldApplyMapPatches_Visual()) {
@@ -427,9 +429,6 @@ static void patchMap_Ballistyx() noexcept {
         gpSides[gpLines[865].sidenum[1]].rowoffset = -48 * FRACUNIT;
         gpSides[gpLines[873].sidenum[1]].rowoffset = -48 * FRACUNIT;
         addFlagsToLines(ML_DONTPEGBOTTOM, 862, 864, 872, 874);
-
-        // Remove actions from door tracks for south room closet
-        removeLineActions(862, 864);
 
         // Fix textures on the red key platform not moving as it lowers
         removeFlagsFromLines(ML_DONTPEGBOTTOM, 841, 842, 843, 844);
@@ -470,12 +469,14 @@ static void patchMap_Heck() noexcept {
             }
         );
 
-        // Restore false walls in marble maze
-        addFlagsToLines(ML_MIDMASKED, 419, 425, 429, 481);
-
         // Fix textures not moving on monster closet doors which open after picking up the yellow key.
         // These doors are in the cavern directly to the east of the starting area.
         removeFlagsFromLines(ML_DONTPEGTOP, 657, 658, 758, 760, 762, 764, 766);
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Restore false walls in the marble maze
+        addFlagsToLines(ML_MIDMASKED, 419, 425, 429, 481);
     }
 }
 
@@ -486,20 +487,11 @@ static void patchMap_Aztec() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        // Restore hidden textures on the glowing floor room
-        addFlagsToLines(ML_MIDMASKED, 199, 1203, 194, 1206);
-
         // Fix textures not moving on the monster closet door in the glowing floor room
         removeFlagsFromLines(ML_DONTPEGTOP, 196, 197, 225, 226);
 
         // Fix the texture not moving when a teleport lowers on entering the large southeast room (the room with the Arachnotron bridge)
         removeFlagsFromLines(ML_DONTPEGBOTTOM, 1171);
-
-        // Restore hidden textures in the large southeast room
-        addFlagsToLines(ML_MIDMASKED, 363, 367, 369, 370, 374, 432, 414, 1188);
-
-        // Hide a map line for a trap in the red key room
-        addFlagsToLines(ML_DONTDRAW, 1003);
 
         // Fix a door texture not moving (on open) for the southernmost trap door (beside the SSG, containing a Chaingunner)
         removeFlagsFromLines(ML_DONTPEGTOP, 478);
@@ -667,6 +659,7 @@ static void patchMap_TheDeathDomain() noexcept {
         // Also add an additional texture to cover the new wall which will be exposed, and adjust the barrier texture so it moves as the barrier lowers.
         gpSectors[39].tag = 27;
         gpSides[gpLines[80].sidenum[1]].bottomtexture = R_TextureNumForName("BRICK12");
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 80);
     }
 
     if (shouldApplyMapPatches_Visual()) {
@@ -705,7 +698,7 @@ static void patchMap_Onslaught() noexcept {
         addFlagsToLines(ML_DONTPEGBOTTOM, 535, 539);
         
         // Fix door textures not moving on various monster closets in the northeast/starting room
-        removeFlagsFromLines(ML_DONTPEGTOP, 400, 407, 796);
+        removeFlagsFromLines(ML_DONTPEGTOP, 796);
         
         // Fix hidden platform textures not moving in a small lowered area in the central outdoor room
         removeFlagsFromLines(ML_DONTPEGBOTTOM, 108, 121);
