@@ -54,8 +54,7 @@ static void patchMap_ToxinRefinery() noexcept {
 
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
+        removeLineActions(
             // Lines surrounding the blue key (W1 Light Change to 35)
             895, 896, 897
         );
@@ -143,8 +142,7 @@ static void patchMap_ContainmentArea() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
+        removeLineActions(
             // Blue doors hallway (WR Floor Stop Moving)
             357, 504,
             // South central hallway (WR Floor Stop Moving, WR Floor Start Moving Up and Down)
@@ -164,8 +162,7 @@ static void patchMap_Refinery() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
+        removeLineActions(
             // Entrances to the room with a shotgun on a pedestal (WR Floor Stop Moving, WR Floor Start Moving Up and Down)
             70, 495, 496,
             // Entrance to the room with an Arachnotron (WR Floor Stop Moving, WR Floor Start Moving Up and Down)
@@ -192,8 +189,7 @@ static void patchMap_DeimosLab() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
+        removeLineActions(
             // Pillar room with the two crushed bodies (G1 Floor Raise to Lowest Ceiling, WR Crusher Start with Slow Damage)
             187, 200,
             // Corridor to the west of the oval slime room (WR Crusher Stop)
@@ -228,10 +224,10 @@ static void patchMap_CommandCenter() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        {
+        removeLineActions(
             // Near the trap room towards the exit containing lots of demons (W1 Light Change to Darkest Adjacent)
-            gpLines[383].special = 0;
-        }
+            383
+        );
     }
 }
 
@@ -302,16 +298,14 @@ static void patchMap_HellGate() noexcept {
         // Hide map lines past the window near the start (sky)
         hideLines(27, 28, 29, 30, 31, 32, 33, 34, 35, 42);
 
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
-            // Remove a line action that has no effect other than changing the map display because the target tag does not exist.
-            // This action (W1 Door Open Stay) is found in one of the monster closets to the north east of the map.
-            72,
-            // Remove a line action that has no efect other than playing a sound and changing the map display.
-            // The action (W1 Door Open Stay) has no effect because when it is triggered, the door it targets is already opened.
-            // The action can be found in one of the monster closets to the north west of the map.
-            87
-        );
+        // Remove a line action that has no effect other than changing the map display because the target tag does not exist.
+        // This action (W1 Door Open Stay) is found in one of the monster closets to the north east of the map.
+        removeLineActions(72);
+
+        // Remove a line action that has no efect other than playing a sound and changing the map display.
+        // The action (W1 Door Open Stay) has no effect because when it is triggered, the door it targets is already opened.
+        // The action can be found in one of the monster closets to the north west of the map.
+        removeLineActions(87);
     }
 }
 
@@ -348,17 +342,16 @@ static void patchMap_HouseOfPain() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix a bug where an unintended door line causes one of the ceilings to collapse permanently (near the other side of the start teleport).
         // Remove the line action (DR Door Open Wait Close, also monsters) that causes the bug.
-        gpLines[435].special = 0;
+        removeLineActions(435);
     }
 
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        {
-            // These two lines (WR Crusher Stop) are near the line 435 fix above
-            gpLines[88].special = 0;
-            gpLines[450].special = 0;
-        }
+        removeLineActions(
+            // These two lines (WR Crusher Stop) are near the line 435 fix above:
+            88, 450
+        );
 
         // Hide some map lines which aren't needed
         hideLines(
@@ -383,8 +376,7 @@ static void patchMap_UnholyCathedral() noexcept {
 
         // Fix various one-sided lines being incorrectly tagged as 'door' lines.
         // In the original game activating these lines could cause a crash.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
+        removeLineActions(
             // Fix 2 one-sided lines by the north-east teleporter being incorrectly tagged as 'door' lines
             499, 501,
             // Fix another instance of one-sided lines being marked as 'door' lines (the track of the door leading to westernmost room)
@@ -443,8 +435,7 @@ static void patchMap_UnholyCathedral() noexcept {
 
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
+        removeLineActions(
             // Near the north west teleporter in the center area (WR Crusher Stop)
             426, 431,
             // Near the north east teleporter in the center area (WR Crusher Stop)
@@ -464,8 +455,7 @@ static void patchMap_MtErebus() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
+        removeLineActions(
             // Inside the building by the start point (W1 Floor Lower to Highest Floor)
             48, 66,
             // Outside the small building with the two teleporters side by side (WR Floor Lower to Lowest Floor)
@@ -516,8 +506,7 @@ static void patchMap_Limbo() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
+        removeLineActions(
             // At the entrance to the lava maze
             235, 236, 237
         );
@@ -559,8 +548,7 @@ static void patchMap_PerfectHatred() noexcept {
 
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
+        removeLineActions(
             // Near the platform with the Plasma Rifle
             117
         );
@@ -769,10 +757,7 @@ static void patchMap_TheCrusher() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix one-sided lines being incorrectly tagged as 'door' lines inside the red door.
         // In the original game activating these lines could cause a crash.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
-            24, 25
-        );
+        removeLineActions(24, 25);
     }
 }
 
@@ -886,8 +871,7 @@ static void patchMap_TheFactory() noexcept {
         gpSectors[63].tag = 0;
 
         // Remove unneeded actions from walls next to the switch in the slime floor room
-        gpLines[520].special = 0;
-        gpLines[775].special = 0;
+        removeLineActions(520, 775);
     }
 }
 
@@ -1164,7 +1148,7 @@ static void patchMap_MonsterCondo() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Remove a redundant switch action from line which doesn't have a switch texture in the SE corner of the map.
         // This switch is inside the hidden book room.
-        gpLines[201].special = 0;
+        removeLineActions(201);
 
         // Fix a line incorrectly flagged as impassable in the northeast room (with all the hooks).
         // This line is beside the switch that lowers the floor.
@@ -1231,8 +1215,7 @@ static void patchMap_TheMansion() noexcept {
 
         // Remove line actions which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
+        removeLineActions(
             // Soulsphere platform
             513, 514, 515, 516
         );

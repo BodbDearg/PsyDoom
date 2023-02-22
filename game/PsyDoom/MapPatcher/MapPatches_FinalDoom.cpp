@@ -100,9 +100,7 @@ static void patchMap_Subspace() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Remove unintended actions from lines neighboring a switch which lowers the blue key platform.
         // These duplicate the same action of the actual switch line.
-        gpLines[852].special = 0;
-        gpLines[892].special = 0;
-        gpLines[893].special = 0;
+        removeLineActions(852, 892, 893);
     }
 
     if (shouldApplyMapPatches_Visual()) {
@@ -450,8 +448,7 @@ static void patchMap_Ballistyx() noexcept {
         addFlagsToLines(ML_DONTPEGBOTTOM, 862, 864, 872, 874);
 
         // Remove actions from door tracks for south room closet
-        gpLines[862].special = 0;
-        gpLines[864].special = 0;
+        removeLineActions(862, 864);
 
         // Fix textures on the red key platform not moving as it lowers
         removeFlagsFromLines(ML_DONTPEGBOTTOM, 841, 842, 843, 844);
