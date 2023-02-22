@@ -122,6 +122,8 @@ PsyDoom contributors (sorted alphabetically)
         https://github.com/BodbDearg/PsyDoom/pull/78
     * Suggestion to auto-pause the game when the window loses focus:
         https://github.com/BodbDearg/PsyDoom/issues/79
+    * A very large set of patches for various maps:
+        https://github.com/BodbDearg/PsyDoom/pull/63
 
 * **[getphobo](https://github.com/getphobo)**
     * Raised a bug about not being able to achieve 100% items on some maps due to multiple 'Computer Area Maps':
