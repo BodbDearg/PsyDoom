@@ -176,7 +176,7 @@ static void patchMap_DantesGate() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix a line which should not be marked as a door line beside the room with the blue key.
         // Activating this door line messes up the the adjacent sector.
-        gpLines[645].special = 0;
+        removeLineActions(645);
     }
 
     if (shouldApplyMapPatches_Visual()) {
@@ -338,10 +338,7 @@ static void patchMap_WellOfSouls() noexcept {
         // Fix not being able to reach the exit again if backtracking after raising the final lift to the exit.
         // This line special would lower the lift permanently, preventing the player from reaching the exit.
         // It's not needed for anything so just remove the special:
-        modifyLines(
-            [](line_t& line) noexcept { line.special = 0; },
-            590
-        );
+        removeLineActions(590);
     }
 
     if (shouldApplyMapPatches_Visual()) {
