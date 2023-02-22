@@ -12,6 +12,26 @@ using namespace MapPatcherUtils;
 BEGIN_NAMESPACE(MapPatches)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP04: Hell Keep
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_HellKeep() noexcept {
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix door tracks that shouldn't move for the start door
+        addFlagsToLines(ML_DONTPEGBOTTOM,
+            // First door (in the start area)
+            19, 22
+        );
+
+        removeFlagsFromLines(ML_DONTPEGBOTTOM,
+            // Door on the way to the courtyard with the big tree
+            95, 104,
+            // Door beside the exit
+            136, 144
+        );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP11: Sheol
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Sheol() noexcept {
@@ -157,6 +177,29 @@ static void patchMap_Vivisection() noexcept {
         // Fix monster closet map lines which should be hidden after getting the map powerup
         hideLines(121, 163, 424, 443, 869, 897, 974);
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP31: Inferno of Blood
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_InfernoOfBlood() noexcept {
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix door track textures that shouldn't move for the first door at the start of the map
+        addFlagsToLines(ML_DONTPEGBOTTOM, 1014, 1015);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP33: Tomb Of Malevolence
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TombOfMalevolence() noexcept {
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Adjust the height of the stairs in the middle of the main area, to allow room for the co-op only cyberdemon to teleport.
+        // This stairs is the one that has a Soulsphere on it.
+        gpSectors[146].floorheight -= 16 * FRACUNIT;
+        gpSectors[149].floorheight -= 32 * FRACUNIT;
+        gpSectors[148].floorheight -= 48 * FRACUNIT;
+    };
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -419,6 +462,7 @@ static void patchMap_Go2It() noexcept {
 // All of the map patches for this game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const PatchDef gPatchArray_GEC_ME_Beta4[] = {
+    {  20001, 0x51BD8C31DAE5DC9C, 0x0160232923A6BA2D, patchMap_HellKeep },                      // MAP04
     { 160332, 0x013F3B27435F706B, 0xA99F122A12E2E3EE, patchMap_Sheol },                         // MAP11
     { 173712, 0x93D4D689C51DEF47, 0x9F26A30E8101CF37, patchMap_PathsOfWretchedness },           // MAP13
     { 105207, 0xA2B8A7F0CFA83D6B, 0xF88EAB0FDCE3667A, patchMap_AbaddonsVoid },                  // MAP14
@@ -428,6 +472,8 @@ static const PatchDef gPatchArray_GEC_ME_Beta4[] = {
     { 162499, 0x05C85D345D4523AE, 0x77C081B1536F0B82, patchMap_IndustrialZone },                // MAP19
     {  87382, 0x85CC150D7341AD22, 0x01555EF45756FF8E, patchMap_Betray },                        // MAP20
     { 122661, 0xD43A809445B5907E, 0x4AD280F7598BE3D5, patchMap_Vivisection },                   // MAP30
+    { 140784, 0xDB5A27E8FEE6CB5B, 0x85D2D986F5E07304, patchMap_InfernoOfBlood },                // MAP31
+    {  73904, 0xD1D176845E2CA3D1, 0xBEE5A14C51434B80, patchMap_TombOfMalevolence },             // MAP33
     { 151044, 0xE49FB277051FDB5B, 0xD95431833051308A, patchMap_TheFarsideOfTitan },             // MAP45
     { 122098, 0xDF2507C85472FB25, 0xEFAED249AFE4CCD2, patchMap_DantesGate },                    // MAP46
     {  59287, 0x29A485887DAE27C3, 0x534228B651D4DFDE, patchMap_Bloodflood },                    // MAP48
