@@ -381,7 +381,7 @@ static void patchMap_UnholyCathedral() noexcept {
         );
 
         // Fix the alignment of the scrolling skull wall textures
-        auto setLineFrontTexOffset = [](const int32_t lineNum, const int32_t offsetX, const int32_t offsetY) noexcept {
+        const auto setLineFrontTexOffset = [](const int32_t lineNum, const int32_t offsetX, const int32_t offsetY) noexcept {
             side_t& side = gpSides[gpLines[lineNum].sidenum[0]];
             side.textureoffset.snapToValue(offsetX * FRACUNIT);
             side.rowoffset.snapToValue(offsetY * FRACUNIT);
@@ -758,7 +758,7 @@ static void patchMap_OofDestruction() noexcept {
         // Fix a dummy sector (hack to work around sector height limits) on the south wall, close it up and adjust the map lines:
         addFlagsToLines(ML_SECRET, 374, 375, 376, 377, 378, 793);
         addFlagsToLines(ML_DONTDRAW, 788, 789, 790, 791, 792, 794);
-        gpSectors[83].ceilingheight = 136 * FRACUNIT;
+        gpSectors[83].ceilingheight = gpSectors[83].floorheight;
         gpSectors[83].ceilingpic = R_FlatNumForName("BRN14");
 
         modifyLines(
@@ -934,8 +934,8 @@ static void patchMap_TheCitadel() noexcept {
         // Fix the southwest teleporter in the teleporter room not working on easier skills.
         // The intended teleport destination marker only spawned on medium and hard, so spawn another one:
         if (gGameSkill <= sk_easy) {
-            mobj_t* const pTeleDest = P_SpawnMobj(-912 * FRACUNIT, -880 * FRACUNIT, INT32_MIN, MT_TELEPORTMAN);
-            pTeleDest->angle = ANG270;
+            mobj_t* const pTeleportDest = P_SpawnMobj(-912 * FRACUNIT, -880 * FRACUNIT, INT32_MIN, MT_TELEPORTMAN);
+            pTeleportDest->angle = ANG270;
         }
     }
 

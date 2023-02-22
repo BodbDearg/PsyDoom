@@ -86,8 +86,8 @@ static void patchMap_Paradox() noexcept {
         gpSides[gpLines[553].sidenum[0]].textureoffset = -16 * FRACUNIT;
 
         // Fix the texture alignment on a deathmatch only hidden door (on the east side of the map)
-        gpSides[1743].textureoffset = 8 * FRACUNIT;
-        gpSides[1743].rowoffset = -29 * FRACUNIT;
+        gpSides[gpLines[1251].sidenum[0]].textureoffset = 8 * FRACUNIT;
+        gpSides[gpLines[1251].sidenum[0]].rowoffset = -29 * FRACUNIT;
     }
 }
 
@@ -105,8 +105,8 @@ static void patchMap_Subspace() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Shift textures on secret doors to make them possible to discover by observation instead of by chance only
-        gpSides[236].rowoffset += 16 * FRACUNIT;
-        gpSides[240].rowoffset += 16 * FRACUNIT;
+        gpSides[gpLines[196].sidenum[0]].rowoffset += 16 * FRACUNIT;
+        gpSides[gpLines[198].sidenum[0]].rowoffset += 16 * FRACUNIT;
     }
 }
 
@@ -176,7 +176,7 @@ static void patchMap_SystemControl() noexcept {
         );
 
         // Align the texture above the outer door of the north outside area
-        gpSides[483].rowoffset = -16 * FRACUNIT;
+        gpSides[gpLines[344].sidenum[0]].rowoffset = -16 * FRACUNIT;
     }
 }
 
@@ -240,8 +240,8 @@ static void patchMap_DeepestReaches() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Change the texture for the secret door leading to the BFG which appears only on Ultra Violence (in the area past the blue door).
         // Make it stand out more, similar to PC Doom.
-        gpSides[786].toptexture = R_TextureNumForName("ROCK16");
-        gpSides[792].toptexture = R_TextureNumForName("ROCK16");
+        gpSides[gpLines[533].sidenum[0]].toptexture = R_TextureNumForName("ROCK16");
+        gpSides[gpLines[538].sidenum[0]].toptexture = R_TextureNumForName("ROCK16");
 
         // Fix the inside texture for the secret door above not moving as the door opens
         removeFlagsFromLines(ML_DONTPEGTOP, 1380, 1381);
@@ -309,7 +309,7 @@ static void patchMap_LunarMiningProject() noexcept {
 
         // Fix the texture of a co-op only closet door to make it blend in better with the surrounding environment.
         // This closet is in the room with the red key (north west side).
-        gpSides[1735].toptexture = R_TextureNumForName("BRONZE05");
+        gpSides[gpLines[1217].sidenum[0]].toptexture = R_TextureNumForName("BRONZE05");
 
         // Hide a monster closet on the north side of the map (beside the blue key)
         addFlagsToLines(ML_SECRET | ML_MIDMASKED, 919);
@@ -464,8 +464,6 @@ static void patchMap_Heck() noexcept {
         // These were Arch-viles carried over from PC Doom and all (except one) only appear in deathmatch.
         forAllMobj(
             [](mobj_t& mobj) noexcept {
-                const uint32_t sectorIdx = (uint32_t)(mobj.subsector->sector - gpSectors);
-
                 if (mobj.type == MT_MISC_BLOODHOOK) {
                     P_RemoveMobj(mobj);
                 }
@@ -522,13 +520,12 @@ static void patchMap_GhostTown() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix door textures not moving on various doors as they open
-        {
+        removeFlagsFromLines(ML_DONTPEGTOP,
             // The blue key room monster closet door
-            removeFlagsFromLines(ML_DONTPEGTOP, 595);
-
+            595,
             // Southeast arena monster closet doors (on the way towards the blue key)
-            removeFlagsFromLines(ML_DONTPEGTOP, 507, 505, 506, 502, 503, 504);
-        }
+            502, 503, 504, 505, 506, 507
+        );
     }
 }
 

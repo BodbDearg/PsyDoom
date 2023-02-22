@@ -71,11 +71,10 @@ static void patchMap_ForgottenSewers() noexcept {
 static void patchMap_HellKeep() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix door tracks that shouldn't move for the start door
-        {
+        addFlagsToLines(ML_DONTPEGBOTTOM,
             // First door (in the start area)
-            gpLines[19].flags |= ML_DONTPEGBOTTOM;
-            gpLines[22].flags |= ML_DONTPEGBOTTOM;
-        }
+            19, 22
+        );
 
         removeFlagsFromLines(ML_DONTPEGBOTTOM,
             // Door on the way to the courtyard with the big tree
@@ -218,8 +217,7 @@ static void patchMap_InfernoOfBlood() noexcept {
         unhideLines(888);
 
         // Fix door track textures that shouldn't move for the first door at the start of the map
-        gpLines[1014].flags |= ML_DONTPEGBOTTOM;
-        gpLines[1015].flags |= ML_DONTPEGBOTTOM;
+        addFlagsToLines(ML_DONTPEGBOTTOM, 1014, 1015);
     }
 }
 
