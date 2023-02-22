@@ -112,4 +112,14 @@ static inline void forAllMobj(const FuncT& func) noexcept {
 void clearMysterySectorFlags() noexcept;
 void applyOriginalMapCommonPatches() noexcept;
 
+bool moveMobj(
+    const std::optional<int32_t> srcSectorIdx,
+    const std::optional<mobjtype_t> srcType,
+    const std::optional<int32_t> srcX,
+    const std::optional<int32_t> srcY,
+    const std::optional<int32_t> dstX,
+    const std::optional<int32_t> dstY,
+    const std::optional<angle_t> dstAngle = {}
+) noexcept;
+
 END_NAMESPACE(MapPatcherUtils)

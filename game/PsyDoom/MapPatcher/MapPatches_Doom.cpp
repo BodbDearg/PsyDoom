@@ -240,33 +240,13 @@ static void patchMap_HallsOfTheDamned() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix stuck demons and baron of hell in south monster closet in central hallway on harder skills
         if (gGameSkill >= sk_hard) {
-            // Monster closet needs to be slightly lengthened to make room for all monsters
-            gpVertexes[352].y -= 16 * FRACUNIT;
-            gpVertexes[353].y -= 16 * FRACUNIT;
-            
-            modifySectors(
-                [](sector_t& sector) noexcept {
-                    for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
-                        mobj_t* const pNextMobj = pMobj->snext;
-
-                        if (pMobj->type == MT_BRUISER) {
-                            EV_TeleportTo(*pMobj, pMobj->x, -248 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t) 0, sfx_None);
-                        }
-
-                        if ((pMobj->type == MT_SERGEANT) && (pMobj->x == 992 * FRACUNIT) && (pMobj->y == -128 * FRACUNIT)) {
-                            // This will only move one of the two demons since the other one will fail to teleport to the same spot
-                            EV_TeleportTo(*pMobj, pMobj->x, -192 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
-                        }
-
-                        if ((pMobj->type == MT_SERGEANT) && (pMobj->x == 1056 * FRACUNIT) && (pMobj->y == -128 * FRACUNIT)) {
-                            // This will only move one of the two demons since the other one will fail to teleport to the same spot
-                            EV_TeleportTo(*pMobj, pMobj->x, -192 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
-                        }
-
-                        pMobj = pNextMobj;
-                    }
-                }, 88
-            );
+            moveMobj(88, MT_SERGEANT, 992, -64, {}, -62);       // Nudge front Demon forward (left)
+            moveMobj(88, MT_SERGEANT, 1056, -64, {}, -62);      // Nudge front Demon forward (right)
+            moveMobj(88, MT_SERGEANT, 992, -128, {}, -122);     // Nudge one of the Demons on top of each other forward (left)
+            moveMobj(88, MT_SERGEANT, 1056, -128, {}, -122);    // Nudge one of the Demons on top of each other forward (right)
+            moveMobj(88, MT_SERGEANT, 992, -128, {}, -182);     // Move one of the Demons on top of each to the back (left)
+            moveMobj(88, MT_SERGEANT, 1056, -128, {}, -182);    // Move one of the Demons on top of each to the back (right)
+            moveMobj(88, MT_BRUISER, {}, -192, {}, -232);       // Move the Baron down to the very back
         }
     }
 }
@@ -556,20 +536,7 @@ static void patchMap_PerfectHatred() noexcept {
 
     if (shouldApplyMapPatches_GamePlay()) {
         // Move a tall green firestick which is stuck in a wall (on the ledge with the Mega Armor)
-        modifySectors(
-            [](sector_t& sector) noexcept {
-                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
-                    mobj_t* const pNextMobj = pMobj->snext;
-
-                    if ((pMobj->type == MT_MISC42) && (pMobj->y == 1712 * FRACUNIT)) {
-                        EV_TeleportTo(*pMobj, -304 * FRACUNIT, pMobj->y, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
-                    }
-
-                    pMobj = pNextMobj;
-                }
-            },
-            98
-        );
+        moveMobj(98, MT_MISC42, -288, 1712, -304, {});
     }
 }
 
@@ -580,38 +547,13 @@ static void patchMap_UnrulyEvil() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_GamePlay()) {
-        // Move vertexes temporarily to allow moving cacodemons
-        gpVertexes[479].y += 8 * FRACUNIT;
-        gpVertexes[480].y += 8 * FRACUNIT;
-        gpVertexes[472].y += 8 * FRACUNIT;
-        gpVertexes[473].y += 8 * FRACUNIT;
-
         // Fix monsters that are stuck in north-most monster closets (beside the exit)
-        modifySectors(
-            [](sector_t& sector) noexcept {
-                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
-                    mobj_t* const pNextMobj = pMobj->snext;
-
-                    // Move cacodemons on hard
-                    if ((pMobj->type == MT_HEAD) && (pMobj->y == -96 * FRACUNIT)) {
-                        EV_TeleportTo(*pMobj, pMobj->x, -80 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
-                    }
-
-                    // Move spectres on easy
-                    if (pMobj->type == MT_SERGEANT) {
-                        EV_TeleportTo(*pMobj, pMobj->x, -144 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
-                    }
-
-                    pMobj = pNextMobj;
-                }
-            }, 89, 95
-        );
-
-        // Move vertexes back to original locations
-        gpVertexes[479].y -= 8 * FRACUNIT;
-        gpVertexes[480].y -= 8 * FRACUNIT;
-        gpVertexes[472].y -= 8 * FRACUNIT;
-        gpVertexes[473].y -= 8 * FRACUNIT;
+        {
+            moveMobj(89, MT_HEAD, {}, -96, {}, -80);        // Move Cacodemon on hard (east)
+            moveMobj(95, MT_HEAD, {}, -96, {}, -80);        // Move Cacodemon on hard (west)
+            moveMobj(89, MT_SERGEANT, {}, {}, {}, -144);    // Move Demon on easy (east)
+            moveMobj(95, MT_SERGEANT, {}, {}, {}, -144);    // Move Demon on easy (west)
+        }
     }
 }
 
@@ -730,21 +672,7 @@ static void patchMap_TheWasteTunnels() noexcept {
 
     if (shouldApplyMapPatches_GamePlay()) {
         // Move one of two lost souls that are stuck togther on the hard skill level in the eastmost passage
-        modifySectors(
-            [](sector_t& sector) noexcept {
-                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
-                    mobj_t* const pNextMobj = pMobj->snext;
-
-                    if ((pMobj->type == MT_SKULL) && (pMobj->x == 2848 * FRACUNIT) && (pMobj->y == -400 * FRACUNIT)) {
-                        // This will only move one of the two lost souls since the other one will fail to teleport to the same spot
-                        EV_TeleportTo(*pMobj, pMobj->x, -320 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
-                    }
-
-                    pMobj = pNextMobj;
-                }
-            },
-            65
-        );
+        moveMobj(65, MT_SKULL, 2848, -400, {}, -320);
     }
 }
 
@@ -914,20 +842,8 @@ static void patchMap_Tenements() noexcept {
 
         // Fix some Imps on 'Ultra Violence' (and also 'Nightmare') being stuck in a wall and un-killable.
         // Move them to the right so they are not stuck.
-        modifySectors(
-            [](sector_t& sector) noexcept {
-                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
-                    mobj_t* const pNextMobj = pMobj->snext;
-
-                    if ((pMobj->type == MT_TROOP) && (pMobj->x == -2272 * FRACUNIT)) {
-                        EV_TeleportTo(*pMobj, -2160 * FRACUNIT, pMobj->y, pMobj->angle, false, false, (mobjtype_t) 0, sfx_None);
-                    }
-
-                    pMobj = pNextMobj;
-                }
-            },
-            179, 182, 183, 184
-        );
+        moveMobj(182, MT_TROOP, -2272, {}, -2160, {});
+        moveMobj(184, MT_TROOP, -2272, {}, -2160, {});
     }
 
     if (shouldApplyMapPatches_Visual()) {
@@ -967,19 +883,7 @@ static void patchMap_TheCourtyard() noexcept {
 
     if (shouldApplyMapPatches_GamePlay()) {
         // Move a stuck spectre in the west passage (beside the BFG) on easier skills
-        modifySectors(
-            [](sector_t& sector) noexcept {
-                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
-                    mobj_t* const pNextMobj = pMobj->snext;
-
-                    if ((pMobj->type == MT_SERGEANT) && (pMobj->y == 992 * FRACUNIT)) {
-                        EV_TeleportTo(*pMobj, -2050 * FRACUNIT, pMobj->y, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
-                    }
-
-                    pMobj = pNextMobj;
-                }
-            }, 16
-        );
+        moveMobj(16, MT_SERGEANT, {}, 992, -2050, {});
     }
 
     if (shouldApplyMapPatches_Visual()) {

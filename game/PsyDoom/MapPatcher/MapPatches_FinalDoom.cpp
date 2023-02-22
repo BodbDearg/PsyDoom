@@ -262,22 +262,8 @@ static void patchMap_DeepestReaches() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Move stuck imps in order to fix a platform which won't lower in the west-most (wooden) room.
         // The platform should lower when picking up the rocket launcher or BFG9000 in the nearby raised area, but does not because of the stuck imps.
-        modifySectors(
-            [](sector_t& sector) noexcept {
-                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
-                    mobj_t* const pNextMobj = pMobj->snext;
-
-                    if ((pMobj->type == MT_TROOP) && (pMobj->x == -1704 * FRACUNIT)) {
-                        pMobj->x -= 8 * FRACUNIT;
-                    }
-                    if ((pMobj->type == MT_TROOP) && (pMobj->x == -1776 * FRACUNIT)) {
-                        pMobj->y += 16 * FRACUNIT;
-                    }
-
-                    pMobj = pNextMobj;
-                }
-            }, 143, 145
-        );
+        moveMobj(143, MT_TROOP, -1704, {}, -1712, {});
+        moveMobj(145, MT_TROOP, -1776, {}, {}, -1048);
     }
 }
 
@@ -342,17 +328,7 @@ static void patchMap_LunarMiningProject() noexcept {
 
         // Move one of the central courtyard teleport destinations (south west corner).
         // The destination marker is not on the teleport destination sector, so the teleport is broken.
-        forAllMobj(
-            [](mobj_t& mobj) noexcept {
-                const uint32_t sectorIdx = (uint32_t)(mobj.subsector->sector - gpSectors);
-
-                if ((sectorIdx == 75) &&  (mobj.x == -536 * FRACUNIT)) {
-                    P_RemoveMobj(mobj);
-                }
-            }
-        );
-        mobj_t* const pTeleDest = P_SpawnMobj(-592 * FRACUNIT, -1040 * FRACUNIT, INT32_MIN, MT_TELEPORTMAN);
-        pTeleDest->angle = ANG45;
+        moveMobj(75, MT_TELEPORTMAN, -536, -1032, -592, -1040);
     }
 }
 
