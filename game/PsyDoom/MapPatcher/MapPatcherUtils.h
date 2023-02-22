@@ -109,6 +109,26 @@ static inline void forAllMobj(const FuncT& func) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Calls the specified lambda for all map objects in the specified sectors
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class FuncT>
+static inline void forAllMobjInSectors([[maybe_unused]] const FuncT& func) noexcept {}
+
+template <class FuncT, class ...Int32List>
+static inline void forAllMobjInSectors(const FuncT& func, const int32_t sectorIdx, Int32List... sectorIndexes) noexcept {
+    ASSERT((sectorIdx >= 0) && (sectorIdx < gNumSectors));
+    mobj_t* pMobj = gpSectors[sectorIdx].thinglist;
+
+    while (pMobj) {
+        mobj_t* const pNextMobj = pMobj->snext;
+        func(*pMobj);
+        pMobj = pNextMobj;
+    }
+
+    forAllMobjInSectors(func, sectorIndexes...);
+}
+
 void clearMysterySectorFlags() noexcept;
 void applyOriginalMapCommonPatches() noexcept;
 

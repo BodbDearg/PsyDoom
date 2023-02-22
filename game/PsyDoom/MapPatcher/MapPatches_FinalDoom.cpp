@@ -320,10 +320,15 @@ static void patchMap_LunarMiningProject() noexcept {
         // Two monsters are in a closet that is only accessible in co-op: remove them in single player and subtract from the kill count.
         // This closet is in the room with the red key, on the north west side of the room.
         if (gStartGameType == gt_single) {
-            for (mobj_t* pMobj = gpSectors[237].thinglist; pMobj != nullptr; pMobj = pMobj->snext) {
-                P_RemoveMobj(*pMobj);
-                gTotalKills--;
-            }
+            forAllMobjInSectors(
+                [](mobj_t& mobj) noexcept {
+                    if (mobj.flags & MF_COUNTKILL) {
+                        P_RemoveMobj(mobj);
+                        gTotalKills--;
+                    }
+                },
+                237
+            );
         }
 
         // Move one of the central courtyard teleport destinations (south west corner).
