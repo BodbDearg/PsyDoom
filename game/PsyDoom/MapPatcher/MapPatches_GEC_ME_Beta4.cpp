@@ -174,7 +174,7 @@ static void patchMap_TheFarsideOfTitan() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_DantesGate() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
-        // Fix a linedef which should not be marked as a door line beside the room with the blue key.
+        // Fix a line which should not be marked as a door line beside the room with the blue key.
         // Activating this door line messes up the the adjacent sector.
         gpLines[645].special = 0;
     }

@@ -724,11 +724,8 @@ static void patchMap_TheFocus() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        removeFlagsFromLines(
-            ML_DONTPEGBOTTOM,
-            // Fix the texture on the bridge near the exit not moving as it is raised
-            511, 515
-        );
+        // Fix the texture on the bridge near the exit not moving as it is raised
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 511, 515);
     }
 }
 

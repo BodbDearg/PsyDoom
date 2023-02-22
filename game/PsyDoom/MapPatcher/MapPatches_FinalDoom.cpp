@@ -388,7 +388,7 @@ static void patchMap_Ballistyx() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_PsyDoom()) {
-        // Make various linedefs not render sky walls or be see through for occlusion purposes
+        // Make various lines not render sky walls or be see through for occlusion purposes
         addVoidFlagToLines(
             // Altar hole: don't draw sky walls
             1212, 1211, 1215, 1210, 1214, 1213,

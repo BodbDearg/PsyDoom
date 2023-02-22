@@ -632,10 +632,10 @@ static void patchMap_ShippingRespawning() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_CentralProcessing() noexcept {
     if (shouldApplyMapPatches_Visual()) {
-        // Fix a linedef in a secret area that should be hidden (all the other lines are in this area)
+        // Fix a map line in a secret area that should be hidden (all the other lines are in this area)
         hideLines(926);
 
-        // Fix a linedef that should not be hidden on the automap (in slime, at the west of the map)
+        // Fix a map line that should not be hidden (in slime, at the west of the map)
         unhideLines(1254);
     }
 }
