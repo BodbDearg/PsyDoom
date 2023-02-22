@@ -67,10 +67,19 @@ static void patchMap_ForgottenSewers() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_HellKeep() noexcept {
     if (shouldApplyMapPatches_Visual()) {
-        //Fix door tracks that shouldn't move
-        gpLines[19].flags |= ML_DONTPEGBOTTOM;
-        gpLines[22].flags |= ML_DONTPEGBOTTOM;
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 95, 104, 136, 144);
+        // Fix door tracks that shouldn't move for the start door
+        {
+            // First door (in the start area)
+            gpLines[19].flags |= ML_DONTPEGBOTTOM;
+            gpLines[22].flags |= ML_DONTPEGBOTTOM;
+        }
+
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM,
+            // Door on the way to the courtyard with the big tree
+            95, 104,
+            // Door beside the exit
+            136, 144
+        );
     }
 }
 
@@ -205,7 +214,7 @@ static void patchMap_InfernoOfBlood() noexcept {
         // Fix a hidden automap line in the blood river
         unhideLinedefs(888);
 
-        // Fix door track textures that move at start of map
+        // Fix door track textures that shouldn't move for the first door at the start of the map
         gpLines[1014].flags |= ML_DONTPEGBOTTOM;
         gpLines[1015].flags |= ML_DONTPEGBOTTOM;
     }
@@ -252,6 +261,7 @@ static void patchMap_TombOfMalevolence() noexcept {
     
     if (shouldApplyMapPatches_GamePlay()) {
         // Adjust the height of the stairs in the middle of the main area, to allow room for the co-op only cyberdemon to teleport.
+        // This stairs is the one which has a Soulsphere on it.
         gpSectors[146].floorheight -= 16 * FRACUNIT;
         gpSectors[149].floorheight -= 32 * FRACUNIT;
         gpSectors[148].floorheight -= 48 * FRACUNIT;
