@@ -9,6 +9,9 @@
 #include "Doom/Game/p_mobj.h"
 #include "Doom/Game/p_telept.h"
 #include "Doom/Renderer/r_data.h"
+#include "MapPatcherUtils.h"
+
+using namespace MapPatcherUtils;
 
 BEGIN_NAMESPACE(MapPatches)
 
@@ -20,7 +23,7 @@ static void patchMap_Hangar() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines which should not show around the central courtyard's exit (non-visible sky)
-        addFlagsToLinedefs(ML_DONTDRAW, 234, 236, 237);
+        addFlagsToLines(ML_DONTDRAW, 234, 236, 237);
     }
 }
 
@@ -32,7 +35,7 @@ static void patchMap_Plant() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines in the east courtyard which should not show (non-visible sky)
-        addFlagsToLinedefs(ML_DONTDRAW, 935, 936, 937);
+        addFlagsToLines(ML_DONTDRAW, 935, 936, 937);
 
         // Fix the wrong texture being used in the opening behind red key
         gpSides[gpLines[943].sidenum[0]].midtexture = R_TextureNumForName("LITE01");
@@ -47,11 +50,11 @@ static void patchMap_ToxinRefinery() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide a map line which should not show in the hallway beside the secret exit
-        addFlagsToLinedefs(ML_DONTDRAW, 646);
+        addFlagsToLines(ML_DONTDRAW, 646);
 
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // Lines surrounding the blue key (W1 Light Change to 35)
             895, 896, 897
@@ -66,7 +69,7 @@ static void patchMap_CommandControl() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        removeFlagsFromLinedefs(
+        removeFlagsFromLines(
             ML_DONTPEGBOTTOM,
             // Fix bugs where step textures appear black
             337, 746, 747, 748,
@@ -79,7 +82,7 @@ static void patchMap_CommandControl() noexcept {
         gpSides[253].rowoffset.snap();
 
         // Hide map lines which should not show
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // Hallway to the east of the center circular area
             692,
             // Maze
@@ -96,7 +99,7 @@ static void patchMap_PhobosLab() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines past the window beside the east slime pit
-        addFlagsToLinedefs(ML_DONTDRAW, 503, 504);
+        addFlagsToLines(ML_DONTDRAW, 503, 504);
     }
 }
 
@@ -120,14 +123,14 @@ static void patchMap_DeimosAnomaly() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Add missing textures to back side of wall that lowers around final teleport
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("BRONZE01"); },
             243, 244
         );
 
         // Move secret flags to the outer wall of the final teleport to better match the PC version
-        removeFlagsFromLinedefs(ML_SECRET, 243, 244);
-        addFlagsToLinedefs(ML_SECRET, 356, 357);
+        removeFlagsFromLines(ML_SECRET, 243, 244);
+        addFlagsToLines(ML_SECRET, 356, 357);
     }
 }
 
@@ -140,7 +143,7 @@ static void patchMap_ContainmentArea() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // Blue doors hallway (WR Floor Stop Moving)
             357, 504,
@@ -161,7 +164,7 @@ static void patchMap_Refinery() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // Entrances to the room with a shotgun on a pedestal (WR Floor Stop Moving, WR Floor Start Moving Up and Down)
             70, 495, 496,
@@ -189,7 +192,7 @@ static void patchMap_DeimosLab() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // Pillar room with the two crushed bodies (G1 Floor Raise to Lowest Ceiling, WR Crusher Start with Slow Damage)
             187, 200,
@@ -280,7 +283,7 @@ static void patchMap_SpawningVats() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide skybox map lines for the north west hallway windows
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // North window
             624, 625, 626, 627, 628, 629, 630, 631, 632, 633,
             // South window
@@ -297,9 +300,9 @@ static void patchMap_HellGate() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines past the window near the start (sky)
-        addFlagsToLinedefs(ML_DONTDRAW, 27, 28, 29, 30, 31, 32, 33, 34, 35, 42);
+        addFlagsToLines(ML_DONTDRAW, 27, 28, 29, 30, 31, 32, 33, 34, 35, 42);
 
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // Remove a line action that has no effect other than changing the map display because the target tag does not exist.
             // This action (W1 Door Open Stay) is found in one of the monster closets to the north east of the map.
@@ -320,7 +323,7 @@ static void patchMap_HellKeep() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix map lines that shouldn't be hidden in the room north of the start room
-        removeFlagsFromLinedefs(ML_DONTDRAW, 41, 42, 77, 78, 83, 84);
+        removeFlagsFromLines(ML_DONTDRAW, 41, 42, 77, 78, 83, 84);
     }
 }
 
@@ -332,7 +335,7 @@ static void patchMap_Pandemonium() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix the texture of pillars to the north of the start point not moving as they are lowered
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 529, 531, 533, 534, 540, 541);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 529, 531, 533, 534, 540, 541);
     }
 }
 
@@ -358,7 +361,7 @@ static void patchMap_HouseOfPain() noexcept {
         }
 
         // Hide some map lines which aren't needed
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // Near the other side of the start teleporter
             90, 91,
             // Some lines that aren't needed near the exit (outdoors)
@@ -380,7 +383,7 @@ static void patchMap_UnholyCathedral() noexcept {
 
         // Fix various one-sided lines being incorrectly tagged as 'door' lines.
         // In the original game activating these lines could cause a crash.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // Fix 2 one-sided lines by the north-east teleporter being incorrectly tagged as 'door' lines
             499, 501,
@@ -397,7 +400,7 @@ static void patchMap_UnholyCathedral() noexcept {
         );
 
         // Fix a missing upper wall texture when the ceiling closes in the trap room with the BFG
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("MARBLE04");
                 gpSides[line.sidenum[1]].toptexture = R_TextureNumForName("MARBLE04");
@@ -424,7 +427,7 @@ static void patchMap_UnholyCathedral() noexcept {
         setLineFrontTexOffset(1125, 32, -48);
 
         // Fix the track of some doorways moving when it should not
-        removeFlagsFromLinedefs(
+        removeFlagsFromLines(
             ML_DONTPEGBOTTOM,
             // Doorway to west green slime area
             733, 736,
@@ -433,14 +436,14 @@ static void patchMap_UnholyCathedral() noexcept {
         );
 
         // Tweak the vertical alignment of the doorway track to the northmost room (adjustments following the 'lower unpegged' fix)
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { gpSides[line.sidenum[0]].rowoffset = 16 * FRACUNIT; },
             815, 818
         );
 
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // Near the north west teleporter in the center area (WR Crusher Stop)
             426, 431,
@@ -461,7 +464,7 @@ static void patchMap_MtErebus() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // Inside the building by the start point (W1 Floor Lower to Highest Floor)
             48, 66,
@@ -474,7 +477,7 @@ static void patchMap_MtErebus() noexcept {
         );
 
         // Unhide map lines that shouldn't be hidden
-        removeFlagsFromLinedefs(ML_DONTDRAW,
+        removeFlagsFromLines(ML_DONTDRAW,
             // Near the entrance/exit of the Y shaped building
             385, 396, 407,
             // At the entrance to the exit building
@@ -492,7 +495,7 @@ static void patchMap_MtErebus() noexcept {
         gpSides[gpLines[406].sidenum[0]].textureoffset = -11 * FRACUNIT;
 
         // Fix Texture alignment for platform that lowers in Y-shaped building
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 408, 409);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 408, 409);
     }
 }
 
@@ -513,7 +516,7 @@ static void patchMap_Limbo() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // At the entrance to the lava maze
             235, 236, 237
@@ -540,7 +543,7 @@ static void patchMap_HellBeneath() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Flag lines as secret in the blue key room (demon faces)
-        addFlagsToLinedefs(ML_SECRET, 263, 266);
+        addFlagsToLines(ML_SECRET, 263, 266);
     }
 }
 
@@ -552,11 +555,11 @@ static void patchMap_PerfectHatred() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix unpegged textures at the teleport with the hidden back side (near the berserk pack)
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 174);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 174);
 
         // Remove leftover actions from PC Doom which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // Near the platform with the Plasma Rifle
             117
@@ -632,7 +635,7 @@ static void patchMap_UntoTheCruel() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Unhide map lines that don't need to be hidden
-        removeFlagsFromLinedefs(ML_DONTDRAW, 
+        removeFlagsFromLines(ML_DONTDRAW, 
             // Bridge area (except bridge itself)
             581, 582, 583, 585, 601, 602,
             // Final area stairs (north)
@@ -661,7 +664,7 @@ static void patchMap_TwilightDescends() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Unhide map lines that don't need to be hidden
-        removeFlagsFromLinedefs(ML_DONTDRAW,
+        removeFlagsFromLines(ML_DONTDRAW,
             // Secret doorway in north hallway
             853, 871,
             // South tunnels
@@ -673,7 +676,7 @@ static void patchMap_TwilightDescends() noexcept {
         );
 
         // Hide map lines that should be hidden
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // North tunnel (hide remaining structures to match the rest that are already hidden)
             502, 503, 504, 505, 506, 507, 508, 511, 515, 516, 520, 523, 634, 644, 645, 813, 814,
             815, 816, 817, 818, 819, 820, 823, 824, 825, 826, 828, 829, 830, 1237, 1239
@@ -704,7 +707,7 @@ static void patchMap_Underhalls() noexcept {
 
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix red door bars; all sides should be the same special and tag
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 line.special = 135;
                 line.tag = 7;
@@ -721,7 +724,7 @@ static void patchMap_TheFocus() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        removeFlagsFromLinedefs(
+        removeFlagsFromLines(
             ML_DONTPEGBOTTOM,
             // Fix the texture on the bridge near the exit not moving as it is raised
             511, 515
@@ -737,7 +740,7 @@ static void patchMap_TheWasteTunnels() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix the texture on the secret elevator in the first area
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 329);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 329);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
@@ -769,7 +772,7 @@ static void patchMap_TheCrusher() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix one-sided lines being incorrectly tagged as 'door' lines inside the red door.
         // In the original game activating these lines could cause a crash.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             24, 25
         );
@@ -784,8 +787,8 @@ static void patchMap_DeadSimple() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide a deathmatch only door at the north west of the map and fix the texture when it's moving
-        addFlagsToLinedefs(ML_SECRET, 168);
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 168);
+        addFlagsToLines(ML_SECRET, 168);
+        removeFlagsFromLines(ML_DONTPEGTOP, 168);
     }
 }
 
@@ -797,10 +800,10 @@ static void patchMap_TricksAndTraps() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix the texture on the two gun activated doors
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 281, 282, 286, 287);
+        removeFlagsFromLines(ML_DONTPEGTOP, 281, 282, 286, 287);
 
         // Flag the southeast corner wall in the southeast room as secret (to display it as a solid wall on the map)
-        addFlagsToLinedefs(ML_SECRET, 263, 645, 646);
+        addFlagsToLines(ML_SECRET, 263, 645, 646);
     }
 }
 
@@ -812,7 +815,7 @@ static void patchMap_ThePit() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide dummy sectors on the east elevator beside the start pit
-        addFlagsToLinedefs(ML_SECRET, 9, 71);
+        addFlagsToLines(ML_SECRET, 9, 71);
     }
 }
 
@@ -824,14 +827,14 @@ static void patchMap_RefuelingBase() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix the texture on the hidden door on the northeast room
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 656);
-        modifyLinedefs(
+        removeFlagsFromLines(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 656);
+        modifyLines(
             [](line_t& line) noexcept { gpSides[line.sidenum[0]].rowoffset = -16 * FRACUNIT; },
             656
         );
 
         // Hide monster only teleport lines near the exit area
-        addFlagsToLinedefs(ML_DONTDRAW, 894, 895, 897, 1060);
+        addFlagsToLines(ML_DONTDRAW, 894, 895, 897, 1060);
     }
 }
 
@@ -843,12 +846,12 @@ static void patchMap_OofDestruction() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix a dummy sector (hack to work around sector height limits) on the south wall, close it up and adjust the map lines:
-        addFlagsToLinedefs(ML_SECRET, 374, 375, 376, 377, 378, 793);
-        addFlagsToLinedefs(ML_DONTDRAW, 788, 789, 790, 791, 792, 794);
+        addFlagsToLines(ML_SECRET, 374, 375, 376, 377, 378, 793);
+        addFlagsToLines(ML_DONTDRAW, 788, 789, 790, 791, 792, 794);
         gpSectors[83].ceilingheight = 136 * FRACUNIT;
         gpSectors[83].ceilingpic = R_FlatNumForName("BRN14");
 
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("ROCK06"); },
             374, 375, 376, 377, 378
         );
@@ -865,7 +868,7 @@ static void patchMap_TheFactory() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix map lines which should not be hidden
-        removeFlagsFromLinedefs(ML_DONTDRAW,
+        removeFlagsFromLines(ML_DONTDRAW,
             // Pedestal with Arachnotron (beside blue key)
             260,
             // Dark room with the BFG
@@ -873,10 +876,10 @@ static void patchMap_TheFactory() noexcept {
         );
 
         // Fix door tracks moving on the imp building door
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 113, 114);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 113, 114);
 
         // Hide lines around the perimeter of map
-        addFlagsToLinedefs(ML_DONTDRAW, 63, 64, 65, 66);
+        addFlagsToLines(ML_DONTDRAW, 63, 64, 65, 66);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
@@ -899,13 +902,13 @@ static void patchMap_Suburbs() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix some textures by the secret exit door moving when they should not
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 573, 781, 782);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 573, 781, 782);
 
         // Fix the texture of the elevator inside the secret area with the BFG not moving properly
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 598);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 598);
 
         // Hide map lines in the west and southwest perimeter
-        addFlagsToLinedefs(ML_DONTDRAW, 537, 538, 539);
+        addFlagsToLines(ML_DONTDRAW, 537, 538, 539);
 
         // Change the floor texture in the southwest monster closet since you can see through the opening in the wall
         gpSectors[14].floorpic = R_FlatNumForName("SLIME01");
@@ -948,7 +951,7 @@ static void patchMap_Tenements() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix the track of some doorways moving when they should not
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM,
+        addFlagsToLines(ML_DONTPEGBOTTOM,
             // First room, door on the left
             128, 130,
             // South blood floor room, door on the right
@@ -956,10 +959,10 @@ static void patchMap_Tenements() noexcept {
         );
 
         // Unhide map lines that shouldn't be hidden (in the east slime room, beside a torch)
-        removeFlagsFromLinedefs(ML_DONTDRAW, 1128, 1129);
+        removeFlagsFromLines(ML_DONTDRAW, 1128, 1129);
 
         // Fix door textures which should move as the door moves
-        removeFlagsFromLinedefs(ML_DONTPEGTOP,
+        removeFlagsFromLines(ML_DONTPEGTOP,
             // Top of the first stairs on the right
             159, 160,
             // Right cage in start room (other side of door)
@@ -978,7 +981,7 @@ static void patchMap_TheCourtyard() noexcept {
 
     if (shouldApplyMapPatches_PsyDoom()) {
         // Fix a wall top/floor sometimes not appearing: this wall is at the starting area and borders the sky
-        addVoidFlagToLinedefs(45, 17, 18, 51);
+        addVoidFlagToLines(45, 17, 18, 51);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
@@ -1000,7 +1003,7 @@ static void patchMap_TheCourtyard() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix door/platform textures
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM,
+        removeFlagsFromLines(ML_DONTPEGBOTTOM,
             // North building (which contains the Soul sphere)
             622, 623, 625, 627,
             // Northeast courtyard outdoor monster closet (with a teleporter)
@@ -1018,7 +1021,7 @@ static void patchMap_TheCourtyard() noexcept {
         );
 
         // Hide map lines in various places
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // At the west side of the indoor glowing rock tunnels
             413, 647,
             // Near the '+' shaped building
@@ -1035,7 +1038,7 @@ static void patchMap_TheCitadel() noexcept {
 
     if (shouldApplyMapPatches_PsyDoom()) {
         // Fix the starting hut: make it so you can see past it, since it is shorter than buildings around it
-        addVoidFlagToLinedefs(170, 171, 172, 173, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+        addVoidFlagToLines(170, 171, 172, 173, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
@@ -1053,13 +1056,13 @@ static void patchMap_TheCitadel() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix a wall texture moving that shouldn't at the side of the barrier in the yellow key room
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 509);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 509);
 
         // Fix door tracks in the "imp room" monster closet moving when opening
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 922, 923);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 922, 923);
 
         // Hide map lines which shouldn't show
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // On the north side of the citadel, beside the elevator leading down to lots of Demons outside
             1130,
             // Beside the exit building (non visible sky lines)
@@ -1084,7 +1087,7 @@ static void patchMap_TheCatacombs() noexcept {
         // Fix a missing texture at the back side of a bridge leading to the rocket launcher.
         // The bug happens when you use the switch to raise the bridge two times.
         gpSides[gpLines[54].sidenum[1]].bottomtexture = R_TextureNumForName("METAL03");
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 54);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 54);
     }
 }
 
@@ -1096,7 +1099,7 @@ static void patchMap_BarrelsOfFun() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines which should not show
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // Starting hallway: left side
             394, 395, 396, 397,
             // Starting hallway: center side
@@ -1106,7 +1109,7 @@ static void patchMap_BarrelsOfFun() noexcept {
         );
 
         // Fix textures on the large door in the east outdoor area
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 144, 161);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 144, 161);
     }
 }
 
@@ -1118,13 +1121,13 @@ static void patchMap_TheAbandonedMines() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix the texture for the lava room monster closet door not moving
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 803);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 803);
 
         // Fix the door tracks for the lava room monster closet moving
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 805, 808);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 805, 808);
 
         // Fix textures not moving on secret doors in the central area (leading to the south west brown sludge room)
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 91, 337);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 91, 337);
         gpSides[gpLines[91].sidenum[0]].rowoffset = -8 * FRACUNIT;
         gpSides[gpLines[337].sidenum[0]].rowoffset = 24 * FRACUNIT;
     }
@@ -1138,7 +1141,7 @@ static void patchMap_MonsterCondo() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix door track textures that shouldn't move as the door is opening
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM,
+        addFlagsToLines(ML_DONTPEGBOTTOM,
             // A trap door inside the hidden book room in the southeast corner of the map
             226, 230,
             // The door tracks of the monster closet containing all the Lost Souls (and the BFG)
@@ -1148,7 +1151,7 @@ static void patchMap_MonsterCondo() noexcept {
         );
 
         // Fix map lines in the northeast room (with all the hooks) which should not be drawn
-        addFlagsToLinedefs(ML_DONTDRAW, 
+        addFlagsToLines(ML_DONTDRAW, 
             // Secret elevator
             490, 491, 492, 493, 494,
             // North elevator
@@ -1158,7 +1161,7 @@ static void patchMap_MonsterCondo() noexcept {
         );
 
         // Fix a switch in the in the northeast room (with all the hooks) which should show as usable
-        removeFlagsFromLinedefs(ML_SECRET, 7);
+        removeFlagsFromLines(ML_SECRET, 7);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
@@ -1168,7 +1171,7 @@ static void patchMap_MonsterCondo() noexcept {
 
         // Fix a line incorrectly flagged as impassable in the northeast room (with all the hooks).
         // This line is beside the switch that lowers the floor.
-        removeFlagsFromLinedefs(ML_BLOCKING, 342);
+        removeFlagsFromLines(ML_BLOCKING, 342);
     }
 }
 
@@ -1180,10 +1183,10 @@ static void patchMap_RedemptionDenied() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide lines that activate platforms beside south teleporter
-        addFlagsToLinedefs(ML_DONTDRAW, 299, 300, 301);
+        addFlagsToLines(ML_DONTDRAW, 299, 300, 301);
 
         // Flag the exit door as secret so that it renders on the map as a solid wall
-        addFlagsToLinedefs(ML_SECRET, 160);
+        addFlagsToLines(ML_SECRET, 160);
     }
 }
 
@@ -1202,7 +1205,7 @@ static void patchMap_TheMansion() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide map lines which should not show
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // Secret exit room
             1236, 1237, 1240, 1243, 1244, 1250, 1251, 1252, 1254, 1264, 1265, 1266, 1267,
             // North hallway window skybox
@@ -1224,14 +1227,14 @@ static void patchMap_TheMansion() noexcept {
         );
 
         // Unhide map lines for the north hallway window
-        removeFlagsFromLinedefs(ML_DONTDRAW, 1019, 1020, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066);
+        removeFlagsFromLines(ML_DONTDRAW, 1019, 1020, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066);
 
         // Fix some bookshelf lines in the start library room (southeast corner) appearing like a solid wall
-        removeFlagsFromLinedefs(ML_SECRET, 7, 1229);
+        removeFlagsFromLines(ML_SECRET, 7, 1229);
 
         // Remove line actions which have no effect due to the targeted sector tag not existing.
         // These changes do not affect gameplay, only how the lines are displayed on the automap.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             // Soulsphere platform
             513, 514, 515, 516

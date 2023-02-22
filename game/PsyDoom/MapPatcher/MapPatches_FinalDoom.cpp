@@ -10,6 +10,9 @@
 #include "Doom/Game/p_mobj.h"
 #include "Doom/Game/p_telept.h"
 #include "Doom/Renderer/r_data.h"
+#include "MapPatcherUtils.h"
+
+using namespace MapPatcherUtils;
 
 BEGIN_NAMESPACE(MapPatches)
 
@@ -21,12 +24,12 @@ static void patchMap_Geryon() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix a door leading to the secret area with the super shotgun not having it's texture move as it lowers
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 966);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 966);
         gpSides[gpLines[966].sidenum[0]].rowoffset = 64 * FRACUNIT;
 
         // In the room immediately after the blue door, fix the wall textures so that they move when the wall does.
         // Also need to re-align the textures after making this change.
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 710, 712, 723, 726);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 710, 712, 723, 726);
         gpSides[gpLines[710].sidenum[0]].rowoffset = -50 * FRACUNIT;
         gpSides[gpLines[712].sidenum[0]].rowoffset = -50 * FRACUNIT;
         gpSides[gpLines[723].sidenum[0]].rowoffset = -34 * FRACUNIT;
@@ -42,7 +45,7 @@ static void patchMap_Minos() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM,
+        addFlagsToLines(ML_DONTPEGBOTTOM,
             // Fix door tracks that shouldn't move for the small room with the Chainsaw
             727, 729,
             // Fix door tracks for the room containing the red key (beside the SSG) that move when they shouldn't
@@ -73,12 +76,12 @@ static void patchMap_Paradox() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix the texture on the hidden elevator inside the castle walls not moving with the platform.
         // Also need to adjust the texture coordinates when using this fix.
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 325);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 325);
         gpSides[gpLines[325].sidenum[0]].rowoffset = 65 * FRACUNIT;
 
         // Hide the opening to a monster closet at the northeast of the central area and adjust the texturing accordingly (to blend in)
-        addFlagsToLinedefs(ML_DONTDRAW, 552, 554, 555);
-        addFlagsToLinedefs(ML_SECRET | ML_MIDMASKED, 553);
+        addFlagsToLines(ML_DONTDRAW, 552, 554, 555);
+        addFlagsToLines(ML_SECRET | ML_MIDMASKED, 553);
         gpSides[gpLines[553].sidenum[0]].midtexture = R_TextureNumForName("ROCK03");
         gpSides[gpLines[553].sidenum[0]].textureoffset = -16 * FRACUNIT;
 
@@ -117,14 +120,14 @@ static void patchMap_Vesperas() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix door tracks which shouldn't move for the north door in the starting room
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 16, 18);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 16, 18);
 
         // Fix the wall texture not moving when the wall lowers to reveal the closet with the red key (in the NW room with the Hell Knights)
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 696);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 696);
         gpSides[gpLines[696].sidenum[0]].rowoffset = 31 * FRACUNIT;
 
         // Hide various map lines which should not show
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // Hell Knight monster closet in the blue key room
             1165, 1522, 1523, 1524,
             // Dummy sector in the northeast blood room (with the SSG)
@@ -136,7 +139,7 @@ static void patchMap_Vesperas() noexcept {
         );
 
         // Mark various lines as secret on automap so they render as solid lines on the map
-        addFlagsToLinedefs(ML_SECRET,
+        addFlagsToLines(ML_SECRET,
             // South monster closet in the courtyard
             571,
             // Dummy sector in the west hallway leading to the red key room
@@ -167,7 +170,7 @@ static void patchMap_SystemControl() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix door tracks
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM,
+        addFlagsToLines(ML_DONTPEGBOTTOM,
             // Door to outside
             346, 348,
             // Blue key door
@@ -187,7 +190,7 @@ static void patchMap_HumanBarbeque() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix the track on a door inside the secret room near the exit moving when it shouldn't
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 315, 317);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 315, 317);
     }
 }
 
@@ -199,7 +202,7 @@ static void patchMap_Wormhole() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide 2 linedefs from the automap in the starting room to match those in the alternate version
-        addFlagsToLinedefs(ML_DONTDRAW, 1425, 1426);
+        addFlagsToLines(ML_DONTDRAW, 1425, 1426);
 
         // Fix the brightness for half of the central weapon pedestal in the starting room and alternate version.
         // Should be the same brightness as the surrounding areas and also the other half of the pedestal.
@@ -216,7 +219,7 @@ static void patchMap_NukageProcessing() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide multiplayer-only areas from computer map to match others of the same type
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // Closets attached to the blue Armor room
             1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079,
             // A nukage tank in the north area (near the exit)
@@ -243,14 +246,14 @@ static void patchMap_DeepestReaches() noexcept {
         gpSides[792].toptexture = R_TextureNumForName("ROCK16");
 
         // Fix the inside texture for the secret door above not moving as the door opens
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 1380, 1381);
+        removeFlagsFromLines(ML_DONTPEGTOP, 1380, 1381);
 
         // Fix the texture for the secret door leading to the Megasphere not moving when it is opened
-        removeFlagsFromLinedefs(ML_DONTPEGTOP | ML_DONTPEGBOTTOM, 773, 776);
+        removeFlagsFromLines(ML_DONTPEGTOP | ML_DONTPEGBOTTOM, 773, 776);
         gpSides[gpLines[776].sidenum[0]].rowoffset = 63 * FRACUNIT;
 
         // Unhide map lines that shouldn't be hidden
-        removeFlagsFromLinedefs(ML_DONTDRAW,
+        removeFlagsFromLines(ML_DONTDRAW,
             // Near the entrance to the secret area with the Megasphere
             706, 707,
             // In the cave/rock area with the yellow key
@@ -288,14 +291,14 @@ static void patchMap_ProcessingArea() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide a map line on the east wall of the south courtyard which should not show
-        addFlagsToLinedefs(ML_DONTDRAW, 953);
+        addFlagsToLines(ML_DONTDRAW, 953);
 
         // Fix texture alignment on the door leading from the top-of-wall secret area in the south courtyard
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 202);
+        removeFlagsFromLines(ML_DONTPEGTOP, 202);
 
         // Prevent textures in a tunnel to the north (leading to the outdoor area with the rocket launcher) from moving when the passage opens.
         // Also realign the textures to correspond with this fix.
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 572, 664);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 572, 664);
         gpSides[gpLines[572].sidenum[0]].rowoffset = -8 * FRACUNIT;
         gpSides[gpLines[664].sidenum[0]].textureoffset = -16 * FRACUNIT;
         gpSides[gpLines[664].sidenum[0]].rowoffset = -8 * FRACUNIT;
@@ -313,20 +316,20 @@ static void patchMap_LunarMiningProject() noexcept {
         gpSides[gpLines[718].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK06");
 
         // South hallway monster closet: show a map line for the sound channel entrance as solid and fix the texture alignment
-        addFlagsToLinedefs(ML_SECRET, 1);
+        addFlagsToLines(ML_SECRET, 1);
         gpSides[gpLines[1].sidenum[0]].rowoffset = 0 * FRACUNIT;
         gpSectors[162].floorheight = 0 * FRACUNIT;
 
         // Hide teleport destination sectors in the central courtyard
-        addFlagsToLinedefs(ML_DONTDRAW, 972, 973, 974, 975, 976, 977, 978, 979, 980, 981, 982, 983);
+        addFlagsToLines(ML_DONTDRAW, 972, 973, 974, 975, 976, 977, 978, 979, 980, 981, 982, 983);
 
         // Fix the texture of a co-op only closet door to make it blend in better with the surrounding environment.
         // This closet is in the room with the red key (north west side).
         gpSides[1735].toptexture = R_TextureNumForName("BRONZE05");
 
         // Hide a monster closet on the north side of the map (beside the blue key)
-        addFlagsToLinedefs(ML_SECRET | ML_MIDMASKED, 919);
-        addFlagsToLinedefs(ML_DONTDRAW, 1051, 1052);
+        addFlagsToLines(ML_SECRET | ML_MIDMASKED, 919);
+        addFlagsToLines(ML_DONTDRAW, 1051, 1052);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
@@ -341,7 +344,7 @@ static void patchMap_LunarMiningProject() noexcept {
 
         // Move one of the central courtyard teleport destinations (south west corner).
         // The destination marker is not on the teleport destination sector, so the teleport is broken.
-        forAllThings(
+        forAllMobj(
             [](mobj_t& mobj) noexcept {
                 const uint32_t sectorIdx = (uint32_t)(mobj.subsector->sector - gpSectors);
 
@@ -364,17 +367,17 @@ static void patchMap_Quarry() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix shootable lines which should render on the map as solid.
         // These lines are beside the SSG secret, at the south west corner of the map.
-        addFlagsToLinedefs(ML_SECRET, 167, 191);
+        addFlagsToLines(ML_SECRET, 167, 191);
 
         // Unhide a map line which should be shown in the SE tunnel (near the Chaingun)
-        removeFlagsFromLinedefs(ML_DONTDRAW, 276);
+        removeFlagsFromLines(ML_DONTDRAW, 276);
 
         // Hide zero height sectors in the eastern lava cavern
-        addFlagsToLinedefs(ML_DONTDRAW, 846, 847, 849, 850, 851, 852);
-        addFlagsToLinedefs(ML_SECRET, 716, 720, 726, 799);
+        addFlagsToLines(ML_DONTDRAW, 846, 847, 849, 850, 851, 852);
+        addFlagsToLines(ML_SECRET, 716, 720, 726, 799);
 
         // Hide west (outside) elevator walk-over lines
-        addFlagsToLinedefs(ML_DONTDRAW, 111, 112);
+        addFlagsToLines(ML_DONTDRAW, 111, 112);
     }
 }
 
@@ -386,7 +389,7 @@ static void patchMap_Ballistyx() noexcept {
 
     if (shouldApplyMapPatches_PsyDoom()) {
         // Make various linedefs not render sky walls or be see through for occlusion purposes
-        addVoidFlagToLinedefs(
+        addVoidFlagToLines(
             // Altar hole: don't draw sky walls
             1212, 1211, 1215, 1210, 1214, 1213,
             // Altar pillars: don't occlude and prevent geometry behind from rendering (needed for floating platform hack)
@@ -398,7 +401,7 @@ static void patchMap_Ballistyx() noexcept {
 
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix some monsters not teleporting in at the start: nudge the teleport destinations a little
-        forAllThings(
+        forAllMobj(
             [](mobj_t& mobj) noexcept {
                 const uint32_t sectorIdx = (uint32_t)(mobj.subsector->sector - gpSectors);
 
@@ -420,17 +423,17 @@ static void patchMap_Ballistyx() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide a monster closet (containing imps) beside the first set of stairs at the start of the map
-        addFlagsToLinedefs(ML_DONTDRAW, 1098, 1101, 1102);
-        addFlagsToLinedefs(ML_SECRET | ML_MIDMASKED | ML_DONTPEGTOP, 1100);
+        addFlagsToLines(ML_DONTDRAW, 1098, 1101, 1102);
+        addFlagsToLines(ML_SECRET | ML_MIDMASKED | ML_DONTPEGTOP, 1100);
         gpSides[gpLines[1100].sidenum[0]].midtexture = R_TextureNumForName("SUPPORT3");
         gpSides[gpLines[1100].sidenum[0]].textureoffset = 8 * FRACUNIT;
 
         // Fix door tracks moving on the door for the secret closet containing a Soulsphere and Light amplification powerup.
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 1479, 1480);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 1479, 1480);
 
         // Fix door textures not moving upon opening for 7 doors in the circular brown sludge room.
         // Also adjust the texture coordinates accordingly for this fix.
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 305, 306, 312, 316, 320, 324, 336);
+        removeFlagsFromLines(ML_DONTPEGTOP, 305, 306, 312, 316, 320, 324, 336);
         gpSides[gpLines[305].sidenum[0]].rowoffset = 16 * FRACUNIT;
         gpSides[gpLines[306].sidenum[0]].rowoffset = 16 * FRACUNIT;
         gpSides[gpLines[312].sidenum[0]].rowoffset = 16 * FRACUNIT;
@@ -441,21 +444,21 @@ static void patchMap_Ballistyx() noexcept {
 
         // Fix the textures not moving on doors for 2 monster closets in the south cave (near the blood pool and blue key).
         // Also fix their door tracks moving when opening.
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 863, 865, 873, 875);
+        removeFlagsFromLines(ML_DONTPEGTOP, 863, 865, 873, 875);
         gpSides[gpLines[865].sidenum[1]].rowoffset = -48 * FRACUNIT;
         gpSides[gpLines[873].sidenum[1]].rowoffset = -48 * FRACUNIT;
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 862, 864, 872, 874);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 862, 864, 872, 874);
 
         // Remove actions from door tracks for south room closet
         gpLines[862].special = 0;
         gpLines[864].special = 0;
 
         // Fix textures on the red key platform not moving as it lowers
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 841, 842, 843, 844);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 841, 842, 843, 844);
 
         // Fix door tracks moving for a trap door in the short hallway with the cages on both sides.
         // Also fix up the texture alignment for some neighboring lines.
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 216, 219);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 216, 219);
         gpSides[gpLines[215].sidenum[0]].textureoffset = 8 * FRACUNIT;
         gpSides[gpLines[216].sidenum[0]].textureoffset = 8 * FRACUNIT;
         gpSides[gpLines[216].sidenum[0]].rowoffset = -26 * FRACUNIT;
@@ -472,16 +475,16 @@ static void patchMap_Heck() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix the texture on the elevator in the southwest room not moving as it goes up and down.
         // Also adjust the texture alignment for this fix.
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 550);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 550);
         gpSides[gpLines[550].sidenum[0]].textureoffset = 0 * FRACUNIT;
         gpSides[gpLines[550].sidenum[0]].rowoffset = 64 * FRACUNIT;
 
         // Hide lines in front of teleporters in the starting area
-        addFlagsToLinedefs(ML_DONTDRAW, 1128, 1129, 1130, 1131, 1132, 1133, 1134, 1135);
+        addFlagsToLines(ML_DONTDRAW, 1128, 1129, 1130, 1131, 1132, 1133, 1134, 1135);
 
         // Remove all chain hook with blood decorations.
         // These were Arch-viles carried over from PC Doom and all (except one) only appear in deathmatch.
-        forAllThings(
+        forAllMobj(
             [](mobj_t& mobj) noexcept {
                 const uint32_t sectorIdx = (uint32_t)(mobj.subsector->sector - gpSectors);
 
@@ -492,11 +495,11 @@ static void patchMap_Heck() noexcept {
         );
 
         // Restore false walls in marble maze
-        addFlagsToLinedefs(ML_MIDMASKED, 419, 425, 429, 481);
+        addFlagsToLines(ML_MIDMASKED, 419, 425, 429, 481);
 
         // Fix textures not moving on monster closet doors which open after picking up the yellow key.
         // These doors are in the cavern directly to the east of the starting area.
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 657, 658, 758, 760, 762, 764, 766);
+        removeFlagsFromLines(ML_DONTPEGTOP, 657, 658, 758, 760, 762, 764, 766);
     }
 }
 
@@ -508,26 +511,26 @@ static void patchMap_Aztec() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Restore hidden textures on the glowing floor room
-        addFlagsToLinedefs(ML_MIDMASKED, 199, 1203, 194, 1206);
+        addFlagsToLines(ML_MIDMASKED, 199, 1203, 194, 1206);
 
         // Fix textures not moving on the monster closet door in the glowing floor room
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 196, 197, 225, 226);
+        removeFlagsFromLines(ML_DONTPEGTOP, 196, 197, 225, 226);
 
         // Fix the texture not moving when a teleport lowers on entering the large southeast room (the room with the Arachnotron bridge)
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 1171);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 1171);
 
         // Restore hidden textures in the large southeast room
-        addFlagsToLinedefs(ML_MIDMASKED, 363, 367, 369, 370, 374, 432, 414, 1188);
+        addFlagsToLines(ML_MIDMASKED, 363, 367, 369, 370, 374, 432, 414, 1188);
 
         // Hide a map line for a trap in the red key room
-        addFlagsToLinedefs(ML_DONTDRAW, 1003);
+        addFlagsToLines(ML_DONTDRAW, 1003);
 
         // Fix a door texture not moving (on open) for the southernmost trap door (beside the SSG, containing a Chaingunner)
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 478);
+        removeFlagsFromLines(ML_DONTPEGTOP, 478);
         gpSides[gpLines[478].sidenum[0]].rowoffset = -1 * FRACUNIT;
 
         // Fix door textures not moving (on open) for the northernmost trap doors (containing Hell Knights)
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 715, 922);
+        removeFlagsFromLines(ML_DONTPEGTOP, 715, 922);
         gpSides[gpLines[715].sidenum[0]].rowoffset = 20 * FRACUNIT;
         gpSides[gpLines[922].sidenum[0]].rowoffset = 20 * FRACUNIT;
     }
@@ -543,10 +546,10 @@ static void patchMap_GhostTown() noexcept {
         // Fix door textures not moving on various doors as they open
         {
             // The blue key room monster closet door
-            removeFlagsFromLinedefs(ML_DONTPEGTOP, 595);
+            removeFlagsFromLines(ML_DONTPEGTOP, 595);
 
             // Southeast arena monster closet doors (on the way towards the blue key)
-            removeFlagsFromLinedefs(ML_DONTPEGTOP, 507, 505, 506, 502, 503, 504);
+            removeFlagsFromLines(ML_DONTPEGTOP, 507, 505, 506, 502, 503, 504);
         }
     }
 }
@@ -573,7 +576,7 @@ static void patchMap_BaronsLair() noexcept {
         );
 
         // Align switch textures in the deathmatch start closets
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].rowoffset = 0;
             },
@@ -581,7 +584,7 @@ static void patchMap_BaronsLair() noexcept {
         );
 
         // Hide deathmatch start closets from the map
-        addFlagsToLinedefs(ML_SECRET,
+        addFlagsToLines(ML_SECRET,
             1225,       // North east closet
             1215,       // South east closet
             620,        // South west closet (eastmost)
@@ -592,7 +595,7 @@ static void patchMap_BaronsLair() noexcept {
             572         // North west closet (eastmost)
         );
 
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             // North east closet
             1219, 1220, 1221, 1222, 1223, 1226,
             // South east closet
@@ -613,7 +616,7 @@ static void patchMap_BaronsLair() noexcept {
 
         // From the map, hide pillars in the starting area which lower in deathmatch.
         // Also fix their textures not moving as they lower and adjust coordinates accordingly.
-        addFlagsToLinedefs(ML_DONTDRAW,
+        addFlagsToLines(ML_DONTDRAW,
             704,    // South (west side)
             705,    // South (east side)
             706,    // West (south side)
@@ -622,7 +625,7 @@ static void patchMap_BaronsLair() noexcept {
             709     // North (east side)
         );
 
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 line.flags &= ~ML_DONTPEGTOP;
                 line.flags |= ML_SECRET;
@@ -635,7 +638,7 @@ static void patchMap_BaronsLair() noexcept {
             77, 79      // South (east side)
         );
 
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].rowoffset = -24 * FRACUNIT;
                 line.flags &= ~ML_DONTPEGTOP;
@@ -650,11 +653,11 @@ static void patchMap_BaronsLair() noexcept {
         );
 
         // Fix door tracks on some of the deathmatch only doors moving when they open
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 580, 584, 574, 578, 586, 590);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 580, 584, 574, 578, 586, 590);
 
         // Hide monster closet tunnels connected to Imp pedestals beside the northmost room
-        addFlagsToLinedefs(ML_SECRET, 295, 1097);
-        addFlagsToLinedefs(ML_DONTDRAW, 1089, 1090, 1091, 1098, 1099, 1100);
+        addFlagsToLines(ML_SECRET, 295, 1097);
+        addFlagsToLines(ML_DONTDRAW, 1089, 1090, 1091, 1098, 1099, 1100);
     }
 }
 
@@ -674,7 +677,7 @@ static void patchMap_TheDeathDomain() noexcept {
         gpLines[333].tag = 7;
         gpLines[333].special = 105;     // WR Door Open Wait Close (fast)
 
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 line.special = 117;     // DR Door Open Wait Close (fast)
             },
@@ -682,7 +685,7 @@ static void patchMap_TheDeathDomain() noexcept {
         );
 
         // Fix the railing next to the stairs in the northeast room (with invisibility power up) being walk-through
-        addFlagsToLinedefs(ML_BLOCKING, 691, 692, 693, 694, 695);
+        addFlagsToLines(ML_BLOCKING, 691, 692, 693, 694, 695);
 
         // The blue key (in the sludge pit near the start) is virutally impossible to get to without strafe jumping from the platform above.
         // To fix, make the barrier to it's trench lower along with the barrier on the platform above.
@@ -693,25 +696,25 @@ static void patchMap_TheDeathDomain() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Prevent the railing texture around the invisibility sphere from repeating vertically in the northeast room
-        addFlagsToLinedefs(ML_MID_FIXED_HEIGHT, 916, 917, 918);
+        addFlagsToLines(ML_MID_FIXED_HEIGHT, 916, 917, 918);
 
         // Hide a map line which should be hidden at the entrance to the small (caged) square containing the invisiblity sphere
-        hideLinedefs(935);
+        hideLines(935);
 
         // Hide map lines which shouldn't show for the east room window skybox (beside a row of Lost Souls)
-        hideLinedefs(833, 834, 835, 836, 837, 838);
+        hideLines(833, 834, 835, 836, 837, 838);
 
         // Fix the alignment for the switch texture on the south hallway barrier (on the way to the platform with the blue key jump)
         gpSides[gpLines[911].sidenum[0]].textureoffset = -16 * FRACUNIT;
         gpSides[gpLines[911].sidenum[0]].rowoffset = 0 * FRACUNIT;
 
         // Realign the texture above and below the inside of the northeast courtyard window
-        addFlagsToLinedefs(ML_DONTPEGTOP, 456);
+        addFlagsToLines(ML_DONTPEGTOP, 456);
         gpSides[gpLines[456].sidenum[0]].rowoffset = 57 * FRACUNIT;
 
         // Fix the texture not moving on a hidden elevator close to exit (closet containing rockets, backpack and clips).
         // Also adjust the texture alignment for this fix.
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 805);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 805);
         gpSides[gpLines[805].sidenum[0]].rowoffset = 64 * FRACUNIT;
     }
 }
@@ -724,16 +727,16 @@ static void patchMap_Onslaught() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix door tracks moving on the northeast monster closet containing Cacodemons (in the start room)
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 535, 539);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 535, 539);
         
         // Fix door textures not moving on various monster closets in the northeast/starting room
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 400, 407, 796);
+        removeFlagsFromLines(ML_DONTPEGTOP, 400, 407, 796);
         
         // Fix hidden platform textures not moving in a small lowered area in the central outdoor room
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 108, 121);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 108, 121);
 
         // Fix textures not moving on doors which open when walking into the Cyberdemon room
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].rowoffset = -8 * FRACUNIT;
                 line.flags &= ~(ML_DONTPEGTOP | ML_DONTPEGBOTTOM);
@@ -742,21 +745,21 @@ static void patchMap_Onslaught() noexcept {
         );
 
         // Fix door tracks moving for the doors which open when walking into the Cyberdemon room
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 32, 40, 42, 48);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 32, 40, 42, 48);
 
         // Hide unused areas in the Cyberdemon room
-        addFlagsToLinedefs(ML_MIDMASKED | ML_SECRET, 29, 41);
-        addFlagsToLinedefs(ML_DONTDRAW, 30, 33, 36, 37, 38, 79, 80, 81, 183, 544, 545, 546);
+        addFlagsToLines(ML_MIDMASKED | ML_SECRET, 29, 41);
+        addFlagsToLines(ML_DONTDRAW, 30, 33, 36, 37, 38, 79, 80, 81, 183, 544, 545, 546);
 
         // Fix door textures not moving on the south monster closet in the final area.
         // Also fix the door tracks moving when the door opens.
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 686, 687);
-        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 753, 757);
+        removeFlagsFromLines(ML_DONTPEGTOP, 686, 687);
+        addFlagsToLines(ML_DONTPEGBOTTOM, 753, 757);
 
         // Fix door textures not moving on doors inside the red key room (never seen moving on single player).
         // Also fix some door tracks moving in some cases.
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 707, 786, 787);
-        removeFlagsFromLinedefs(ML_DONTPEGTOP | ML_DONTPEGBOTTOM, 668, 696);
+        removeFlagsFromLines(ML_DONTPEGTOP, 707, 786, 787);
+        removeFlagsFromLines(ML_DONTPEGTOP | ML_DONTPEGBOTTOM, 668, 696);
         gpSides[gpLines[668].sidenum[0]].rowoffset = -58 * FRACUNIT;
         gpSides[gpLines[696].sidenum[0]].rowoffset = 45 * FRACUNIT;
     }

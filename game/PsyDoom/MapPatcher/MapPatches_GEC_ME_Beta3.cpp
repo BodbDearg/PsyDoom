@@ -6,6 +6,9 @@
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_mobj.h"
 #include "Doom/Renderer/r_data.h"
+#include "MapPatcherUtils.h"
+
+using namespace MapPatcherUtils;
 
 BEGIN_NAMESPACE(MapPatches)
 
@@ -55,7 +58,7 @@ static void patchMap_PhobosMissionControl() noexcept {
 static void patchMap_ForgottenSewers() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix automap lines that should be visible
-        unhideLinedefs(969, 970, 971, 972, 973);
+        unhideLines(969, 970, 971, 972, 973);
 
         // Fix a zero brightness sector
         gpSectors[153].lightlevel = 128;
@@ -74,7 +77,7 @@ static void patchMap_HellKeep() noexcept {
             gpLines[22].flags |= ML_DONTPEGBOTTOM;
         }
 
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM,
+        removeFlagsFromLines(ML_DONTPEGBOTTOM,
             // Door on the way to the courtyard with the big tree
             95, 104,
             // Door beside the exit
@@ -136,7 +139,7 @@ static void patchMap_IndustrialZone() noexcept {
             260
         );
 
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].rowoffset = 0;
                 line.flags |= ML_VOID;
@@ -153,7 +156,7 @@ static void patchMap_IndustrialZone() noexcept {
 static void patchMap_Betray() noexcept {
     if (shouldApplyMapPatches_PsyDoom()) {
         // Fix sky walls rendering where they should not
-        addVoidFlagToLinedefs(
+        addVoidFlagToLines(
             495, 496, 497, 498, 499, 500, 501, 502, 673, 674, 675, 676, 677, 678, 679, 680,     // Two teleporter pillars
             356, 357, 358, 359, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606                // Cross
         );
@@ -166,7 +169,7 @@ static void patchMap_Betray() noexcept {
 static void patchMap_TheChasm() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix missing textures when a floor raises
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("SKIN08"); },
             211, 212, 213, 214
         );
@@ -179,7 +182,7 @@ static void patchMap_TheChasm() noexcept {
 static void patchMap_IconOfSin() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix missing lower step textures in the exit tunnels
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("BRICK09"); },
             261, 287, 293,      // Left tunnel
             366, 367, 368 
@@ -203,7 +206,7 @@ static void patchMap_Vivisection() noexcept {
 static void patchMap_InfernoOfBlood() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix very mismatched textures used: red brick instead of brown rock
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("ROCK03"); },
             759, 762
         );
@@ -212,7 +215,7 @@ static void patchMap_InfernoOfBlood() noexcept {
         gpSides[gpLines[457].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK15");
 
         // Fix a hidden automap line in the blood river
-        unhideLinedefs(888);
+        unhideLines(888);
 
         // Fix door track textures that shouldn't move for the first door at the start of the map
         gpLines[1014].flags |= ML_DONTPEGBOTTOM;
@@ -229,7 +232,7 @@ static void patchMap_BaronsBanquet() noexcept {
         // Fix by adding another trigger that will lower the platform instead.
         gpSectors[80].tag = 9;
 
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 line.special = 36;  // W1 Floor Lower to Lowest Floor
                 line.tag = 9;
@@ -254,7 +257,7 @@ static void patchMap_BaronsBanquet() noexcept {
 static void patchMap_TombOfMalevolence() noexcept {
     // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 31; },
         661, 662, 663, 664
     );
@@ -290,13 +293,13 @@ static void patchMap_Fear() noexcept {
         gpSectors[95].floorpic = R_FlatNumForName("GRAY01");
 
         // Fix a secret door which looks odd (near the exit) when opening due to being upper unpegged
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 1041, 1058);
+        removeFlagsFromLines(ML_DONTPEGTOP, 1041, 1058);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix windows that block projectiles (rockets and plasma etc.) but which strangely allow bullets and all other things to pass.
         // These windows did not block in the original map, so removing the projectile blocking is the most faithful fix:
-        removeFlagsFromLinedefs(ML_BLOCKPRJECTILE, 1069, 1072, 1075, 1078, 1081);
+        removeFlagsFromLines(ML_BLOCKPRJECTILE, 1069, 1072, 1075, 1078, 1081);
     }
 }
 
@@ -328,7 +331,7 @@ static void patchMap_BaphometDemense() noexcept {
 
     // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 31; },
         683
     );
@@ -341,7 +344,7 @@ static void patchMap_TitanManor() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Make the main progression path more obvious and not like a well hidden secret.
         // Change the texture of the hidden door in the fireplace and unmark it as a secret to make it stand out.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 line.flags &= ~ML_SECRET;
                 gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("MARBLE05");
@@ -388,7 +391,7 @@ static void patchMap_TrappedOnTitan() noexcept {
         // Lower the pedestal once it is reached.
         gpSectors[43].tag = 5;
 
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 line.special = 36;  // W1 Floor Lower to 8 above Highest Floor
                 line.tag = 5;
@@ -404,22 +407,22 @@ static void patchMap_TrappedOnTitan() noexcept {
 static void patchMap_BlackTower() noexcept {
     if (shouldApplyMapPatches_PsyDoom()) {
         // Fix sky walls displaying over the pillars supporting a covering by the brown sludge
-        addVoidFlagToLinedefs(629, 627, 939, 624, 626, 704, 623, 622, 693, 632, 633, 680, 634, 1081, 834, 636, 637, 985);
+        addVoidFlagToLines(629, 627, 939, 624, 626, 704, 623, 622, 693, 632, 633, 680, 634, 1081, 834, 636, 637, 985);
 
         // Fix sky walls displaying over some of the tower side walls that shouldn't be there
-        addVoidFlagToLinedefs(79, 80, 105);
+        addVoidFlagToLines(79, 80, 105);
 
         // Ensure there are sky walls displaying for some of the interior windows to block external geometry
         if (shouldApplyMapPatches_GamePlay()) {
             gpSectors[189].ceilingheight = gpSectors[189].floorheight;
-            addVoidFlagToLinedefs(1126, 1152, 1159);
+            addVoidFlagToLines(1126, 1152, 1159);
         }
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
         // Remove a switch (which isn't really needed) that lowers pillars and can cause the player to get stuck.
         // These pillars obscure another switch that is used to escape from the basement area when some walls raise.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("MARBLE06");
                 line.special = 0;
@@ -441,7 +444,7 @@ static void patchMap_BlackTower() noexcept {
 static void patchMap_BloodseaKeep() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix the yellow door looking weird when opening due to the walls being unpegged (remove the unpegged flags)
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 1074, 1080, 1082);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 1074, 1080, 1082);
     }
 }
 
@@ -451,14 +454,14 @@ static void patchMap_BloodseaKeep() noexcept {
 static void patchMap_TEETH() noexcept {
     // Correct the target secret level number from '20' (map number within the episode) to '50' (global map number).
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 50; },
         304
     );
 
     if (shouldApplyMapPatches_Visual()) {
         // Hide a monster closet automap line that should be hidden
-        hideLinedefs(495);
+        hideLines(495);
     }
 }
 
@@ -485,7 +488,7 @@ static void patchMap_CrossingAcheron() noexcept {
 static void patchMap_TheImageOfEvil() noexcept {
     // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 51; },
         929, 936, 937, 938
     );
@@ -497,7 +500,7 @@ static void patchMap_TheImageOfEvil() noexcept {
 static void patchMap_BadDream() noexcept {
     // Correct the level to return to from '7' (map number within the episode) to '37' (global map number).
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 37; },
         83
     );
@@ -557,7 +560,7 @@ static void patchMap_StorageFacility() noexcept {
             183, 184
         );
 
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { gpSides[line.sidenum[0]].midtexture = -1; },
             1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083
         );
@@ -570,7 +573,7 @@ static void patchMap_StorageFacility() noexcept {
 static void patchMap_DeadZone() noexcept {
     // Correct the target secret level number from '19' (map number within the episode) to '69' (global map number).
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 69; },
         672
     );
@@ -600,16 +603,16 @@ static void patchMap_Mill() noexcept {
 static void patchMap_ShippingRespawning() noexcept {
     if (shouldApplyMapPatches_PsyDoom()) {
         // Fix some windows not showing any geometry past them due to a small completely closed sector in the middle - treat it as a void:
-        addVoidFlagToLinedefs(5, 8, 1189, 1568);
+        addVoidFlagToLines(5, 8, 1189, 1568);
 
         // Fix sky walls being rendered for some pillars outside that shouldn't have them
-        addVoidFlagToLinedefs(20, 21, 22, 23, 14, 24, 25, 26, 16, 27, 28, 29, 18, 32, 31, 30);
+        addVoidFlagToLines(20, 21, 22, 23, 14, 24, 25, 26, 16, 27, 28, 29, 18, 32, 31, 30);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix being able to get stuck outside of the level bounds if rushing forward to collect the soulsphere.
         // Don't allow the player to pass certain lines.
-        addFlagsToLinedefs(ML_BLOCKING, 60, 817, 186);
+        addFlagsToLines(ML_BLOCKING, 60, 817, 186);
 
         // Fix being able to see past the end of the sky texture in the soulsphere area - raise the walls to cover it
         modifySectors(
@@ -620,7 +623,7 @@ static void patchMap_ShippingRespawning() noexcept {
     
     if (shouldApplyMapPatches_Visual()) {
         // Fix an automap line not rendering at a computer console
-        unhideLinedefs(982);
+        unhideLines(982);
     }
 }
 
@@ -630,10 +633,10 @@ static void patchMap_ShippingRespawning() noexcept {
 static void patchMap_CentralProcessing() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a linedef in a secret area that should be hidden (all the other lines are in this area)
-        hideLinedefs(926);
+        hideLines(926);
 
         // Fix a linedef that should not be hidden on the automap (in slime, at the west of the map)
-        unhideLinedefs(1254);
+        unhideLines(1254);
     }
 }
 
@@ -643,7 +646,7 @@ static void patchMap_CentralProcessing() noexcept {
 static void patchMap_Habitat() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix the acid floor lift looking weird when moving - the lower wall should not be unpegged
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 77);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 77);
     }
 }
 
@@ -654,7 +657,7 @@ static void patchMap_MountPain() noexcept {
     if (shouldApplyMapPatches_PsyDoom()) {
         // Fix being able to see bits of geometry that shouldn't be seen through some outside windows.
         // Force the fully closed sector containing the sky to render, hence forcing a skywall to render too. Also remove its floor.
-        addVoidFlagToLinedefs(1360, 1412);
+        addVoidFlagToLines(1360, 1412);
         gpSectors[36].floorpic = -1;
     }
 
@@ -678,7 +681,7 @@ static void patchMap_MountPain() noexcept {
 static void patchMap_RiverStyx() noexcept {
     // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 71; },
         1840
     );
@@ -690,24 +693,24 @@ static void patchMap_RiverStyx() noexcept {
 static void patchMap_Pharaoh() noexcept {
     // Correct the level to return to from '11' (map number within the episode) to '61' (global map number).
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 61; },
         162, 258, 259, 429, 573, 734, 929, 964
     );
 
     // Correct the target secret level number from '20' (map number within the episode) to '70' (global map number).
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 70; },
         1323
     );
 
     if (shouldApplyMapPatches_PsyDoom()) {
         // Remove some skywalls that shouldn't be there for an outside box area
-        addVoidFlagToLinedefs(890, 910, 911, 912, 906, 907, 908, 909);
+        addVoidFlagToLines(890, 910, 911, 912, 906, 907, 908, 909);
 
         // Remove some skywalls around the ship near the exit area that shouldn't be there
-        addVoidFlagToLinedefs(1103, 293, 1091, 746, 1393);
+        addVoidFlagToLines(1103, 293, 1091, 746, 1393);
     }
 }
 
@@ -717,7 +720,7 @@ static void patchMap_Pharaoh() noexcept {
 static void patchMap_Caribbean() noexcept {
     // Correct the level to return to from '11' (map number within the episode) to '61' (global map number).
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 61; },
         662
     );
@@ -731,7 +734,7 @@ static void patchMap_WellOfSouls() noexcept {
         // Fix not being able to reach the exit again if backtracking after raising the final lift to the exit.
         // This line special would lower the lift permanently, preventing the player from reaching the exit.
         // It's not needed for anything so just remove the special:
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             590
         );
@@ -753,7 +756,7 @@ static void patchMap_Caughtyard() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix two missing textures at the entraces to one of the huts
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { gpSides[line.sidenum[0]].bottomtexture = R_TextureNumForName("WOOD06"); },
             124, 136
         );
@@ -781,7 +784,7 @@ static void patchMap_Speed() noexcept {
     
         // Fix some geometry showing through the sky.
         // Make the outer edge of sky walls void so that the one-sided sky walls draw behind it.
-        addVoidFlagToLinedefs(1123, 1124, 1126, 1127, 1128, 1129, 1136, 1137, 1138);
+        addVoidFlagToLines(1123, 1124, 1126, 1127, 1128, 1129, 1136, 1137, 1138);
     }
 }
 
@@ -791,7 +794,7 @@ static void patchMap_Speed() noexcept {
 static void patchMap_TheTwilight() noexcept {
     // Correct the target secret level number from '23' (map number within the episode) to '93' (global map number).
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 93; },
         120, 309, 911, 919
     );
@@ -858,7 +861,7 @@ static void patchMap_ImpossibleMission() noexcept {
 
         // Fix the player being able to fall into pits that cannot be climbed out of.
         // Add triggers to raise the pits if the player falls in.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 line.special = 119;     // W1 Floor Raise to Next Higher Floor
                 line.tag = 8;
@@ -887,7 +890,7 @@ static void patchMap_Bunker() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix some missing textures in a monster closet that is normally inaccessible, but which might be reached if 'turbo' mode is enabled
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("64DOOR07");
             },
@@ -902,7 +905,7 @@ static void patchMap_Bunker() noexcept {
 static void patchMap_TheSewers() noexcept {
     if (shouldApplyMapPatches_PsyDoom()) {
         // Fix sky walls that shouldn't be around the floating lights
-        addVoidFlagToLinedefs(
+        addVoidFlagToLines(
             1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308,     // Outer edges
             1434, 1435, 1436, 1437,                             // Top left light
             1438, 1439, 1440, 1441,                             // Top right light
@@ -914,7 +917,7 @@ static void patchMap_TheSewers() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix missing automap lines on the south east side of the map (in metal area with cages)
-        unhideLinedefs(715, 1135, 1051, 1195, 1053, 1056, 1190);
+        unhideLines(715, 1135, 1051, 1195, 1053, 1056, 1190);
     }
 }
 
@@ -924,7 +927,7 @@ static void patchMap_TheSewers() noexcept {
 static void patchMap_OdysseyOfNoises() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix automap lines that shouldn't be hidden
-        unhideLinedefs(187, 188, 202, 203);
+        unhideLines(187, 188, 202, 203);
     }
 }
 
@@ -934,7 +937,7 @@ static void patchMap_OdysseyOfNoises() noexcept {
 static void patchMap_Cyberden() noexcept {
     // Correct the target secret level number from '24' (map number within the episode) to '94' (global map number).
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 94; },
         729, 732, 734, 735
     );
@@ -946,7 +949,7 @@ static void patchMap_Cyberden() noexcept {
 static void patchMap_Go2It() noexcept {
     // Correct the level to return to from '10' (map number within the episode) to '80' (global map number).
     // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
-    modifyLinedefs(
+    modifyLines(
         [](line_t& line) noexcept { line.tag = 80; },
         880, 881, 882, 883
     );

@@ -5,6 +5,9 @@
 
 #include "Doom/Game/p_change.h"
 #include "Doom/Renderer/r_data.h"
+#include "MapPatcherUtils.h"
+
+using namespace MapPatcherUtils;
 
 BEGIN_NAMESPACE(MapPatches)
 
@@ -14,10 +17,10 @@ BEGIN_NAMESPACE(MapPatches)
 static void patchMap_Sheol() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix parts of the exit room which should not be mapped (like the original version)
-        hideLinedefs(181, 182, 183, 593, 830, 897, 981);
+        hideLines(181, 182, 183, 593, 830, 897, 981);
 
         // Fix a lift inside the skin building in the outdoor area looking weird when moving
-        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 1030);
+        removeFlagsFromLines(ML_DONTPEGBOTTOM, 1030);
     }
 }
 
@@ -27,7 +30,7 @@ static void patchMap_Sheol() noexcept {
 static void patchMap_PathsOfWretchedness() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix lines which should be mapped in outside lava area past the red, blue and yellow key barrier
-        unhideLinedefs(65, 189, 198, 263, 879, 1371);
+        unhideLines(65, 189, 198, 263, 879, 1371);
     }
 }
 
@@ -54,7 +57,7 @@ static void patchMap_AbaddonsVoid() noexcept {
 static void patchMap_UnspeakablePersecution() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix missing textures for a floor which raises to block off a pathway (near the start area)
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].bottomtexture = R_TextureNumForName("REDROKX1");
             },
@@ -62,12 +65,12 @@ static void patchMap_UnspeakablePersecution() noexcept {
         );
 
         // Fix a map line which should not show near the start (hell symbol)
-        hideLinedefs(733);
+        hideLines(733);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix a line which the player should be able to cross to use the teleport it bounds
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 line.special = 97;  // WR Teleport
                 line.tag = 41;
@@ -83,11 +86,11 @@ static void patchMap_UnspeakablePersecution() noexcept {
 static void patchMap_NightmareUnderworld() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a map line in the secret area with the soulsphere (near a lava pit) from being mapped
-        hideLinedefs(165);
+        hideLines(165);
 
         // Fix a door which looks weird as it opens (should not be upper unpegged).
         // This door is near the big hellish crack in the wood + skin room.
-        removeFlagsFromLinedefs(ML_DONTPEGTOP, 1494);
+        removeFlagsFromLines(ML_DONTPEGTOP, 1494);
         gpSides[gpLines[1494].sidenum[0]].rowoffset = 8 * FRACUNIT;
     }
 }
@@ -98,7 +101,7 @@ static void patchMap_NightmareUnderworld() noexcept {
 static void patchMap_Downtown() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix lines which should be mapped in the building with the rocket launcher
-        unhideLinedefs(268, 320);
+        unhideLines(268, 320);
     }
 }
 
@@ -108,10 +111,10 @@ static void patchMap_Downtown() noexcept {
 static void patchMap_IndustrialZone() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a line which should be mapped in the building with the red key
-        unhideLinedefs(110);
+        unhideLines(110);
 
         // Fix lines which should be mapped outside, near the start area
-        unhideLinedefs(397, 422, 424, 832);
+        unhideLines(397, 422, 424, 832);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
@@ -126,7 +129,7 @@ static void patchMap_IndustrialZone() noexcept {
             260
         );
 
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].rowoffset = 0;
                 line.flags |= ML_VOID;
@@ -142,7 +145,7 @@ static void patchMap_IndustrialZone() noexcept {
 static void patchMap_Betray() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a map line on the teleporter beside the exit room which should show
-        unhideLinedefs(559);
+        unhideLines(559);
     }
 }
 
@@ -152,7 +155,7 @@ static void patchMap_Betray() noexcept {
 static void patchMap_Vivisection() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix monster closet map lines which should be hidden after getting the map powerup
-        hideLinedefs(121, 163, 424, 443, 869, 897, 974);
+        hideLines(121, 163, 424, 443, 869, 897, 974);
     }
 }
 
@@ -162,7 +165,7 @@ static void patchMap_Vivisection() noexcept {
 static void patchMap_TheFarsideOfTitan() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a map line which should show near the Soulsphere on a pedestal
-        unhideLinedefs(562);
+        unhideLines(562);
     }
 }
 
@@ -179,7 +182,7 @@ static void patchMap_DantesGate() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix 2 door lines in a monster closet (which is not intended to be mapped) from appearing.
         // This small room is joined to the large circular room, at the south west corner.
-        hideLinedefs(852, 853);
+        hideLines(852, 853);
     }
 }
 
@@ -189,10 +192,10 @@ static void patchMap_DantesGate() noexcept {
 static void patchMap_Bloodflood() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a hidden map line in the monster closet in the sewers, beside the green armor
-        unhideLinedefs(400);
+        unhideLines(400);
 
         // Fix a map line for the exit portal not showing
-        addFlagsToLinedefs(ML_SECRET, 527);
+        addFlagsToLines(ML_SECRET, 527);
     }
 }
 
@@ -202,7 +205,7 @@ static void patchMap_Bloodflood() noexcept {
 static void patchMap_DerelictStation() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix some map lines showing inside a hidden monster closet attached to the room with the blue key
-        hideLinedefs(38, 649, 717, 718);
+        hideLines(38, 649, 717, 718);
     }
 }
 
@@ -215,7 +218,7 @@ static void patchMap_TheImageOfEvil() noexcept {
         gpSides[gpLines[925].sidenum[0]].midtexture = R_TextureNumForName("BROWN12");
 
         // Fix a missing map line in the intenstine maze (attached to an unmapped room)
-        addFlagsToLinedefs(ML_SECRET, 920);
+        addFlagsToLines(ML_SECRET, 920);
     }
 }
 
@@ -228,7 +231,7 @@ static void patchMap_BlackTower() noexcept {
         gpSides[gpLines[951].sidenum[1]].bottomtexture = R_TextureNumForName("MARBLE04");
 
         // Fix a map line which should not be hidden (in the small room attached to the Megasphere)
-        unhideLinedefs(760);
+        unhideLines(760);
     }
 }
 
@@ -238,7 +241,7 @@ static void patchMap_BlackTower() noexcept {
 static void patchMap_TheExpressElevatorToHell() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Hide a monster closet automap line that should be hidden (in the south room with 'plus' shaped pillbox in the middle)
-        hideLinedefs(495);
+        hideLines(495);
     }
 }
 
@@ -248,7 +251,7 @@ static void patchMap_TheExpressElevatorToHell() noexcept {
 static void patchMap_Hanger() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix map lines in the room with the Soulsphere and large pillars not showing
-        unhideLinedefs(215, 1101, 1504, 1507, 1508, 1510, 1532, 1536);
+        unhideLines(215, 1101, 1504, 1507, 1508, 1510, 1532, 1536);
     }
 }
 
@@ -258,7 +261,7 @@ static void patchMap_Hanger() noexcept {
 static void patchMap_StorageFacility() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix map lines in a hidden monster closet room sometimes showing (the room is intended to be hidden)
-        hideLinedefs(539, 479);
+        hideLines(539, 479);
     }
 }
 
@@ -274,7 +277,7 @@ static void patchMap_DeadZone() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix a line inside the secret exit room which should not show
-        hideLinedefs(649);
+        hideLines(649);
     }
 }
 
@@ -284,10 +287,10 @@ static void patchMap_DeadZone() noexcept {
 static void patchMap_ShippingRespawning() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a map line in the area with the crates not showing
-        unhideLinedefs(1625);
+        unhideLines(1625);
 
         // Fix a map line inside a monster closet which should not show, near the teleporter pads by the crates
-        hideLinedefs(500);
+        hideLines(500);
     }
 }
 
@@ -297,7 +300,7 @@ static void patchMap_ShippingRespawning() noexcept {
 static void patchMap_CentralProcessing() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a map line in a slime pit to the west of the map not showing
-        unhideLinedefs(1034);
+        unhideLines(1034);
     }
 }
 
@@ -307,13 +310,13 @@ static void patchMap_CentralProcessing() noexcept {
 static void patchMap_AdministrationCenter() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a map line showing at the east of the building which is part of a hidden room
-        hideLinedefs(1213);
+        hideLines(1213);
 
         // Fix a map line not showing in the room with the teleport leading towards the outside
-        unhideLinedefs(834);
+        unhideLines(834);
 
         // Fix a map line not showing in the outdoor area (inside the big building)
-        unhideLinedefs(600);
+        unhideLines(600);
     }
 }
 
@@ -323,7 +326,7 @@ static void patchMap_AdministrationCenter() noexcept {
 static void patchMap_MountPain() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a map line which should show in the terraced room past the brimstone maze
-        unhideLinedefs(349);
+        unhideLines(349);
     }
 }
 
@@ -335,7 +338,7 @@ static void patchMap_WellOfSouls() noexcept {
         // Fix not being able to reach the exit again if backtracking after raising the final lift to the exit.
         // This line special would lower the lift permanently, preventing the player from reaching the exit.
         // It's not needed for anything so just remove the special:
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept { line.special = 0; },
             590
         );
@@ -343,10 +346,10 @@ static void patchMap_WellOfSouls() noexcept {
 
     if (shouldApplyMapPatches_Visual()) {
         // Fix a map line not showing by the yellow key pedestal
-        unhideLinedefs(196);
+        unhideLines(196);
 
         // Fix map lines not showing for the cliff face by the bridge
-        unhideLinedefs(403, 405);
+        unhideLines(403, 405);
     }
 }
 
@@ -374,7 +377,7 @@ static void patchMap_Neurosphere() noexcept {
         // Fix being able to get stuck in the blood in the southernmost room.
         // The player can bypass a line which raises elevators/platforms (containing chaingunners) which allow escape from the blood area.
         // This bypass can be achieved by hopping up onto a half wall and bypassing the trigger line near the Super Shotgun.
-        modifyLinedefs(
+        modifyLines(
             [](line_t& line) noexcept {
                 // Fix by adding an additional 'W1 Floor Raise To Next Higher Floor' trigger which cannot be bypassed!
                 line.special = 119;
@@ -391,7 +394,7 @@ static void patchMap_Neurosphere() noexcept {
 static void patchMap_Slayer() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix map lines showing in a part of a monster closet which should be hidden (to the west of the map)
-        hideLinedefs(219, 220);
+        hideLines(219, 220);
     }
 }
 
@@ -401,7 +404,7 @@ static void patchMap_Slayer() noexcept {
 static void patchMap_Warrens() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a missing map line near the Soulsphere by the red key
-        unhideLinedefs(456);
+        unhideLines(456);
     }
 }
 
@@ -411,7 +414,7 @@ static void patchMap_Warrens() noexcept {
 static void patchMap_Go2It() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix missing map lines in the room with the grass and pillars
-        unhideLinedefs(248, 249, 250, 251);
+        unhideLines(248, 249, 250, 251);
     }
 }
 
