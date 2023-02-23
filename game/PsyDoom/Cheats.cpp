@@ -198,15 +198,19 @@ static void doOpenLevelWarpCheat() noexcept {
         return;
 
     ensureGamePaused();
-
     player_t& player = gPlayers[gCurPlayerIndex];
-    player.cheats |= CF_WARPMENU;
-    const int32_t maxCheatWarpLevel = Game::getNumMaps();
 
-    if (gGameMap > maxCheatWarpLevel) {
-        gMapNumToCheatWarpTo = maxCheatWarpLevel;
-    } else {
-        gMapNumToCheatWarpTo = gGameMap;
+    // Only modify the map number to warp to if the warp menu is not already showing.
+    // If an attempt to open the warp menu is made while we are looking at it, then just ignore the input.
+    if ((player.cheats & CF_WARPMENU) == 0) {
+        player.cheats |= CF_WARPMENU;
+        const int32_t maxCheatWarpLevel = Game::getNumMaps();
+
+        if (gGameMap > maxCheatWarpLevel) {
+            gMapNumToCheatWarpTo = maxCheatWarpLevel;
+        } else {
+            gMapNumToCheatWarpTo = gGameMap;
+        }
     }
 }
 
