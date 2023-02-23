@@ -10,6 +10,7 @@
 #include "Input.h"
 #include "IsoFileSys.h"
 #include "Network.h"
+#include "PlayerPrefs.h"
 #include "ProgArgs.h"
 #include "PsxVm.h"
 #include "Video.h"
@@ -285,6 +286,18 @@ void checkForRendererToggleInput() noexcept {
         gStatusBar.message = (bUseVulkan) ? "Vulkan Renderer." : "Classic Renderer.";
         gStatusBar.messageTicsLeft = 30;
     #endif
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Checks to see if the button to toggle between capped and uncapped framerates has been pressed.
+// Peforms the switch between framerate modes if it is pressed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void checkForUncappedFramerateToggleInput() noexcept {
+    if (Controls::isJustPressed(Controls::Binding::Toggle_UncappedFps)) {
+        PlayerPrefs::gbUncapFramerate = (!PlayerPrefs::gbUncapFramerate);
+        gStatusBar.message = (PlayerPrefs::gbUncapFramerate) ? "Uncapped FPS." : "Original FPS.";
+        gStatusBar.messageTicsLeft = 30;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

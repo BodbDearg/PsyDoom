@@ -998,17 +998,18 @@ gameaction_t MiniLoop(
         if (exitAction != ga_nothing)
             break;
 
-        // PsyDoom: allow renderer toggle and clear input events after the ticker has been called.
-        // Unless the ticker has requested that we hold onto them.
-        // Also check if the app wants to quit, because the window was closed.
+        // PsyDoom: allow renderer and uncapped framerate toggle and clear input events after the ticker has been called - unless the ticker
+        // has requested that we hold onto them.
         #if PSYDOOM_MODS
             if (!gbKeepInputEvents) {
                 Utils::checkForRendererToggleInput();
+                Utils::checkForUncappedFramerateToggleInput();
                 Input::consumeEvents();
             } else {
                 gbKeepInputEvents = false;  // Temporary request only!
             }
 
+            // Also check if the app wants to quit; this can happen when the window is closed.
             if (Input::isQuitRequested()) {
                 exitAction = ga_quitapp;
                 break;

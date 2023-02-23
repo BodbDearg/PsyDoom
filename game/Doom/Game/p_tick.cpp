@@ -673,21 +673,12 @@ gameaction_t P_Ticker() noexcept {
             return gGameAction;
         }
 
-        // PsyDoom: check for uncapped framerate toggle
-        if (Controls::isJustPressed(Controls::Binding::Toggle_UncappedFps)) {
-            PlayerPrefs::gbUncapFramerate = (!PlayerPrefs::gbUncapFramerate);
-            gStatusBar.message = (PlayerPrefs::gbUncapFramerate) ? "Uncapped FPS." : "Original FPS.";
-            gStatusBar.messageTicsLeft = 30;
-        }
+        // PsyDoom: update the frame start times for interpolation purposes and snap the player's position
+        R_SnapPlayerInterpolation();
+        R_InterpBeginPlayerFrame();
 
-        // PsyDoom: update the frame start times for interpolation and snap the player's position
-        if (PlayerPrefs::gbUncapFramerate) {
-            R_SnapPlayerInterpolation();
-            R_InterpBeginPlayerFrame();
-
-            if (gGameTic > gPrevGameTic) {
-                R_InterpBeginWorldFrame();
-            }
+        if (gGameTic > gPrevGameTic) {
+            R_InterpBeginWorldFrame();
         }
 
         // PsyDoom: fix certain sequencer music tracks in 'Final Doom' not looping correctly: if the sequencer track has ended then restart it.
@@ -876,12 +867,10 @@ void P_Start() noexcept {
         P_PlayerInitTurning();
         gbIgnoreCurrentAttack = true;   // If fire is held while the level is loading then ignore the current attack
 
-        // PsyDoom: don't interpolate the first draw frame if doing uncapped framerates
-        if (PlayerPrefs::gbUncapFramerate) {
-            R_InterpBeginPlayerFrame();
-            R_InterpBeginWorldFrame();
-            R_SnapPlayerInterpolation();
-        }
+        // PsyDoom: don't interpolate the first draw frame if we happen to be doing uncapped framerates
+        R_InterpBeginPlayerFrame();
+        R_InterpBeginWorldFrame();
+        R_SnapPlayerInterpolation();
     #endif
 
     // Shouldn't be loading anything off the CDROM during gameplay after this point

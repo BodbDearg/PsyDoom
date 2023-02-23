@@ -34,6 +34,7 @@ bool waitForCdAudioFadeOut() noexcept;
 void threadYield() noexcept;
 void onBeginUIDrawing() noexcept;
 void checkForRendererToggleInput() noexcept;
+void checkForUncappedFramerateToggleInput() noexcept;
 
 DiscFileData getDiscFileData(
     const DiscInfo& discInfo,
