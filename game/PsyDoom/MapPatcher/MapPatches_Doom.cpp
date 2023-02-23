@@ -721,6 +721,9 @@ static void patchMap_TricksAndTraps() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
+        // Fix the door texture not moving for the two gun activated doors in the octagon room with the slime pit
+        removeFlagsFromLines(ML_DONTPEGTOP, 281, 282, 286, 287);
+
         // Flag the southeast corner wall in the southeast room as secret (to display it as a solid wall on the map)
         addFlagsToLines(ML_SECRET, 263, 645, 646);
     }
