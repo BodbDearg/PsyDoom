@@ -27,9 +27,11 @@
 #include "PsyDoom/SaveAndLoad.h"
 #include "PsyDoom/SaveDataTypes.h"
 #include "PsyDoom/Utils.h"
+#include "PsyQ/LIBSPU.h"
 #include "pw_main.h"
 #include "SmallString.h"
 #include "st_main.h"
+#include "Wess/wessapi.h"
 
 #include <algorithm>
 #include <chrono>
@@ -592,6 +594,15 @@ gameaction_t LoadGameForSlot(const SaveFileSlot slot, const LoadGameContext load
         gbLoadSaveOnLevelStart = true;
         gGameMap = SaveAndLoad::getBufferedSaveMapNum();
         gStartMapOrEpisode = gGameMap;
+
+        if (loadContext == LoadGameContext::Quickload) {
+            // When quick loading to another map, kill all sounds immediately.
+            // This prevents strange (uintentional) sounds from playing when the new map's LCD files are loaded.
+            // The new LCD files would change what sounds are loaded into various parts of SPU RAM, thus alter the playing sound.
+            wess_seq_stopall();
+            LIBSPU_SpuSetKey(0, SPU_ALLCH);
+        }
+
         return ga_warped;
     }
     
