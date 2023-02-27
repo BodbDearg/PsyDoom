@@ -45,13 +45,17 @@ struct SpriteFrag {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Describes a very short 2D line, crossing over a candidate sprite spliting BSP node.
-// Used for testing whether a split can occur by colliding the line against level geometry.
+// Describes a very short line, crossing over a candidate sprite spliting BSP node.
+// Used for testing whether a sprite split can occur by colliding the line against level geometry.
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct SplitTestLine {
     float x1, z1;
     float x2, z2;
-    float y;            // At what height is the test line: used to decide whether 2-sided lines should be treated as blocking
+
+    // The bottom and top y positions of the sprite being split.
+    // Used to decide whether 2-sided lines should prevent a split or not.
+    // If too much of the sprite intersects geometry vertically then do not split.
+    float yb, yt;
 };
 
 // All of the sprite fragments to be drawn in this frame
@@ -335,14 +339,29 @@ static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine&
     if ((seg.flags & SGF_VISIBLE_COLS) == 0)
         return true;
 
-    // Treat the 2 sided seg as blocking if the split line would hit either the upper or lower walls.
-    // In all other cases allow a split to take place across this seg, even if the split test line crosses it.
+    // Get the bottom and top y values for the opening that the split will occur across
     const sector_t& frontSector = *seg.frontsector;
+    const float openingBy = RV_FixedToFloat(std::max(frontSector.floorDrawH, pBackSector->floorDrawH));
+    const float openingTy = RV_FixedToFloat(std::min(frontSector.ceilingDrawH, pBackSector->ceilingDrawH));
 
-    const float midBy = RV_FixedToFloat(std::max(frontSector.floorDrawH, pBackSector->floorDrawH));
-    const float midTy = RV_FixedToFloat(std::min(frontSector.ceilingDrawH, pBackSector->ceilingDrawH));
+    // This situation shouldn't happen in practice but if for some reason the sprite being split is zero height then disallow the split
+    const float spriteH = splitLine.yt - splitLine.yb;
 
-    return ((splitLine.y >= midBy) && (splitLine.y <= midTy));
+    if (spriteH <= 0)
+        return false;
+
+    // Compute how much of the sprite is potentially visible (vertically) after it has been obscured by the opening's volume
+    const float spriteVisibleBy = std::max(openingBy, splitLine.yb);
+    const float spriteVisibleTy = std::min(openingTy, splitLine.yt);
+    const float spriteVisibleH = spriteVisibleTy - spriteVisibleBy;
+    const float spriteVisibleRatio = spriteVisibleH / spriteH;
+
+    // Block the sprite split if too much of the vertical area of sprite intersects the opening's geometry.
+    // In all other cases allow a split to take place across this seg.
+    constexpr float MAX_INTERSECT_RATIO = 1.0f / 3.0f;
+    constexpr float MIN_VISIBLE_RATIO = 1.0f - MAX_INTERSECT_RATIO;
+
+    return (spriteVisibleRatio >= MIN_VISIBLE_RATIO);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -490,7 +509,8 @@ static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) 
                 frag.z1 * splitT1_inv + frag.z2 * splitT1,
                 frag.x1 * splitT2_inv + frag.x2 * splitT2,
                 frag.z1 * splitT2_inv + frag.z2 * splitT2,
-                (frag.yt + frag.yb) * 0.5f  // Note: make the test line be at 1/2 of the height of the sprite; splits can happen across small step ups, not large ones
+                frag.yb,
+                frag.yt
             };
 
             // Test the split line against geometry to see if this split would be allowed
