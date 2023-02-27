@@ -21,6 +21,7 @@ Here is a video showing the port in action:
 
 ## Other documents
 - [License](LICENSE)
+- [Changelist](CHANGELIST.md)
 - [Contributors](CONTRIBUTORS.md)
 
 ## Requirements
