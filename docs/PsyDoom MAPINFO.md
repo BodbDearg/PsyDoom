@@ -282,4 +282,4 @@ Internal Fields:
 ## `ClearCredits` definition
 When this definition is encountered it instructs the game to clear the current list of credit pages. You can use it to create an entirely new set of credit pages from scratch. Note: the definition doesn't have any other information associated with it, it's just a simple command/instruction:
 ```
-ClearEpisodes {}
+ClearCredits {}
