@@ -1,5 +1,6 @@
 # Changelist
 
+- [1.1.0](#110)
 - [1.0.1](#101), [1.0.0](#100)
 - [0.8.3](#083), [0.8.2](#082), [0.8.1](#081), [0.8.0](#080)
 - [0.7.4](#074), [0.7.3](#073), [0.7.2](#072), [0.7.1](#071), [0.7.0](#070)
@@ -10,6 +11,91 @@
 - [0.2.0](#020)
 - [0.1.1](#011), [0.1.0](#010)
 - [0.0.3](#003), [0.0.2](#002), [0.0.1](#001)
+
+----------------------------------------------------------------
+# 1.1.0
+
+## Feature changes & improvements
+- Added support for "GEC Master Edition Beta 4".
+- Classic renderer: add a new improved precision mode for rendering walls (enabled by default).
+    - Helps prevent textures from sliding and stretching and improves temporal stability significantly, particularly when using uncapped framerates.
+- Added a variety of new map fixes for Doom, Final Doom, and GEC Master Edition Beta 3 & 4.
+    - Demo compatibility with previous PsyDoom versions may be affected for some maps due to the changes.
+- The game now auto-pauses if the window loses focus.
+    - This feature can be turned off if needed.
+    - Auto-pause is also ignored for demo playback and recording since pause is not allowed in those scenarios.    
+- Vulkan renderer: tweak sprite splitting across subsector boundaries to try and improve the visual result of sprite ordering.
+    - Take into account how much a sprite intersects geometry vertically when deciding whether to allow a split or not.
+    - Disallow splits if the sprite intersects geometry too much.
+- Demo playback: show the intermission screen at the end if the level was completed.
+- Automap: implement opt-in extended automap coloring which shades live enemies and bonus items differently.
+    - This makes identifying remaining enemies and items easier when used with the 'Map all things' cheat.
+- Multi-display environments: make PsyDoom start the game on the display where it is launched from.
+    - Which display to use is determined by the mouse position at launch time.
+    - Also allow the start display to be manually specified, if needed.
+- Launcher: default the mod directory chooser to the currently selected mod directory.
+    - On Windows default it to the current working directory, if no valid mod directory is selected.
+- Add the option to trigger boss related specials when using the 'No monsters' cheat in singeplayer or co-op.
+    - This option allows progress past maps which require boss enemies to be killed, even when there are no monsters.
+- Added the ability for mods to use widescreen menu background assets.
+- Finale: show the Arch-vile in the cast of characters if the current game or mod has the assets for it.
+- Single player: add the option to spawn deathmatch only things (if desired).
+- Single player: add an "IDFA" cheat for "Lots Of Goodies! (No Keys)".
+- Multiplayer: allow secret maps to be selected and map selection to wrap around on the main menu.
+- Co-op: add an option to disable friendly fire.
+- Co-op: add an option to preserve some ammo after dying and respawning.
+- Co-op: add an option to preserve keys after dying and respawning.
+- Co-op: add the option to spawn deathmatch only things.
+- Deathmatch: add a frag limit option.
+- Deathmatch: add the option to disable exits if no frag limit is set.
+- Deathmatch: add the option to trigger boss related special actions upon entering a map.
+    - These are normally only possible to activate in single player, after killing all enemies of a certain type.
+- Tweaked the punctuation for some loading and saving related HUD messages.
+- Turned down the default mouse speed since it was probably too high for most users.
+- Disallow weapon switching from occurring when zooming in and out on the map.
+    - Enables the mouse wheel to be bound to both zoom in/out and weapon switch.
+- Make the Arch-Vile, SS Tropper, and Commander Keen things use the same timings as the 'GEC Master Edition (Beta 4)' project.
+    - This helps maintain demo compatibility between maps made for GEC ME Beta 4 and PsyDoom.
+- Save slots: truncate the map name if it is too long, or if it is multi-line.
+- Icon of sin: add the ability to manually specify the roster of enemies via map things with the 'MTF_SPAWN_BY_IOS' (0x100) flag.
+    - In addition to this when the IOS is using this roster, enemies will occasionally spawn with special blending and will occasionally be nightmare.
+    - This mirrors similar functionality in 'GEC Master Edition Beta 4'.
+- Made new MAPINFO additions and changes:
+    - Added the following new settings to `GameInfo`:
+        - `AllowWideOptionsBg`, `AllowWideTitleScreenFire`
+        - `TexLumpName_BACK`
+        - `TexLumpName_Inter_BACK`, `TexPalette_Inter_BACK`
+        - `TexLumpName_OptionsBG`
+        - `TexLumpName_STATUS`
+        - `TexLumpName_TITLE`, `TexLumpName_TITLE2`, `TexPalette_TITLE2`
+        - `TexPalette_TitleScreenFire`
+        - `TitleScreenCdTrackOverride`
+    - Removed the following settings from `GameInfo`:
+        - `CreditsXPos_IDCRED2`, `CreditsXPos_WMSCRED2`
+    - Added the following new settings to `Episode`:
+        - `LogoPic`, `LogoPal`, `LogoX`, `LogoYOffset`
+        - `IsHidden`
+    - Added the following new settings to `Map`:
+        - `NoIntermission`
+    - Added new `CreditsPage` and `ClearCredits` definitions.
+
+## Bug fixes
+- Fix an infinite freeze if there is no valid audio output device.
+- Arch-vile: fix a small error that might sometimes cause it to not raise corpses when it should.
+- Fix 'nightmare' style enemies resurrected by the Arch-vile not having 2x health.
+- Icon Of Sin: count spawned enemies towards the kill count if the kill count fix is enabled.
+- Status bar: fix the extension pieces for Vulkan widescreen not repeating sometimes for some extremely wide aspect ratios.
+- Fix the toggle key for uncapped framerate not working in all the same places as the renderer toggle key.
+    - This fix can be useful to keep the two settings in lockstep, if you want to toggle between the classic renderer and uncapped FPS with the same key at the same time.
+- Fixed a bug where the level timer is not properly set after loading a save from the main menu or another map.
+- Final Doom: fix unintended/stray pixels on the key card sprites when visual map patches are active.
+- Launcher: fix vertical mouse wheel inputs not being recognized when binding an input to an action.
+- Fix the player being killable while in sector special '11'.
+    - Mirror PC Doom behavior and don't allow enemies to kill the player while in this sector type.
+- Quickload: prevent strange sounds from sometimes playing when quick loading to another map.
+    - Kill all active sounds immediately before loading the new map.
+- Lua scripting: count enemies spawned via 'P_SpawnMobj' towards the total kill count, if the kill count fix is enabled.
+- Warp menu: don't reset the map number if an attempt is made to open it again while it's already showing.
 
 ----------------------------------------------------------------
 # 1.0.1
