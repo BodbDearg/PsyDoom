@@ -15,6 +15,7 @@
 #include "PsyQ/LIBGPU.h"
 
 #include <algorithm>
+#include <cstring>
 
 DrawStringLine      gDrawStringEx_lines[DRAW_STRING_EX_MAX_LINES];      // The lines for the text to be drawn by 'I_DrawStringEx'
 DrawStringMetrics   gDrawStringEx_metrics;                              // The metrics for the text to be drawn by 'I_DrawStringEx'

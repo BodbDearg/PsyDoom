@@ -209,7 +209,7 @@ void GameConstants::populate(const GameType gameType, const bool bIsDemoVersion)
 // Populates the 'demos' field according to the specified number of demos.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void GameConstants::SetNumDemos_GecMe_Beta4OrLater(const int32_t numDemos) noexcept {
-    for (int32_t i = 0; i < C_ARRAY_SIZE(demos); ++i) {
+    for (int32_t i = 0; i < (int) C_ARRAY_SIZE(demos); ++i) {
         // Default init this demo slot to begin with
         BuiltInDemoDef& demo = demos[i];
         demo = {};

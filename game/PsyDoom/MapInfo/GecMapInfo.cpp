@@ -20,6 +20,7 @@
 #include "PsyQ/LIBSPU.h"
 
 #include <algorithm>
+#include <cstring>
 
 BEGIN_NAMESPACE(GecMapInfo)
 
