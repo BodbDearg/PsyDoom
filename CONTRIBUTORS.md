@@ -9,11 +9,15 @@ PsyDoom contributors (sorted alphabetically)
     * Ensure DPI aware for correct screen resolution detection:
         https://github.com/BodbDearg/PsyDoom/pull/13
 
-* **[Ch0wW](https://github.com/BodbDearg/PsyDoom/issues/18)**
-    * Reporting co-op desync issues:
-        https://github.com/BodbDearg/PsyDoom/issues/18
+* **[cf4892](https://github.com/cf4892)**
+    * Suggestion for defaulting the start directory of the mod directory chooser:
+        https://github.com/BodbDearg/PsyDoom/issues/87
 
-* **[DoktorCranium](https://github.com/DoktorCranium)**
+* **[Chris Staples (ObsidianCarnageX12)](https://github.com/ObsidianCarnageX12)**
+    * Suggestion to add the intermission screen at the end of demo playback:
+        https://github.com/BodbDearg/PsyDoom/issues/75
+
+* **[Dr. Cranium (DoktorCranium)](https://github.com/DoktorCranium)**
     * Testing the macOS ARM build and confirming it works:
         https://github.com/BodbDearg/PsyDoom/issues/27
 
@@ -125,7 +129,7 @@ PsyDoom contributors (sorted alphabetically)
     * A very large set of patches for various maps:
         https://github.com/BodbDearg/PsyDoom/pull/63
 
-* **[getphobo](https://github.com/getphobo)**
+* **[Get Phobo (getphobo)](https://github.com/getphobo)**
     * Raised a bug about not being able to achieve 100% items on some maps due to multiple 'Computer Area Maps':
         https://github.com/BodbDearg/PsyDoom/issues/49
 
@@ -141,13 +145,21 @@ PsyDoom contributors (sorted alphabetically)
    * Author of the NO$PSX emulator and also of the NO$PSX specs, which have been extremely helpful during development:
         https://problemkaputt.de/psx-spx.htm
 
+* **[Maëllig Desmottes (Ch0wW)](https://github.com/Ch0wW)**
+    * Reporting co-op desync issues:
+        https://github.com/BodbDearg/PsyDoom/issues/18
+
 * **[minirop](https://github.com/minirop)**
     * Compile fixes for Linux:
         https://github.com/BodbDearg/PsyDoom/pull/21
 
-* **[Chris Staples (ObsidianCarnageX12)](https://github.com/ObsidianCarnageX12)**
-    * Suggestion to add the intermission screen at the end of demo playback:
-        https://github.com/BodbDearg/PsyDoom/issues/75
+* **[NightFright2k19](https://github.com/NightFright2k19)**
+    * Suggestion for widescreen support for menu backgrounds:
+        https://github.com/BodbDearg/PsyDoom/issues/60
+    * Raised an issue about bad pixels in the Final Doom STATUS lump:
+        https://github.com/BodbDearg/PsyDoom/issues/61
+    * Suggestion for punctuation consistency for quicksave/load messages:
+        https://github.com/BodbDearg/PsyDoom/issues/62
 
 * **[OpenRift412](https://github.com/OpenRift412)**
     * In-game uncapped framerate toggle suggestion:
@@ -160,6 +172,14 @@ PsyDoom contributors (sorted alphabetically)
         https://www.doomworld.com/forum/topic/38608-the-console-doom-hacking-project-console-specs
     * Doom64-EX source code (DOOM 64 was based on PSX DOOM, thus can serve as a reference point for it):
         https://github.com/svkaiser/Doom64EX
+
+* **[SoddenCub71](https://github.com/SoddenCub71)**
+    * Suggestion for color coded things on the automap:
+        https://github.com/BodbDearg/PsyDoom/issues/65
+    * Raised issues about automap pan & zoom:
+        https://github.com/BodbDearg/PsyDoom/issues/66
+    * Raised a bug about the level timer resetting:
+        https://github.com/BodbDearg/PsyDoom/issues/69
 
 * **[ts-miller](https://github.com/ts-miller)**
     * Various multiplayer quality of life improvements:
