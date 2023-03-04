@@ -28,12 +28,45 @@ END_DISABLE_HEADER_WARNINGS
 
 #include <cstdlib>
 
+#if WIN32
+    #include <filesystem>
+#endif
+
 BEGIN_NAMESPACE(Launcher)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // The PsyDoom logo in .xpm format
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "Resources/Generic/Launcher_Logo.xpm"
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: sets the initial directory for a directory chooser.
+// Uses it's associated input field to decide where the starting point should be.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void setDirChooserInitialDir(Fl_Native_File_Chooser& dirChooser, Fl_Input& dirInput) noexcept {
+    // If there is a directory already specified by the associated input field then use that
+    const char* const inputDir = dirInput.value();
+    const bool bHaveInputDir = (inputDir && inputDir[0]);
+
+    if (bHaveInputDir) {
+        dirChooser.directory(inputDir);
+    }
+
+    // If there is no directory set for the input field or it does not exist then use the current working directory as a
+    // default starting point on Windows (only). Note that we don't do this logic on macOS or Linux because PsyDoom might
+    // be running within a sandbox for those environments and hence not have a working directory that makes sense to use.
+    #if WIN32
+    {
+        const bool bIsInputDirValid = (bHaveInputDir && std::filesystem::is_directory(inputDir));
+
+        if (!bIsInputDirValid) {
+            // Use the current working directory as the initial starting dir
+            const std::filesystem::path curWorkingDir = std::filesystem::current_path();
+            dirChooser.directory(curWorkingDir.string().c_str());
+        }
+    }
+    #endif
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Asks the user if it's desirable to reset the chosen config section and performs the reset if confirmed
@@ -227,6 +260,7 @@ static void makeModDataDirSelector(Tab_Launcher& tab, const int lx, const int rx
             const auto pFileChooser = std::make_unique<Fl_Native_File_Chooser>();
             pFileChooser->type(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
             pFileChooser->title("Choose a directory containing files for a PsyDoom mod");
+            setDirChooserInitialDir(*pFileChooser, *tab.pInput_dataDir);
 
             if ((pFileChooser->show() == 0) && (pFileChooser->count() == 1)) {
                 tab.pInput_dataDir->value(pFileChooser->filename());
