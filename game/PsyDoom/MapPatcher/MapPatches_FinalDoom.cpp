@@ -486,6 +486,25 @@ static void patchMap_Heck() noexcept {
 static void patchMap_Aztec() noexcept {
     applyOriginalMapCommonPatches();
 
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Close up dummy sectors in the glowing floor room and add the required upper textures for this change
+        modifySectors(
+            [](sector_t& sector) noexcept { sector.ceilingheight = sector.floorheight; },
+            55, 60
+        );
+
+        modifyLines(
+            [](line_t& line) noexcept { gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("ROCK09"); },
+            199, 1203, 194, 1206
+        );
+
+        // Close up dummy sectors in the large circular southeast room (with the Arachnotrons)
+        modifySectors(
+            [](sector_t& sector) noexcept { sector.ceilingheight = sector.floorheight; },
+            119, 120, 131, 132, 140, 149, 153, 154
+        );
+    }
+
     if (shouldApplyMapPatches_Visual()) {
         // Fix textures not moving on the monster closet door in the glowing floor room
         removeFlagsFromLines(ML_DONTPEGTOP, 196, 197, 225, 226);
