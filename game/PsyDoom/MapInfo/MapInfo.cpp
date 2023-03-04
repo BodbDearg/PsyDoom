@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <string>
 #include <memory>
 
 BEGIN_NAMESPACE(MapInfo)
