@@ -9,10 +9,6 @@ PsyDoom contributors (sorted alphabetically)
     * Ensure DPI aware for correct screen resolution detection:
         https://github.com/BodbDearg/PsyDoom/pull/13
 
-* **[cf4892](https://github.com/cf4892)**
-    * Suggestion for defaulting the start directory of the mod directory chooser:
-        https://github.com/BodbDearg/PsyDoom/issues/87
-
 * **[Chris Staples (ObsidianCarnageX12)](https://github.com/ObsidianCarnageX12)**
     * Suggestion to add the intermission screen at the end of demo playback:
         https://github.com/BodbDearg/PsyDoom/issues/75
@@ -128,6 +124,8 @@ PsyDoom contributors (sorted alphabetically)
         https://github.com/BodbDearg/PsyDoom/issues/79
     * A very large set of patches for various maps:
         https://github.com/BodbDearg/PsyDoom/pull/63
+    * Suggestion for defaulting the start directory of the mod directory chooser:
+        https://github.com/BodbDearg/PsyDoom/issues/87
 
 * **[Get Phobo (getphobo)](https://github.com/getphobo)**
     * Raised a bug about not being able to achieve 100% items on some maps due to multiple 'Computer Area Maps':
