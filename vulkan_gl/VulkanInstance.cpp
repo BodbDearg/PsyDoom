@@ -133,8 +133,10 @@ bool VulkanInstance::init(SDL_Window* const pSdlWindow) noexcept {
     mVkFuncs.loadInstanceFuncs(mVkInstance);
 
     // Enable validation layer reporting if we can in debug builds so we can get messages about invalid API usage
-    if (bTryEnableValidationLayers && mVkFuncs.vkCreateDebugReportCallbackEXT) {
-        enableValidationLayerReporting();
+    if (bTryEnableValidationLayers) {
+        if (mVkFuncs.vkCreateDebugReportCallbackEXT) {
+            enableValidationLayerReporting();
+        }
     }
 
     // Query What physical devices are there to finish up

@@ -14,7 +14,6 @@ static VkFormat findFirstMatchingFormat(
     const VkPhysicalDevice vkPhysicalDevice,
     const VkFormat* const pFormats,
     const size_t numFormats,
-    const VkFormatFeatureFlags requiredFeatureFlags,
     const T& areFormatPropsOk
 ) noexcept {
     ASSERT(pFormats || (numFormats == 0));
@@ -167,7 +166,6 @@ VkFormat PhysicalDevice::findFirstSupportedLinearTilingFormat(
         mVkPhysicalDevice,
         pFormats,
         numFormats,
-        requiredFeatureFlags,
         [&](const VkFormatProperties& props) noexcept -> bool {
             return ((props.linearTilingFeatures & requiredFeatureFlags) == requiredFeatureFlags);
         }
@@ -184,7 +182,6 @@ VkFormat PhysicalDevice::findFirstSupportedOptimalTilingFormat(
         mVkPhysicalDevice,
         pFormats,
         numFormats,
-        requiredFeatureFlags,
         [&](const VkFormatProperties& props) noexcept -> bool {
             return ((props.optimalTilingFeatures & requiredFeatureFlags) == requiredFeatureFlags);
         }
@@ -201,7 +198,6 @@ VkFormat PhysicalDevice::findFirstSupportedBufferFormat(
         mVkPhysicalDevice,
         pFormats,
         numFormats,
-        requiredFeatureFlags,
         [&](const VkFormatProperties& props) noexcept -> bool {
             return ((props.bufferFeatures & requiredFeatureFlags) == requiredFeatureFlags);
         }
