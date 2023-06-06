@@ -37,8 +37,8 @@ void initCore(Core& core, const uint16_t ramPixelW, const uint16_t ramPixelH) no
     core.pRam = new std::uint16_t[(size_t) ramPixelW * ramPixelH];
     std::memset(core.pRam, 0, sizeof(uint16_t) * ramPixelW * ramPixelH);    // Zero init VRAM
 
-    core.ramPixelW = nextPow2(ramPixelW);
-    core.ramPixelH = nextPow2(ramPixelH);
+    core.ramPixelW = (uint16_t) nextPow2(ramPixelW);
+    core.ramPixelH = (uint16_t) nextPow2(ramPixelH);
     core.ramXMask = ramPixelW - 1;
     core.ramYMask = ramPixelH - 1;
 
@@ -240,9 +240,9 @@ void clearRect(Core& core, const Color16 color, const uint16_t x, const uint16_t
     const uint16_t endX = (uint16_t) std::min(x + w, (int32_t) ramPixelW);
     const uint16_t endY = (uint16_t) std::min(y + h, (int32_t) ramPixelH);
 
-    for (uint16_t y = begY; y < endY; ++y) {
-        for (uint16_t x = begX; x < endX; ++x) {
-            pRam[(uint32_t) y * ramPixelW + x] = color;
+    for (uint16_t curY = begY; curY < endY; ++curY) {
+        for (uint16_t curX = begX; curX < endX; ++curX) {
+            pRam[(uint32_t) curY * ramPixelW + curX] = color;
         }
     }
 }
@@ -368,8 +368,8 @@ static void draw(Core& core, const DrawRect& rect) noexcept {
         begY = core.drawAreaTy;
     }
 
-    const int16_t endX = std::min(rectTx + (int16_t) rect.w, (int16_t) core.drawAreaRx + 1);
-    const int16_t endY = std::min(rectTy + (int16_t) rect.h, (int16_t) core.drawAreaBy + 1);
+    const int16_t endX = (int16_t) std::min((int) rectTx + rect.w, core.drawAreaRx + 1);
+    const int16_t endY = (int16_t) std::min((int) rectTy + rect.h, core.drawAreaBy + 1);
 
     // If we are in flat colored mode then decide the foreground color for every pixel in the rectangle
     const Color24F rectColor = rect.color;
@@ -501,8 +501,8 @@ void draw(Core& core, const DrawLine& line) noexcept {
     const BlendMode blendMode = core.blendMode;
 
     for (int32_t a = a1; a <= a2; ++a) {
-        const int32_t x = (bLineIsSteep) ? b : a;
-        const int32_t y = (bLineIsSteep) ? a : b;
+        const uint16_t x = (uint16_t)((bLineIsSteep) ? b : a);
+        const uint16_t y = (uint16_t)((bLineIsSteep) ? a : b);
 
         if (isPixelInDrawArea(core, x, y)) {
             const Color16 color = (bBlend) ? colorBlend(vramReadU16(core, x, y), lineColor, blendMode) : lineColor;

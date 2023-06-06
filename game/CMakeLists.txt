@@ -568,7 +568,6 @@ if (COMPILER_MSVC)
     # Warnings
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4102)     # Disable: no unreferenced label warnings
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4146)     # Disable: negating unsigned integer
-    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4702)     # Disable: unreachable code
 endif()
     
 # Compile options used across all PsyDoom projects
