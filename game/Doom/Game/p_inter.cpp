@@ -935,6 +935,9 @@ void P_KillMobj(mobj_t* const pKiller, mobj_t& target) noexcept {
         case MT_SHOTGUY:    dropItemType = MT_SHOTGUN;  break;
         case MT_POSSESSED:  dropItemType = MT_CLIP;     break;
         case MT_CHAINGUY:   dropItemType = MT_CHAINGUN; break;
+    #if PSYDOOM_MODS
+        case MT_WOLFSS:     dropItemType = MT_CLIP;     break;
+    #endif
 
         default:
             break;

@@ -131,6 +131,10 @@ PsyDoom contributors (sorted alphabetically)
     * Raised a bug about not being able to achieve 100% items on some maps due to multiple 'Computer Area Maps':
         https://github.com/BodbDearg/PsyDoom/issues/49
 
+* **[GMANRULES2009](https://github.com/GMANRULES2009)**
+    * Reported a bug about the Wolfenstein SS enemy not dropping ammo clips:
+        https://github.com/BodbDearg/PsyDoom/commit/d01e8e0bc171386469ee23f22dc5e9e8d01d7119#commitcomment-106056326
+
 * **[j0r9](https://github.com/j0r9)**
     * Suggestion to interpolate weapon bobbing:
         https://github.com/BodbDearg/PsyDoom/issues/2
