@@ -502,7 +502,7 @@ if (PLATFORM_WINDOWS)
     set(GENERATED_SOURCE_FILES
         "${CMAKE_CURRENT_BINARY_DIR}/version.generated.rc"
     )
-elseif(PLATFORM_MAC)
+elseif (PLATFORM_MAC)
     # macOS
     list(APPEND SOURCE_FILES
         "Main_Mac.mm"
@@ -569,13 +569,10 @@ if (COMPILER_MSVC)
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4102)     # Disable: no unreferenced label warnings
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4146)     # Disable: negating unsigned integer
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4702)     # Disable: unreachable code
-    target_compile_options(${GAME_TGT_NAME} PUBLIC /W4)         # Enable all warnings (except the ones disabled above)
-
-    # MSVC: Don't complain about using regular 'std::fopen()' etc.
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -D_CRT_SECURE_NO_WARNINGS)
-else()
-    add_common_target_compile_options(${GAME_TGT_NAME})
 endif()
+    
+# Compile options used across all PsyDoom projects
+add_psydoom_common_target_compile_options(${GAME_TGT_NAME})
 
 # Clang or GCC specific
 if (COMPILER_CLANG OR COMPILER_GCC)

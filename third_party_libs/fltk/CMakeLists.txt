@@ -489,6 +489,7 @@ endif()
 add_library(${FLTK_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
+add_common_target_compile_options(${FLTK_TGT_NAME})
 include_directories(${INCLUDE_PATHS})
 target_include_directories(${FLTK_TGT_NAME} INTERFACE ${EXPORTED_INCLUDE_PATHS})
 target_compile_definitions(${FLTK_TGT_NAME} PUBLIC -DFL_LIBRARY=1)

@@ -40,5 +40,5 @@ set(INCLUDE_PATHS
 add_library(${REVERSING_COMMON_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
-add_common_target_compile_options(${REVERSING_COMMON_TGT_NAME})
+add_psydoom_common_target_compile_options(${REVERSING_COMMON_TGT_NAME})
 target_include_directories(${REVERSING_COMMON_TGT_NAME} PUBLIC INTERFACE ${INCLUDE_PATHS})

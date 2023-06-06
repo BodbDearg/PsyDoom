@@ -69,6 +69,7 @@ set(OTHER_FILES
 add_library(${LUA_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
+add_common_target_compile_options(${LUA_TGT_NAME})
 include_directories(${SRC_DIR})
 target_include_directories(${LUA_TGT_NAME} INTERFACE ${SRC_DIR})
 

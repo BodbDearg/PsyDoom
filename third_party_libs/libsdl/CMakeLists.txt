@@ -437,6 +437,7 @@ endif()
 add_library(${LIBSDL_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
+add_common_target_compile_options(${LIBSDL_TGT_NAME})
 include_directories(${INCLUDE_PATHS})
 target_include_directories(${LIBSDL_TGT_NAME} INTERFACE ${EXPORTED_INCLUDE_PATHS})
 target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DSDL_LEAN_AND_MEAN=1)

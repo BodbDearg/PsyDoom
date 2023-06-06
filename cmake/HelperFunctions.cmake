@@ -19,9 +19,24 @@ function(setup_source_groups SOURCE_FILES OTHER_FILES)
 endfunction()
 
 #-----------------------------------------------------------------------------------------------------------------------
-# Add common target compile options for all projects
+# Add common compile options shared by all targets (both PsyDoom specific and third party).
 #-----------------------------------------------------------------------------------------------------------------------
 function(add_common_target_compile_options TARGET_NAME)
+    # MSVC: Enable multi-core compilation
+    if (COMPILER_MSVC)
+        target_compile_options(${TARGET_NAME} PRIVATE /MP)
+    endif()
+endfunction()
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Add compile options used by all targets specific to the PsyDoom project.
+# 
+# Note: this function is NOT called for third party libraries.
+# For third party code only 'add_common_target_compile_options()' is used.
+#-----------------------------------------------------------------------------------------------------------------------
+function(add_psydoom_common_target_compile_options TARGET_NAME)
+    add_common_target_compile_options(${TARGET_NAME})
+
     # Enable a very strict level of warnings
     if (COMPILER_MSVC)    
         target_compile_options(${TARGET_NAME} PRIVATE /W4)                  # Enable all warnings
