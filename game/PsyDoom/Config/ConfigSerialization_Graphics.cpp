@@ -66,6 +66,18 @@ void initCfgSerialization_Graphics() noexcept {
         gOutputDisplayIndex,
         -1
     );
+
+    cfg.exclusiveFullscreenMode = makeConfigField(
+        "ExclusiveFullscreenMode",
+        "If fullscreen is enabled, whether to use an exclusive ('real') fullscreen mode instead of 'faking'\n"
+        "it via a screen sized borderless window.\n"
+        "\n"
+        "Exclusive fullscreen mode may offer very small performance benefits but will not handle overlays\n"
+        "or task switching as well as a borderless window. In most cases it is probably preferable to leave\n"
+        "this setting disabled.",
+        gbExclusiveFullscreenMode,
+        false
+    );
     
     cfg.antiAliasingMultisamples = makeConfigField(
         "AntiAliasingMultisamples",

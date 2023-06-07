@@ -131,7 +131,12 @@ static Uint32 getSdlWindowCreateFlags() noexcept {
         SDL_WINDOW_MOUSE_CAPTURE
     );
 
-    windowCreateFlags |= (Config::gbFullscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE;
+    if (Config::gbFullscreen) {
+        windowCreateFlags |= (Config::gbExclusiveFullscreenMode) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_FULLSCREEN_DESKTOP;
+    } else {
+        windowCreateFlags |= SDL_WINDOW_RESIZABLE;
+    }
+
     windowCreateFlags |= gpVideoBackend->getSdlWindowCreateFlags();
     return windowCreateFlags;
 }

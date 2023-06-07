@@ -186,6 +186,8 @@ PsyDoom contributors (sorted alphabetically)
         https://github.com/BodbDearg/PsyDoom/issues/66
     * Raised a bug about the level timer resetting:
         https://github.com/BodbDearg/PsyDoom/issues/69
+    * Identified the need for separate 'borderless windowed' vs 'exclusive' fullscreen modes:
+        https://github.com/BodbDearg/PsyDoom/issues/90
 
 * **[ts-miller](https://github.com/ts-miller)**
     * Various multiplayer quality of life improvements:

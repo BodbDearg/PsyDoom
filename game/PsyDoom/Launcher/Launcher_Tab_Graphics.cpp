@@ -131,49 +131,56 @@ static void makeOutputOptionsSection(const int x, const int y) noexcept {
 
     // Fullscreen toggle
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 150, 30, "  Fullscreen");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 120, 30, "  Fullscreen");
         bindConfigField<Config::gbFullscreen, Config::gbNeedSave_Graphics>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Graphics.fullscreen.comment);
     }
 
     // Vsync toggle
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Enable vsync");
+        const auto pCheck = makeFl_Check_Button(x + 150, y + 40, 120, 30, "  Enable vsync");
         bindConfigField<Config::gbEnableVSync, Config::gbNeedSave_Graphics>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Graphics.enableVSync.comment);
     }
 
     // Output resolution: width
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 110, 80, 26, "Resolution: width");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 80, 80, 26, "Resolution: width");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Graphics.outputResolutionW.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 200, y + 110, 80, 26);
+        const auto pInput = new Fl_Int_Input(x + 200, y + 80, 80, 26);
         bindConfigField<Config::gOutputResolutionW, Config::gbNeedSave_Graphics>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
 
     // Output resolution: height
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 140, 80, 26, "Resolution: height");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 110, 80, 26, "Resolution: height");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Graphics.outputResolutionW.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 200, y + 140, 80, 26);
+        const auto pInput = new Fl_Int_Input(x + 200, y + 110, 80, 26);
         bindConfigField<Config::gOutputResolutionH, Config::gbNeedSave_Graphics>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
 
     // Output display index
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 170, 80, 26, "Output display index");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 140, 80, 26, "Output display index");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Graphics.outputDisplayIndex.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 200, y + 170, 80, 26);
+        const auto pInput = new Fl_Int_Input(x + 200, y + 140, 80, 26);
         bindConfigField<Config::gOutputDisplayIndex, Config::gbNeedSave_Graphics>(*pInput);
         pInput->tooltip(pLabel->tooltip());
+    }
+
+    // Exclusive fullscreen mode toggle
+    {
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 170, 120, 30, "  Exclusive fullscreen mode");
+        bindConfigField<Config::gbExclusiveFullscreenMode, Config::gbNeedSave_Graphics>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Graphics.exclusiveFullscreenMode.comment);
     }
 }
 
