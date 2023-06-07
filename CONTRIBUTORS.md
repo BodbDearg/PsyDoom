@@ -9,6 +9,10 @@ PsyDoom contributors (sorted alphabetically)
     * Ensure DPI aware for correct screen resolution detection:
         https://github.com/BodbDearg/PsyDoom/pull/13
 
+* **[Bendy-Gaming](https://github.com/Bendy-Gaming)**
+    * Reported an issue with saving data when the current Windows username contains Unicode characters:
+        https://github.com/BodbDearg/PsyDoom/issues/93
+
 * **[Chris Staples (ObsidianCarnageX12)](https://github.com/ObsidianCarnageX12)**
     * Suggestion to add the intermission screen at the end of demo playback:
         https://github.com/BodbDearg/PsyDoom/issues/75

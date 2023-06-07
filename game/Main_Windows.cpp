@@ -1,6 +1,7 @@
 ﻿#include "Doom/psx_main.h"
 #include "PsyDoom/Launcher/Launcher.h"
 
+#include <clocale>
 #include <memory>
 #include <string>
 #include <vector>
@@ -117,6 +118,9 @@ int WINAPI wWinMain(
     const PWSTR lpCmdLine,
     [[maybe_unused]] const int nShowCmd
 ) {
+    // Interpret 'char*' strings as UTF-8 for 'fopen' etc.
+    setlocale(LC_ALL, "en_US.UTF-8");
+
     // In debug builds allocate a console window also and redirect the standard streams to it
     #if !NDEBUG
         openDebugConsoleWindow();
@@ -125,6 +129,7 @@ int WINAPI wWinMain(
     // Get the 'main' function arguments in standard C format and then run the game
     const Args args = getCmdLineArgs(lpCmdLine);
     
+    // Run the game!
     #if PSYDOOM_LAUNCHER
         return Launcher::launcherMain((int) args.argv.size(), args.argv.data());
     #else
