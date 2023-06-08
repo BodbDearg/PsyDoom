@@ -60,10 +60,19 @@ bool Swapchain::init(
         }
     });
 
+    // Early out and don't attempt to recreate the Swapchain if the window is currently minimized.
+    // On Windows this avoids excessive registry access while the window is minimized.
+    // The excessive registry access was caused by constant querying of device surface caps here each frame.
+    // Since the surface image extent will be zero sized anyway in this situation, we can just exit early.
+    const vgl::WindowSurface& winSurface = *device.getWindowSurface();
+
+    if (SDL_GetWindowFlags(winSurface.getSdlWindow()) & SDL_WINDOW_MINIMIZED)
+        return false;
+
     // Firstly query the device surface capabilities
     mpDevice = &device;
 
-    if (!mDeviceSurfaceCaps.query(*device.getPhysicalDevice(), *device.getWindowSurface())) {
+    if (!mDeviceSurfaceCaps.query(*device.getPhysicalDevice(), winSurface)) {
         ASSERT_FAIL("Failed to query device surface capabilities!");
         return false;
     }
