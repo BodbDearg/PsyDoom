@@ -1,8 +1,8 @@
-// sol2
+// sol3
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -32,22 +32,22 @@
 
 namespace sol {
 	namespace detail {
-		struct direct_error_tag { };
-		const auto direct_error = direct_error_tag {};
+		struct direct_error_tag {};
+		const auto direct_error = direct_error_tag{};
 
 		struct error_result {
 			int results;
 			const char* format_string;
-			std::array<const char*, 4> argument_strings;
+			std::array<const char*, 4> args_strings;
 
 			error_result() : results(0), format_string(nullptr) {
 			}
 
-			error_result(int results_) : results(results_), format_string(nullptr) {
+			error_result(int results) : results(results), format_string(nullptr) {
 			}
 
-			error_result(const char* format_string_, const char* first_message_) : results(0), format_string(format_string_), argument_strings() {
-				argument_strings[0] = first_message_;
+			error_result(const char* fmt, const char* msg) : results(0), format_string(fmt) {
+				args_strings[0] = msg;
 			}
 		};
 
@@ -55,7 +55,7 @@ namespace sol {
 			if (er.format_string == nullptr) {
 				return er.results;
 			}
-			return luaL_error(L, er.format_string, er.argument_strings[0], er.argument_strings[1], er.argument_strings[2], er.argument_strings[3]);
+			return luaL_error(L, er.format_string, er.args_strings[0], er.args_strings[1], er.args_strings[2], er.args_strings[3]);
 		}
 	} // namespace detail
 

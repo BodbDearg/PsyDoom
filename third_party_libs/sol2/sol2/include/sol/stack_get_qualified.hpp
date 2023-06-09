@@ -1,8 +1,8 @@
-// sol2
+// sol3
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -26,12 +26,15 @@
 
 #include <sol/stack_get_unqualified.hpp>
 
-namespace sol { namespace stack {
+namespace sol {
+namespace stack {
 
 	// There are no more enable_ifs that can be used here,
 	// so this is just for posterity, I guess?
 	// maybe I'll fill this file in later.
 
-}} // namespace sol::stack
+}
+} // namespace sol::stack
 
 #endif // SOL_STACK_QUALIFIED_GET_HPP
+

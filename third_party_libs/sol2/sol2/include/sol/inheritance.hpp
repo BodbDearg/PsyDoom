@@ -1,8 +1,8 @@
-// sol2
+// sol3
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -30,7 +30,7 @@
 
 namespace sol {
 	template <typename... Args>
-	struct base_list { };
+	struct base_list {};
 	template <typename... Args>
 	using bases = base_list<Args...>;
 
@@ -38,7 +38,7 @@ namespace sol {
 	const auto base_classes = base_classes_tag();
 
 	template <typename... Args>
-	struct is_to_stringable<base_list<Args...>> : std::false_type { };
+	struct is_to_stringable<base_list<Args...>> : std::false_type {};
 
 	namespace detail {
 
@@ -79,7 +79,7 @@ namespace sol {
 				return ti == usertype_traits<T>::qualified_name() || type_check_bases(bases_t(), ti);
 			}
 
-			template <typename... Bases>
+			template <typename ...Bases>
 			static bool type_check_with(const string_view& ti) {
 				return ti == usertype_traits<T>::qualified_name() || type_check_bases(types<Bases...>(), ti);
 			}
@@ -91,8 +91,7 @@ namespace sol {
 			template <typename Base, typename... Args>
 			static void* type_cast_bases(types<Base, Args...>, T* data, const string_view& ti) {
 				// Make sure to convert to T first, and then dynamic cast to the proper type
-				return ti != usertype_traits<Base>::qualified_name() ? type_cast_bases(types<Args...>(), data, ti)
-				                                                     : static_cast<void*>(static_cast<Base*>(data));
+				return ti != usertype_traits<Base>::qualified_name() ? type_cast_bases(types<Args...>(), data, ti) : static_cast<void*>(static_cast<Base*>(data));
 			}
 
 			static void* type_cast(void* voiddata, const string_view& ti) {
@@ -114,7 +113,7 @@ namespace sol {
 			template <typename U, typename Base, typename... Args>
 			static int type_unique_cast_bases(types<Base, Args...>, void* source_data, void* target_data, const string_view& ti) {
 				using uu_traits = unique_usertype_traits<U>;
-				using base_ptr = typename uu_traits::template rebind_actual_type<Base>;
+				using base_ptr = typename uu_traits::template rebind_base<Base>;
 				string_view base_ti = usertype_traits<Base>::qualified_name();
 				if (base_ti == ti) {
 					if (target_data != nullptr) {
@@ -130,10 +129,11 @@ namespace sol {
 
 			template <typename U>
 			static int type_unique_cast(void* source_data, void* target_data, const string_view& ti, const string_view& rebind_ti) {
-				if constexpr (is_actual_type_rebindable_for_v<U>) {
-					using rebound_actual_type = unique_usertype_rebind_actual_t<U>;
-					using maybe_bases_or_empty = meta::conditional_t<std::is_void_v<rebound_actual_type>, types<>, bases_t>;
-					string_view this_rebind_ti = usertype_traits<rebound_actual_type>::qualified_name();
+				typedef unique_usertype_traits<U> uu_traits;
+				if constexpr (is_base_rebindable_v<uu_traits>) {
+					typedef typename uu_traits::template rebind_base<void> rebind_t;
+					typedef meta::conditional_t<std::is_void<rebind_t>::value, types<>, bases_t> cond_bases_t;
+					string_view this_rebind_ti = usertype_traits<rebind_t>::qualified_name();
 					if (rebind_ti != this_rebind_ti) {
 						// this is not even of the same unique type
 						return 0;
@@ -143,7 +143,7 @@ namespace sol {
 						// direct match, return 1
 						return 1;
 					}
-					return type_unique_cast_bases<U>(maybe_bases_or_empty(), source_data, target_data, ti);
+					return type_unique_cast_bases<U>(cond_bases_t(), source_data, target_data, ti);
 				}
 				else {
 					(void)rebind_ti;
@@ -159,10 +159,11 @@ namespace sol {
 			template <typename U, typename... Bases>
 			static int type_unique_cast_with(void* source_data, void* target_data, const string_view& ti, const string_view& rebind_ti) {
 				using uc_bases_t = types<Bases...>;
-				if constexpr (is_actual_type_rebindable_for_v<U>) {
-					using rebound_actual_type = unique_usertype_rebind_actual_t<U>;
-					using cond_bases_t = meta::conditional_t<std::is_void_v<rebound_actual_type>, types<>, uc_bases_t>;
-					string_view this_rebind_ti = usertype_traits<rebound_actual_type>::qualified_name();
+				typedef unique_usertype_traits<U> uu_traits;
+				if constexpr (is_base_rebindable_v<uu_traits>) {
+					using rebind_t = typename uu_traits::template rebind_base<void>;
+					using cond_bases_t = meta::conditional_t<std::is_void<rebind_t>::value, types<>, uc_bases_t>;
+					string_view this_rebind_ti = usertype_traits<rebind_t>::qualified_name();
 					if (rebind_ti != this_rebind_ti) {
 						// this is not even of the same unique type
 						return 0;

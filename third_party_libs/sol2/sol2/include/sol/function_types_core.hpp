@@ -1,8 +1,8 @@
-// sol2
+// sol3 
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -29,7 +29,8 @@
 
 #include <memory>
 
-namespace sol { namespace function_detail {
+namespace sol {
+namespace function_detail {
 	template <typename Fx, int start = 1, bool is_yielding = false>
 	int call(lua_State* L) {
 		Fx& fx = stack::get<user<Fx>>(L, upvalue_index(start));
@@ -41,6 +42,7 @@ namespace sol { namespace function_detail {
 			return nr;
 		}
 	}
-}} // namespace sol::function_detail
+}
+} // namespace sol::function_detail
 
 #endif // SOL_FUNCTION_TYPES_CORE_HPP

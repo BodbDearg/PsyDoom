@@ -1,8 +1,8 @@
-// sol2
+// sol3 
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -30,23 +30,25 @@
 namespace sol {
 	struct stack_proxy_base : public proxy_base<stack_proxy_base> {
 	private:
-		lua_State* m_L;
-		int m_index;
+		lua_State* L;
+		int index;
 
 	public:
-		stack_proxy_base() : m_L(nullptr), m_index(0) {
+		stack_proxy_base()
+			: L(nullptr), index(0) {
 		}
-		stack_proxy_base(lua_State* L_, int index_) : m_L(L_), m_index(index_) {
+		stack_proxy_base(lua_State* L, int index)
+			: L(L), index(index) {
 		}
 
 		template <typename T>
 		decltype(auto) get() const {
-			return stack::get<T>(m_L, stack_index());
+			return stack::get<T>(L, stack_index());
 		}
 
 		template <typename T>
 		bool is() const {
-			return stack::check<T>(m_L, stack_index());
+			return stack::check<T>(L, stack_index());
 		}
 
 		template <typename T>
@@ -59,34 +61,34 @@ namespace sol {
 		}
 
 		int push() const {
-			return push(m_L);
+			return push(L);
 		}
 
-		int push(lua_State* L_) const {
-			lua_pushvalue(L_, m_index);
+		int push(lua_State* Ls) const {
+			lua_pushvalue(Ls, index);
 			return 1;
 		}
 
 		lua_State* lua_state() const {
-			return m_L;
+			return L;
 		}
 		int stack_index() const {
-			return m_index;
+			return index;
 		}
 	};
 
 	namespace stack {
 		template <>
 		struct unqualified_getter<stack_proxy_base> {
-			static stack_proxy_base get(lua_State* L_, int index_ = -1) {
-				return stack_proxy_base(L_, index_);
+			static stack_proxy_base get(lua_State* L, int index = -1) {
+				return stack_proxy_base(L, index);
 			}
 		};
 
 		template <>
 		struct unqualified_pusher<stack_proxy_base> {
-			static int push(lua_State*, const stack_proxy_base& proxy_reference) {
-				return proxy_reference.push();
+			static int push(lua_State*, const stack_proxy_base& ref) {
+				return ref.push();
 			}
 		};
 	} // namespace stack

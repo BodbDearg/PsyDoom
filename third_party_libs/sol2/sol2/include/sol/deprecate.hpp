@@ -1,8 +1,8 @@
-// sol2
+// sol3 
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -34,11 +34,13 @@
 #endif // compilers
 #endif // SOL_DEPRECATED
 
-namespace sol { namespace detail {
+namespace sol {
+namespace detail {
 	template <typename T>
 	struct SOL_DEPRECATED deprecate_type {
 		using type = T;
 	};
-}} // namespace sol::detail
+}
+} // namespace sol::detail
 
 #endif // SOL_DEPRECATE_HPP

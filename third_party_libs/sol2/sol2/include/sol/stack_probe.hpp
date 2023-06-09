@@ -1,8 +1,8 @@
-// sol2
+// sol3 
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -28,12 +28,13 @@
 #include <sol/stack_field.hpp>
 #include <sol/stack_check.hpp>
 
-namespace sol { namespace stack {
+namespace sol {
+namespace stack {
 	template <typename T, typename P, bool b, bool raw, typename>
 	struct probe_field_getter {
 		template <typename Key>
 		probe get(lua_State* L, Key&& key, int tableindex = -2) {
-			if constexpr (!b) {
+			if constexpr(!b) {
 				if (!maybe_indexable(L, tableindex)) {
 					return probe(false, 0);
 				}
@@ -63,7 +64,7 @@ namespace sol { namespace stack {
 	struct probe_field_getter<std::tuple<Args...>, P, b, raw, C> {
 		template <std::size_t I, typename Keys>
 		probe apply(std::index_sequence<I>, int sofar, lua_State* L, Keys&& keys, int tableindex) {
-			get_field<(I < 1) && b, raw>(L, std::get<I>(keys), tableindex);
+			get_field<(I<1) && b, raw>(L, std::get<I>(keys), tableindex);
 			return probe(check<P>(L), sofar);
 		}
 
@@ -89,6 +90,7 @@ namespace sol { namespace stack {
 			}
 		}
 	};
-}} // namespace sol::stack
+}
+} // namespace sol::stack
 
 #endif // SOL_STACK_PROBE_HPP

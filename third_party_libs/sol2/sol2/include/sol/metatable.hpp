@@ -1,8 +1,8 @@
-// sol2
+// sol3
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -51,27 +51,6 @@ namespace sol {
 		basic_metatable(detail::no_safety_tag, lua_State* L, T&& r) noexcept : base_t(L, std::forward<T>(r)) {
 		}
 
-		template <typename R, typename... Args, typename Fx, typename Key, typename = std::invoke_result_t<Fx, Args...>>
-		void set_fx(types<R(Args...)>, Key&& key, Fx&& fx) {
-			set_resolved_function<R(Args...)>(std::forward<Key>(key), std::forward<Fx>(fx));
-		}
-
-		template <typename Fx, typename Key, meta::enable<meta::is_specialization_of<meta::unqualified_t<Fx>, overload_set>> = meta::enabler>
-		void set_fx(types<>, Key&& key, Fx&& fx) {
-			set(std::forward<Key>(key), std::forward<Fx>(fx));
-		}
-
-		template <typename Fx, typename Key, typename... Args,
-		     meta::disable<meta::is_specialization_of<meta::unqualified_t<Fx>, overload_set>> = meta::enabler>
-		void set_fx(types<>, Key&& key, Fx&& fx, Args&&... args) {
-			set(std::forward<Key>(key), as_function_reference(std::forward<Fx>(fx), std::forward<Args>(args)...));
-		}
-
-		template <typename... Sig, typename... Args, typename Key>
-		void set_resolved_function(Key&& key, Args&&... args) {
-			set(std::forward<Key>(key), as_function_reference<function_sig<Sig...>>(std::forward<Args>(args)...));
-		}
-
 	public:
 		using base_t::lua_state;
 
@@ -86,22 +65,22 @@ namespace sol {
 		}
 		template <typename T, meta::enable_any<is_lua_reference<meta::unqualified_t<T>>> = meta::enabler>
 		basic_metatable(lua_State* L, T&& r) : base_t(L, std::forward<T>(r)) {
-#if SOL_IS_ON(SOL_SAFE_REFERENCES)
+#if SOL_IS_ON(SOL_SAFE_REFERENCES_I_)
 			auto pp = stack::push_pop(*this);
-			constructor_handler handler {};
+			constructor_handler handler{};
 			stack::check<basic_metatable>(lua_state(), -1, handler);
 #endif // Safety
 		}
 		basic_metatable(lua_State* L, int index = -1) : basic_metatable(detail::no_safety, L, index) {
-#if SOL_IS_ON(SOL_SAFE_REFERENCES)
-			constructor_handler handler {};
+#if SOL_IS_ON(SOL_SAFE_REFERENCES_I_)
+			constructor_handler handler{};
 			stack::check<basic_metatable>(L, index, handler);
 #endif // Safety
 		}
 		basic_metatable(lua_State* L, ref_index index) : basic_metatable(detail::no_safety, L, index) {
-#if SOL_IS_ON(SOL_SAFE_REFERENCES)
+#if SOL_IS_ON(SOL_SAFE_REFERENCES_I_)
 			auto pp = stack::push_pop(*this);
-			constructor_handler handler {};
+			constructor_handler handler{};
 			stack::check<basic_metatable>(lua_state(), -1, handler);
 #endif // Safety
 		}
@@ -109,10 +88,10 @@ namespace sol {
 		     meta::enable<meta::neg<meta::any_same<meta::unqualified_t<T>, basic_metatable>>, meta::neg<std::is_same<base_type, stack_reference>>,
 		          meta::neg<std::is_same<lua_nil_t, meta::unqualified_t<T>>>, is_lua_reference<meta::unqualified_t<T>>> = meta::enabler>
 		basic_metatable(T&& r) noexcept : basic_metatable(detail::no_safety, std::forward<T>(r)) {
-#if SOL_IS_ON(SOL_SAFE_REFERENCES)
+#if SOL_IS_ON(SOL_SAFE_REFERENCES_I_)
 			if (!is_table<meta::unqualified_t<T>>::value) {
 				auto pp = stack::push_pop(*this);
-				constructor_handler handler {};
+				constructor_handler handler{};
 				stack::check<basic_metatable>(base_t::lua_state(), -1, handler);
 			}
 #endif // Safety
@@ -121,19 +100,7 @@ namespace sol {
 		}
 
 		template <typename Key, typename Value>
-		basic_metatable<base_type>& set(Key&& key, Value&& value);
-
-		template <typename Sig, typename Key, typename... Args>
-		basic_metatable& set_function(Key&& key, Args&&... args) {
-			set_fx(types<Sig>(), std::forward<Key>(key), std::forward<Args>(args)...);
-			return *this;
-		}
-
-		template <typename Key, typename... Args>
-		basic_metatable& set_function(Key&& key, Args&&... args) {
-			set_fx(types<>(), std::forward<Key>(key), std::forward<Args>(args)...);
-			return *this;
-		}
+		void set(Key&& key, Value&& value);
 
 		void unregister() {
 			using ustorage_base = u_detail::usertype_storage_base;
@@ -146,13 +113,11 @@ namespace sol {
 			stack_reference mt(L, -1);
 			stack::get_field(L, meta_function::gc_names, mt.stack_index());
 			if (type_of(L, -1) != type::table) {
-				lua_settop(L, top);
 				return;
 			}
 			stack_reference gc_names_table(L, -1);
 			stack::get_field(L, meta_function::storage, mt.stack_index());
 			if (type_of(L, -1) != type::lightuserdata) {
-				lua_settop(L, top);
 				return;
 			}
 			ustorage_base& base_storage = *static_cast<ustorage_base*>(stack::get<void*>(L, -1));
@@ -181,7 +146,7 @@ namespace sol {
 				else {
 					// do not change the values in the registry: they need to be present
 					// no matter what, for safety's sake
-					// stack::set_field(L, gcmetakey, lua_nil, registry.stack_index());
+					//stack::set_field(L, gcmetakey, lua_nil, registry.stack_index());
 				}
 			}
 
