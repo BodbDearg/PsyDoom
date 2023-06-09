@@ -338,6 +338,8 @@ if (PLATFORM_MAC)
         "${SRC_DIR}/video/cocoa/SDL_cocoamodes.m"
         "${SRC_DIR}/video/cocoa/SDL_cocoamouse.h"
         "${SRC_DIR}/video/cocoa/SDL_cocoamouse.m"
+        "${SRC_DIR}/video/cocoa/SDL_cocoaopengl.h"
+        "${SRC_DIR}/video/cocoa/SDL_cocoaopengl.m"
         "${SRC_DIR}/video/cocoa/SDL_cocoashape.h"
         "${SRC_DIR}/video/cocoa/SDL_cocoashape.m"
         "${SRC_DIR}/video/cocoa/SDL_cocoavideo.h"
@@ -496,10 +498,6 @@ if (PLATFORM_MAC)
     target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DSDL_VIDEO_METAL=1)       # Enable Metal Video backend
     target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -fobjc-arc)                   # Enable Objective-C automatic reference counting
     target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-objc-method-access)      # No warnings about calling undeclared Objective C methods
-    
-    if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
-        target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DVK_USE_PLATFORM_METAL_EXT=1)
-    endif()
 endif()
 
 if (PLATFORM_LINUX)

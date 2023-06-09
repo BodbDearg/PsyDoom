@@ -244,7 +244,7 @@
 #define SDL_VIDEO_OPENGL_EGL    0
 #endif
 #ifndef SDL_VIDEO_OPENGL_CGL
-#define SDL_VIDEO_OPENGL_CGL    0
+#define SDL_VIDEO_OPENGL_CGL    1
 #endif
 #ifndef SDL_VIDEO_OPENGL_GLX
 #define SDL_VIDEO_OPENGL_GLX    0
