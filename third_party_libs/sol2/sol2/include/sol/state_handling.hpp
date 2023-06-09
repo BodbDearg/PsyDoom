@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -31,13 +31,13 @@
 #include <sol/object.hpp>
 #include <sol/lua_value.hpp>
 
-#if SOL_IS_ON(SOL_PRINT_ERRORS_I_)
+#if SOL_IS_ON(SOL_PRINT_ERRORS)
 #include <iostream>
 #endif
 
 namespace sol {
 	inline void register_main_thread(lua_State* L) {
-#if SOL_LUA_VESION_I_ < 502
+#if SOL_LUA_VERSION_I_ < 502
 		if (L == nullptr) {
 			lua_pushnil(L);
 			lua_setglobal(L, detail::default_main_thread_name());
@@ -51,7 +51,7 @@ namespace sol {
 	}
 
 	inline int default_at_panic(lua_State* L) {
-#if SOL_IS_OFF(SOL_EXCEPTIONS_I_)
+#if SOL_IS_OFF(SOL_EXCEPTIONS)
 		(void)L;
 		return -1;
 #else
@@ -60,8 +60,8 @@ namespace sol {
 		if (message) {
 			std::string err(message, messagesize);
 			lua_settop(L, 0);
-#if SOL_IS_ON(SOL_PRINT_ERRORS_I_)
-			std::cerr << "[sol3] An error occurred and panic has been invoked: ";
+#if SOL_IS_ON(SOL_PRINT_ERRORS)
+			std::cerr << "[sol2] An error occurred and panic has been invoked: ";
 			std::cerr << err;
 			std::cerr << std::endl;
 #endif
@@ -74,19 +74,19 @@ namespace sol {
 
 	inline int default_traceback_error_handler(lua_State* L) {
 		std::string msg = "An unknown error has triggered the default error handler";
-		optional<string_view> maybetopmsg = stack::unqualified_check_get<string_view>(L, 1, no_panic);
+		optional<string_view> maybetopmsg = stack::unqualified_check_get<string_view>(L, 1, &no_panic);
 		if (maybetopmsg) {
 			const string_view& topmsg = maybetopmsg.value();
 			msg.assign(topmsg.data(), topmsg.size());
 		}
 		luaL_traceback(L, L, msg.c_str(), 1);
-		optional<string_view> maybetraceback = stack::unqualified_check_get<string_view>(L, -1, no_panic);
+		optional<string_view> maybetraceback = stack::unqualified_check_get<string_view>(L, -1, &no_panic);
 		if (maybetraceback) {
 			const string_view& traceback = maybetraceback.value();
 			msg.assign(traceback.data(), traceback.size());
 		}
-#if SOL_IS_ON(SOL_PRINT_ERRORS_I_)
-		// std::cerr << "[sol3] An error occurred and was caught in traceback: ";
+#if SOL_IS_ON(SOL_PRINT_ERRORS)
+		// std::cerr << "[sol2] An error occurred and was caught in traceback: ";
 		// std::cerr << msg;
 		// std::cerr << std::endl;
 #endif // Printing
@@ -105,9 +105,9 @@ namespace sol {
 	}
 
 	inline std::size_t total_memory_used(lua_State* L) {
-		std::size_t kb = lua_gc(L, LUA_GCCOUNT, 0);
+		std::size_t kb = static_cast<std::size_t>(lua_gc(L, LUA_GCCOUNT, 0));
 		kb *= 1024;
-		kb += lua_gc(L, LUA_GCCOUNTB, 0);
+		kb += static_cast<std::size_t>(lua_gc(L, LUA_GCCOUNTB, 0));
 		return kb;
 	}
 
@@ -120,7 +120,7 @@ namespace sol {
 		std::string err = "sol: ";
 		err += to_string(result.status());
 		err += " error";
-#if SOL_IS_ON(SOL_EXCEPTIONS_I_)
+#if SOL_IS_ON(SOL_EXCEPTIONS)
 		std::exception_ptr eptr = std::current_exception();
 		if (eptr) {
 			err += " with a ";
@@ -149,8 +149,8 @@ namespace sol {
 			string_view serr = stack::unqualified_get<string_view>(L, result.stack_index());
 			err.append(serr.data(), serr.size());
 		}
-#if SOL_IS_ON(SOL_PRINT_ERRORS_I_)
-		std::cerr << "[sol3] An error occurred and has been passed to an error handler: ";
+#if SOL_IS_ON(SOL_PRINT_ERRORS)
+		std::cerr << "[sol2] An error occurred and has been passed to an error handler: ";
 		std::cerr << err;
 		std::cerr << std::endl;
 #endif
@@ -165,7 +165,7 @@ namespace sol {
 		if (towards != 0) {
 			lua_rotate(L, top, towards);
 		}
-#if SOL_IS_OFF(SOL_EXCEPTIONS_I_)
+#if SOL_IS_OFF(SOL_EXCEPTIONS)
 		return result;
 #else
 		// just throw our error
@@ -174,7 +174,7 @@ namespace sol {
 	}
 
 	inline protected_function_result script_default_on_error(lua_State* L, protected_function_result pfr) {
-#if SOL_IS_ON(SOL_DEFAULT_PASS_ON_ERROR_I_)
+#if SOL_IS_ON(SOL_DEFAULT_PASS_ON_ERROR)
 		return script_pass_on_error(L, std::move(pfr));
 #else
 		return script_throw_on_error(L, std::move(pfr));
