@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -127,7 +127,7 @@ X11_GetPixelFormatFromVisualInfo(Display * display, XVisualInfo * vinfo)
     if (vinfo->class == PseudoColor || vinfo->class == StaticColor) {
         switch (vinfo->depth) {
         case 8:
-            return SDL_PIXELTYPE_INDEX8;
+            return SDL_PIXELFORMAT_INDEX8;
         case 4:
             if (BitmapBitOrder(display) == LSBFirst) {
                 return SDL_PIXELFORMAT_INDEX4LSB;
@@ -833,6 +833,8 @@ freeInfo:
             return SDL_SetError("X11_XRRSetCrtcConfig failed");
         }
     }
+#else
+    (void)data;
 #endif /* SDL_VIDEO_DRIVER_X11_XRANDR */
 
     return 0;

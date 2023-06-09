@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -53,6 +53,7 @@ int Cocoa_Vulkan_LoadLibrary(_THIS, const char *path)
     VkExtensionProperties *extensions = NULL;
     Uint32 extensionCount = 0;
     SDL_bool hasSurfaceExtension = SDL_FALSE;
+    SDL_bool hasMetalSurfaceExtension = SDL_FALSE;
     SDL_bool hasMacOSSurfaceExtension = SDL_FALSE;
     PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = NULL;
 
@@ -130,12 +131,9 @@ int Cocoa_Vulkan_LoadLibrary(_THIS, const char *path)
     for (Uint32 i = 0; i < extensionCount; i++) {
         if (SDL_strcmp(VK_KHR_SURFACE_EXTENSION_NAME, extensions[i].extensionName) == 0) {
             hasSurfaceExtension = SDL_TRUE;
-    // PsyDoom: the MVK extension is now obsolete and replaced by the metal surface extension
-    #if 1
-        } else if (SDL_strcmp("VK_EXT_metal_surface", extensions[i].extensionName) == 0) {
-    #else
+        } else if (SDL_strcmp(VK_EXT_METAL_SURFACE_EXTENSION_NAME, extensions[i].extensionName) == 0) {
+            hasMetalSurfaceExtension = SDL_TRUE;
         } else if (SDL_strcmp(VK_MVK_MACOS_SURFACE_EXTENSION_NAME, extensions[i].extensionName) == 0) {
-    #endif
             hasMacOSSurfaceExtension = SDL_TRUE;
         }
     }
@@ -144,14 +142,10 @@ int Cocoa_Vulkan_LoadLibrary(_THIS, const char *path)
         SDL_SetError("Installed Vulkan Portability library doesn't implement the "
                      VK_KHR_SURFACE_EXTENSION_NAME " extension");
         goto fail;
-    } else if (!hasMacOSSurfaceExtension) {
-    // PsyDoom: the MVK extension is now obsolete and replaced by the metal surface extension
-    #if 1
-        SDL_SetError("Installed Vulkan Portability library doesn't implement the VK_EXT_metal_surface extension");
-    #else
+    } else if (!hasMetalSurfaceExtension && !hasMacOSSurfaceExtension) {
         SDL_SetError("Installed Vulkan Portability library doesn't implement the "
-                     VK_MVK_MACOS_SURFACE_EXTENSION_NAME "extension");
-    #endif
+                     VK_EXT_METAL_SURFACE_EXTENSION_NAME " or "
+                     VK_MVK_MACOS_SURFACE_EXTENSION_NAME " extensions");
         goto fail;
     }
     return 0;
@@ -178,12 +172,7 @@ SDL_bool Cocoa_Vulkan_GetInstanceExtensions(_THIS,
                                           const char **names)
 {
     static const char *const extensionsForCocoa[] = {
-        // PsyDoom: the MVK extension is now obsolete and replaced by the metal surface extension
-        #if 1
-            VK_KHR_SURFACE_EXTENSION_NAME, "VK_EXT_metal_surface"
-        #else
-            VK_KHR_SURFACE_EXTENSION_NAME, VK_MVK_MACOS_SURFACE_EXTENSION_NAME
-        #endif
+        VK_KHR_SURFACE_EXTENSION_NAME, VK_EXT_METAL_SURFACE_EXTENSION_NAME
     };
     if (!_this->vulkan_config.loader_handle) {
         SDL_SetError("Vulkan is not loaded");
@@ -201,21 +190,14 @@ SDL_bool Cocoa_Vulkan_CreateSurface(_THIS,
 {
     PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
         (PFN_vkGetInstanceProcAddr)_this->vulkan_config.vkGetInstanceProcAddr;
-      
-// PsyDoom: the MVK function is now deprecated - use the new Vulkan SDK method instead
-#if 1
     PFN_vkCreateMetalSurfaceEXT vkCreateMetalSurfaceEXT =
         (PFN_vkCreateMetalSurfaceEXT)vkGetInstanceProcAddr(
                                             (VkInstance)instance,
                                             "vkCreateMetalSurfaceEXT");
-    VkMetalSurfaceCreateInfoEXT createInfo = {};
-#else
     PFN_vkCreateMacOSSurfaceMVK vkCreateMacOSSurfaceMVK =
         (PFN_vkCreateMacOSSurfaceMVK)vkGetInstanceProcAddr(
                                             (VkInstance)instance,
                                             "vkCreateMacOSSurfaceMVK");
-    VkMacOSSurfaceCreateInfoMVK createInfo = {};
-#endif
     VkResult result;
     SDL_MetalView metalview;
 
@@ -224,52 +206,46 @@ SDL_bool Cocoa_Vulkan_CreateSurface(_THIS,
         return SDL_FALSE;
     }
 
-// PsyDoom: the MVK function is now deprecated - use the new Vulkan SDK method instead
-#if 1
-    if (!vkCreateMetalSurfaceEXT) {
-        SDL_SetError("VK_EXT_metal_surface extension is not enabled in the Vulkan instance.");
+    if (!vkCreateMetalSurfaceEXT && !vkCreateMacOSSurfaceMVK) {
+        SDL_SetError(VK_EXT_METAL_SURFACE_EXTENSION_NAME " or "
+                     VK_MVK_MACOS_SURFACE_EXTENSION_NAME
+                     " extensions are not enabled in the Vulkan instance.");
         return SDL_FALSE;
     }
-#else
-    if (!vkCreateMacOSSurfaceMVK) {
-        SDL_SetError(VK_MVK_MACOS_SURFACE_EXTENSION_NAME
-                     " extension is not enabled in the Vulkan instance.");
-        return SDL_FALSE;
-    }
-#endif
 
     metalview = Cocoa_Metal_CreateView(_this, window);
     if (metalview == NULL) {
         return SDL_FALSE;
     }
 
-
-    
-// PsyDoom: the MVK function is now deprecated - use the new Vulkan SDK method instead
-#if 1
-    createInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
-    createInfo.pNext = NULL;
-    createInfo.flags = 0;
-    #if __MACOSX__
-        createInfo.pLayer = (CAMetalLayer*)[((__bridge NSView*) metalview) layer];  // macOS
-    #else
-        createInfo.pLayer = (CAMetalLayer*)[((__bridge UIView*) metalview) layer];  // iOS/tvOS
-    #endif
-    result = vkCreateMetalSurfaceEXT(instance, &createInfo, NULL, surface);
-#else
-    createInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
-    createInfo.pNext = NULL;
-    createInfo.flags = 0;
-    createInfo.pView = (const void *)metalview;
-    result = vkCreateMacOSSurfaceMVK(instance, &createInfo,
-                                       NULL, surface);
-#endif
-
-    if (result != VK_SUCCESS) {
-        Cocoa_Metal_DestroyView(_this, metalview);
-        SDL_SetError("vkCreateMacOSSurfaceMVK failed: %s",
-                     SDL_Vulkan_GetResultString(result));
-        return SDL_FALSE;
+    if (vkCreateMetalSurfaceEXT) {
+        VkMetalSurfaceCreateInfoEXT createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+        createInfo.pNext = NULL;
+        createInfo.flags = 0;
+        createInfo.pLayer = (__bridge const CAMetalLayer *)
+                            Cocoa_Metal_GetLayer(_this, metalview);
+        result = vkCreateMetalSurfaceEXT(instance, &createInfo, NULL, surface);
+        if (result != VK_SUCCESS) {
+            Cocoa_Metal_DestroyView(_this, metalview);
+            SDL_SetError("vkCreateMetalSurfaceEXT failed: %s",
+                         SDL_Vulkan_GetResultString(result));
+            return SDL_FALSE;
+        }
+    } else {
+        VkMacOSSurfaceCreateInfoMVK createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
+        createInfo.pNext = NULL;
+        createInfo.flags = 0;
+        createInfo.pView = (const void *)metalview;
+        result = vkCreateMacOSSurfaceMVK(instance, &createInfo,
+                                           NULL, surface);
+        if (result != VK_SUCCESS) {
+            Cocoa_Metal_DestroyView(_this, metalview);
+            SDL_SetError("vkCreateMacOSSurfaceMVK failed: %s",
+                         SDL_Vulkan_GetResultString(result));
+            return SDL_FALSE;
+        }
     }
 
     /* Unfortunately there's no SDL_Vulkan_DestroySurface function we can call
