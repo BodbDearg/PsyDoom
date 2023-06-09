@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -54,7 +54,7 @@ namespace sol {
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
-		protected_function_result() noexcept = default;
+		protected_function_result() noexcept : protected_function_result(nullptr) {}
 		protected_function_result(lua_State* Ls, int idx = -1, int retnum = 0, int popped = 0, call_status pferr = call_status::ok) noexcept
 		: L(Ls), index(idx), returncount(retnum), popcount(popped), err(pferr) {
 		}
@@ -99,6 +99,11 @@ namespace sol {
 			return status() == call_status::ok || status() == call_status::yielded;
 		}
 
+#if SOL_IS_ON(SOL_COMPILER_GCC)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 		template <typename T>
 		decltype(auto) get(int index_offset = 0) const {
 			using UT = meta::unqualified_t<T>;
@@ -120,7 +125,7 @@ namespace sol {
 			}
 			else {
 				if constexpr (std::is_same_v<T, error>) {
-#if SOL_IS_ON(SOL_SAFE_PROXIES_I_)
+#if SOL_IS_ON(SOL_SAFE_PROXIES)
 					if (valid()) {
 						type t = type_of(L, target);
 						type_panic_c_str(L, target, t, type::none, "bad get from protected_function_result (is an error)");
@@ -129,7 +134,7 @@ namespace sol {
 					return error(detail::direct_error, stack::get<std::string>(L, target));
 				}
 				else {
-#if SOL_IS_ON(SOL_SAFE_PROXIES_I_)
+#if SOL_IS_ON(SOL_SAFE_PROXIES)
 					if (!valid()) {
 						type t = type_of(L, target);
 						type_panic_c_str(L, target, t, type::none, "bad get from protected_function_result (is not an error)");
@@ -139,6 +144,10 @@ namespace sol {
 				}
 			}
 		}
+
+#if SOL_IS_ON(SOL_COMPILER_GCC)
+#pragma GCC diagnostic pop
+#endif
 
 		type get_type(int index_offset = 0) const noexcept {
 			return type_of(L, index + static_cast<int>(index_offset));
@@ -206,6 +215,8 @@ namespace sol {
 			err = call_status::runtime;
 		}
 		~protected_function_result() {
+			if (L == nullptr)
+				return;
 			stack::remove(L, index, popcount);
 		}
 	};
@@ -214,7 +225,7 @@ namespace sol {
 		template <>
 		struct unqualified_pusher<protected_function_result> {
 			static int push(lua_State* L, const protected_function_result& pfr) {
-#if SOL_IS_ON(SOL_SAFE_STACK_CHECK_I_)
+#if SOL_IS_ON(SOL_SAFE_STACK_CHECK)
 				luaL_checkstack(L, static_cast<int>(pfr.pop_count()), detail::not_enough_stack_space_generic);
 #endif // make sure stack doesn't overflow
 				int p = 0;

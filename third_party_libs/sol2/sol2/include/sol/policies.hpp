@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -30,14 +30,14 @@
 
 namespace sol {
 	namespace detail {
-		struct policy_base_tag {};
+		struct policy_base_tag { };
 	} // namespace detail
 
 	template <int Target, int... In>
-	struct static_stack_dependencies : detail::policy_base_tag {};
+	struct static_stack_dependencies : detail::policy_base_tag { };
 	typedef static_stack_dependencies<-1, 1> self_dependency;
 	template <int... In>
-	struct returns_self_with : detail::policy_base_tag {};
+	struct returns_self_with : detail::policy_base_tag { };
 	typedef returns_self_with<> returns_self;
 
 	struct stack_dependencies : detail::policy_base_tag {
@@ -48,7 +48,7 @@ namespace sol {
 		template <typename... Args>
 		stack_dependencies(int stack_target, Args&&... args) : target(stack_target), stack_indices(), len(sizeof...(Args)) {
 			std::size_t i = 0;
-			(void)detail::swallow{ int(), (stack_indices[i++] = static_cast<int>(std::forward<Args>(args)), int())... };
+			(void)detail::swallow { int(), (stack_indices[i++] = static_cast<int>(std::forward<Args>(args)), int())... };
 		}
 
 		int& operator[](std::size_t i) {

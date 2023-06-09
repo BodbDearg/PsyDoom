@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -44,10 +44,14 @@ namespace sol {
 
 		namespace detail {
 			template <typename... Args>
-			struct tuple_types_ { typedef types<Args...> type; };
+			struct tuple_types_ {
+				typedef types<Args...> type;
+			};
 
 			template <typename... Args>
-			struct tuple_types_<std::tuple<Args...>> { typedef types<Args...> type; };
+			struct tuple_types_<std::tuple<Args...>> {
+				typedef types<Args...> type;
+			};
 		} // namespace detail
 
 		template <typename... Args>

@@ -105,18 +105,18 @@ static void compat53_call_lua(lua_State* L, char const code[], size_t len, int n
 }
 
 
-static const char compat53_arith_code[]
-     = "local op,a,b=...\n"
-       "if op==0 then return a+b\n"
-       "elseif op==1 then return a-b\n"
-       "elseif op==2 then return a*b\n"
-       "elseif op==3 then return a/b\n"
-       "elseif op==4 then return a%b\n"
-       "elseif op==5 then return a^b\n"
-       "elseif op==6 then return -a\n"
-       "end\n";
-
 COMPAT53_API void lua_arith(lua_State* L, int op) {
+	static const char compat53_arith_code[]
+	     = "local op,a,b=...\n"
+	       "if op==0 then return a+b\n"
+	       "elseif op==1 then return a-b\n"
+	       "elseif op==2 then return a*b\n"
+	       "elseif op==3 then return a/b\n"
+	       "elseif op==4 then return a%b\n"
+	       "elseif op==5 then return a^b\n"
+	       "elseif op==6 then return -a\n"
+	       "end\n";
+
 	if (op < LUA_OPADD || op > LUA_OPUNM)
 		luaL_error(L, "invalid 'op' argument for lua_arith");
 	luaL_checkstack(L, 5, "not enough stack slots");
@@ -128,11 +128,11 @@ COMPAT53_API void lua_arith(lua_State* L, int op) {
 }
 
 
-static const char compat53_compare_code[]
-     = "local a,b=...\n"
-       "return a<=b\n";
-
 COMPAT53_API int lua_compare(lua_State* L, int idx1, int idx2, int op) {
+	static const char compat53_compare_code[]
+	     = "local a,b=...\n"
+	       "return a<=b\n";
+
 	int result = 0;
 	switch (op) {
 	case LUA_OPEQ:
@@ -677,7 +677,11 @@ COMPAT53_API char* luaL_prepbuffsize(luaL_Buffer_53* B, size_t s) {
 			newcap = B->nelems + s;
 		if (newcap < B->capacity) /* overflow */
 			luaL_error(B->L2, "buffer too large");
+#if defined(LUA_VERSION_NUM) && LUA_VERSION_NUM >= 504
+		newptr = (char*)lua_newuserdatauv(B->L2, newcap, 0);
+#else
 		newptr = (char*)lua_newuserdata(B->L2, newcap);
+#endif
 		memcpy(newptr, B->ptr, B->nelems);
 		if (B->ptr != B->b.buffer)
 			lua_replace(B->L2, -2); /* remove old buffer */

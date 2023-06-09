@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -49,10 +49,10 @@ namespace sol {
 		std::ptrdiff_t idx = 0;
 
 	public:
-		basic_table_iterator() : keyidx(-1), idx(-1) {
+		basic_table_iterator() noexcept : keyidx(-1), idx(-1) {
 		}
 
-		basic_table_iterator(reference_type x) : ref(std::move(x)) {
+		basic_table_iterator(reference_type x) noexcept : ref(std::move(x)) {
 			ref.push();
 			tableidx = lua_gettop(ref.lua_state());
 			stack::push(ref.lua_state(), lua_nil);
@@ -63,7 +63,7 @@ namespace sol {
 			--idx;
 		}
 
-		basic_table_iterator& operator++() {
+		basic_table_iterator& operator++() noexcept {
 			if (idx == -1)
 				return *this;
 
@@ -81,25 +81,21 @@ namespace sol {
 			return *this;
 		}
 
-		basic_table_iterator operator++(int) {
+		basic_table_iterator operator++(int) noexcept {
 			auto saved = *this;
 			this->operator++();
 			return saved;
 		}
 
-		reference operator*() {
-			return kvp;
+		reference operator*() const noexcept {
+			return const_cast<reference>(kvp);
 		}
 
-		const_reference operator*() const {
-			return kvp;
-		}
-
-		bool operator==(const basic_table_iterator& right) const {
+		bool operator==(const basic_table_iterator& right) const noexcept {
 			return idx == right.idx;
 		}
 
-		bool operator!=(const basic_table_iterator& right) const {
+		bool operator!=(const basic_table_iterator& right) const noexcept {
 			return idx != right.idx;
 		}
 

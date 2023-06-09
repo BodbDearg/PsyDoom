@@ -1,8 +1,8 @@
-// sol3 
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -41,14 +41,11 @@ namespace sol {
 		int stacktop;
 		proxy_t sp;
 
-		stack_iterator()
-			: L(nullptr), index((std::numeric_limits<int>::max)()), stacktop((std::numeric_limits<int>::max)()), sp() {
+		stack_iterator() : L(nullptr), index((std::numeric_limits<int>::max)()), stacktop((std::numeric_limits<int>::max)()), sp() {
 		}
-		stack_iterator(const stack_iterator<proxy_t, true>& r)
-			: L(r.L), index(r.index), stacktop(r.stacktop), sp(r.sp) {
+		stack_iterator(const stack_iterator<proxy_t, true>& r) : L(r.L), index(r.index), stacktop(r.stacktop), sp(r.sp) {
 		}
-		stack_iterator(lua_State* luastate, int idx, int topidx)
-			: L(luastate), index(idx), stacktop(topidx), sp(luastate, idx) {
+		stack_iterator(lua_State* luastate, int idx, int topidx) : L(luastate), index(idx), stacktop(topidx), sp(luastate, idx) {
 		}
 
 		reference operator*() {
@@ -147,7 +144,8 @@ namespace sol {
 	};
 
 	template <typename proxy_t, bool is_const>
-	inline stack_iterator<proxy_t, is_const> operator+(typename stack_iterator<proxy_t, is_const>::difference_type n, const stack_iterator<proxy_t, is_const>& r) {
+	inline stack_iterator<proxy_t, is_const> operator+(
+	     typename stack_iterator<proxy_t, is_const>::difference_type n, const stack_iterator<proxy_t, is_const>& r) {
 		return r + n;
 	}
 } // namespace sol

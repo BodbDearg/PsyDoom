@@ -2,7 +2,7 @@
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -85,7 +85,7 @@ namespace sol {
 
 		template <typename T>
 		table_proxy&& set(T&& item) && {
-			tuple_set(std::make_index_sequence<std::tuple_size_v<meta::unqualified_t<key_type>>>(), std::forward<T>(item));
+			std::move(*this).tuple_set(std::make_index_sequence<std::tuple_size_v<meta::unqualified_t<key_type>>>(), std::forward<T>(item));
 			return std::move(*this);
 		}
 
@@ -104,7 +104,7 @@ namespace sol {
 		template <typename T>
 		table_proxy& operator=(T&& other) & {
 			using Tu = meta::unwrap_unqualified_t<T>;
-			if constexpr (!is_lua_reference_or_proxy_v<Tu> && meta::is_callable_v<Tu>) {
+			if constexpr (!is_lua_reference_or_proxy_v<Tu> && meta::is_invocable_v<Tu>) {
 				return set_function(std::forward<T>(other));
 			}
 			else {
@@ -115,7 +115,7 @@ namespace sol {
 		template <typename T>
 		table_proxy&& operator=(T&& other) && {
 			using Tu = meta::unwrap_unqualified_t<T>;
-			if constexpr (!is_lua_reference_or_proxy_v<Tu> && meta::is_callable_v<Tu>) {
+			if constexpr (!is_lua_reference_or_proxy_v<Tu> && meta::is_invocable_v<Tu> && !detail::is_msvc_callable_rigged_v<T>) {
 				return std::move(*this).set_function(std::forward<T>(other));
 			}
 			else {
@@ -131,6 +131,13 @@ namespace sol {
 		template <typename T>
 		table_proxy&& operator=(std::initializer_list<T> other) && {
 			return std::move(*this).set(std::move(other));
+		}
+
+		template <typename T>
+		bool is() const {
+			typedef decltype(get<T>()) U;
+			optional<U> option = this->get<optional<U>>();
+			return option.has_value();
 		}
 
 		template <typename T>

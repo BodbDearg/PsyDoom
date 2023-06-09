@@ -1,8 +1,8 @@
-// sol3
+// sol2
 
 // The MIT License (MIT)
 
-// Copyright (c) 2013-2020 Rapptz, ThePhD and contributors
+// Copyright (c) 2013-2022 Rapptz, ThePhD and contributors
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -28,6 +28,7 @@
 #include <sol/stack.hpp>
 #include <sol/function_types.hpp>
 #include <sol/table_iterator.hpp>
+#include <sol/pairs_iterator.hpp>
 #include <sol/types.hpp>
 #include <sol/object.hpp>
 #include <sol/usertype.hpp>
@@ -47,16 +48,17 @@ namespace sol {
 
 		struct ref_clean {
 			lua_State* L;
-			int& n;
-			ref_clean(lua_State* luastate, int& n) : L(luastate), n(n) {
+			int& pop_count;
+
+			ref_clean(lua_State* L_, int& pop_count_) noexcept : L(L_), pop_count(pop_count_) {
 			}
 			~ref_clean() {
-				lua_pop(L, static_cast<int>(n));
+				lua_pop(L, static_cast<int>(pop_count));
 			}
 		};
 
-		inline int fail_on_newindex(lua_State* L) {
-			return luaL_error(L, "sol: cannot modify the elements of an enumeration table");
+		inline int fail_on_newindex(lua_State* L_) {
+			return luaL_error(L_, "sol: cannot modify the elements of an enumeration table");
 		}
 
 	} // namespace detail
@@ -72,6 +74,18 @@ namespace sol {
 		friend class basic_usertype;
 		template <typename>
 		friend class basic_metatable;
+
+		template <typename T>
+		using is_get_direct_tableless = meta::boolean<stack::stack_detail::is_get_direct_tableless_v<T, top_level, false>>;
+
+		template <typename T>
+		using is_raw_get_direct_tableless = std::false_type;
+
+		template <typename T>
+		using is_set_direct_tableless = meta::boolean<stack::stack_detail::is_set_direct_tableless_v<T, top_level, false>>;
+
+		template <typename T>
+		using is_raw_set_direct_tableless = std::false_type;
 
 		template <bool raw, typename... Ret, typename... Keys>
 		decltype(auto) tuple_get(int table_index, Keys&&... keys) const {
@@ -102,7 +116,7 @@ namespace sol {
 
 		template <bool raw, typename Ret, typename... Keys>
 		decltype(auto) traverse_get_single(int table_index, Keys&&... keys) const {
-			constexpr static bool global = top_level && (meta::count_for_to_pack_v<1, meta::is_c_str, meta::unqualified_t<Keys>...> > 0);
+			constexpr static bool global = (meta::count_for_to_pack_v < 1, is_get_direct_tableless, meta::unqualified_t<Keys>... >> 0);
 			if constexpr (meta::is_optional_v<meta::unqualified_t<Ret>>) {
 				int popcount = 0;
 				detail::ref_clean c(base_t::lua_state(), popcount);
@@ -116,8 +130,8 @@ namespace sol {
 
 		template <bool raw, typename Pairs, std::size_t... I>
 		void tuple_set(std::index_sequence<I...>, Pairs&& pairs) {
-			constexpr static bool global = top_level
-			     && (meta::count_even_for_pack_v<meta::is_c_str, meta::unqualified_t<decltype(std::get<I * 2>(std::forward<Pairs>(pairs)))>...> > 0);
+			constexpr static bool global = (meta::count_even_for_pack_v < is_set_direct_tableless,
+			     meta::unqualified_t<decltype(std::get<I * 2>(std::forward<Pairs>(pairs)))>... >> 0);
 			auto pp = stack::push_pop<global>(*this);
 			int table_index = pp.index_of(*this);
 			lua_State* L = base_t::lua_state();
@@ -186,7 +200,7 @@ namespace sol {
 					if (!p.success) {
 						if constexpr ((mode & detail::insert_mode::create_if_nil) == detail::insert_mode::create_if_nil) {
 							lua_pop(L, 1);
-							constexpr bool is_seq = meta::count_for_to_pack_v<1, std::is_integral, Keys...> > 0;
+							constexpr bool is_seq = meta::count_for_to_pack_v < 1, std::is_integral, Keys... >> 0;
 							stack::push(L, new_table(static_cast<int>(is_seq), static_cast<int>(!is_seq)));
 							stack::set_field<global, raw>(L, std::forward<Key>(key), stack_reference(L, -1), table_index);
 						}
@@ -207,7 +221,7 @@ namespace sol {
 							lua_pop(L, 1);
 							stack::push(L, new_table(0, 0));
 							stack::set_field<global, raw>(L, std::forward<Key>(key), stack_reference(L, -1), table_index);
-							if (stack::check<value_type>(L, lua_gettop(L), no_panic)) {
+							if (stack::check<value_type>(L, lua_gettop(L), &no_panic)) {
 								return stack::get<T>(L);
 							}
 						}
@@ -257,7 +271,7 @@ namespace sol {
 						if constexpr ((mode & detail::insert_mode::update_if_empty) == detail::insert_mode::update_if_empty
 						     || (mode & detail::insert_mode::create_if_nil) == detail::insert_mode::create_if_nil) {
 							if (vt == type::lua_nil || vt == type::none) {
-								constexpr bool is_seq = meta::count_for_to_pack_v<1, std::is_integral, Keys...> > 0;
+								constexpr bool is_seq = meta::count_for_to_pack_v < 1, std::is_integral, Keys... >> 0;
 								lua_pop(L, 1);
 								stack::push(L, new_table(static_cast<int>(is_seq), static_cast<int>(!is_seq)));
 								stack::set_field<global, raw>(L, std::forward<Key>(key), stack_reference(L, -1), table_index);
@@ -265,7 +279,7 @@ namespace sol {
 						}
 						else {
 							if (vt != type::table) {
-								constexpr bool is_seq = meta::count_for_to_pack_v<1, std::is_integral, Keys...> > 0;
+								constexpr bool is_seq = meta::count_for_to_pack_v < 1, std::is_integral, Keys... >> 0;
 								lua_pop(L, 1);
 								stack::push(L, new_table(static_cast<int>(is_seq), static_cast<int>(!is_seq)));
 								stack::set_field<global, raw>(L, std::forward<Key>(key), stack_reference(L, -1), table_index);
@@ -278,9 +292,6 @@ namespace sol {
 					traverse_set_deep<false, raw, mode>(lua_gettop(L), std::forward<Keys>(keys)...);
 				}
 			}
-		}
-
-		basic_table_core(lua_State* L, detail::global_tag t) noexcept : base_t(L, t) {
 		}
 
 	protected:
@@ -310,43 +321,50 @@ namespace sol {
 		basic_table_core(basic_table_core&&) = default;
 		basic_table_core& operator=(const basic_table_core&) = default;
 		basic_table_core& operator=(basic_table_core&&) = default;
+
 		basic_table_core(const stack_reference& r) : basic_table_core(r.lua_state(), r.stack_index()) {
 		}
+
 		basic_table_core(stack_reference&& r) : basic_table_core(r.lua_state(), r.stack_index()) {
 		}
+
 		template <typename T, meta::enable_any<is_lua_reference<meta::unqualified_t<T>>> = meta::enabler>
 		basic_table_core(lua_State* L, T&& r) : base_t(L, std::forward<T>(r)) {
-#if SOL_IS_ON(SOL_SAFE_REFERENCES_I_)
+#if SOL_IS_ON(SOL_SAFE_REFERENCES)
 			auto pp = stack::push_pop(*this);
 			int table_index = pp.index_of(*this);
 			constructor_handler handler {};
 			stack::check<basic_table_core>(lua_state(), table_index, handler);
 #endif // Safety
 		}
+
 		basic_table_core(lua_State* L, const new_table& nt) : base_t(L, -stack::push(L, nt)) {
 			if (!is_stack_based<meta::unqualified_t<ref_t>>::value) {
 				lua_pop(L, 1);
 			}
 		}
+
 		basic_table_core(lua_State* L, int index = -1) : basic_table_core(detail::no_safety, L, index) {
-#if SOL_IS_ON(SOL_SAFE_REFERENCES_I_)
+#if SOL_IS_ON(SOL_SAFE_REFERENCES)
 			constructor_handler handler {};
 			stack::check<basic_table_core>(L, index, handler);
 #endif // Safety
 		}
+
 		basic_table_core(lua_State* L, ref_index index) : basic_table_core(detail::no_safety, L, index) {
-#if SOL_IS_ON(SOL_SAFE_REFERENCES_I_)
+#if SOL_IS_ON(SOL_SAFE_REFERENCES)
 			auto pp = stack::push_pop(*this);
 			int table_index = pp.index_of(*this);
 			constructor_handler handler {};
 			stack::check<basic_table_core>(lua_state(), table_index, handler);
 #endif // Safety
 		}
+
 		template <typename T,
 		     meta::enable<meta::neg<meta::any_same<meta::unqualified_t<T>, basic_table_core>>, meta::neg<std::is_same<ref_t, stack_reference>>,
 		          meta::neg<std::is_same<lua_nil_t, meta::unqualified_t<T>>>, is_lua_reference<meta::unqualified_t<T>>> = meta::enabler>
 		basic_table_core(T&& r) noexcept : basic_table_core(detail::no_safety, std::forward<T>(r)) {
-#if SOL_IS_ON(SOL_SAFE_REFERENCES_I_)
+#if SOL_IS_ON(SOL_SAFE_REFERENCES)
 			if (!is_table<meta::unqualified_t<T>>::value) {
 				auto pp = stack::push_pop(*this);
 				int table_index = pp.index_of(*this);
@@ -355,7 +373,11 @@ namespace sol {
 			}
 #endif // Safety
 		}
+
 		basic_table_core(lua_nil_t r) noexcept : basic_table_core(detail::no_safety, r) {
+		}
+
+		basic_table_core(lua_State* L, global_tag_t t) noexcept : base_t(L, t) {
 		}
 
 		iterator begin() const {
@@ -377,6 +399,14 @@ namespace sol {
 			return end();
 		}
 
+		basic_pairs_range<basic_table_core> pairs() noexcept {
+			return basic_pairs_range<basic_table_core>(*this);
+		}
+
+		basic_pairs_range<const basic_table_core> pairs() const noexcept {
+			return basic_pairs_range<const basic_table_core>(*this);
+		}
+
 		void clear() {
 			auto pp = stack::push_pop<false>(*this);
 			int table_index = pp.index_of(*this);
@@ -386,7 +416,7 @@ namespace sol {
 		template <typename... Ret, typename... Keys>
 		decltype(auto) get(Keys&&... keys) const {
 			static_assert(sizeof...(Keys) == sizeof...(Ret), "number of keys and number of return types do not match");
-			constexpr static bool global = meta::all<meta::boolean<top_level>, meta::is_c_str<meta::unqualified_t<Keys>>...>::value;
+			constexpr static bool global = meta::all<meta::boolean<top_level>, is_get_direct_tableless<meta::unqualified_t<Keys>>...>::value;
 			auto pp = stack::push_pop<global>(*this);
 			int table_index = pp.index_of(*this);
 			return tuple_get<false, Ret...>(table_index, std::forward<Keys>(keys)...);
@@ -414,7 +444,7 @@ namespace sol {
 		template <typename T, typename... Keys>
 		decltype(auto) traverse_get(Keys&&... keys) const {
 			static_assert(sizeof...(Keys) > 0, "must pass at least 1 key to get");
-			constexpr static bool global = top_level && (meta::count_for_to_pack_v<1, meta::is_c_str, meta::unqualified_t<Keys>...> > 0);
+			constexpr static bool global = (meta::count_for_to_pack_v < 1, is_get_direct_tableless, meta::unqualified_t<Keys>... >> 0);
 			auto pp = stack::push_pop<global>(*this);
 			int table_index = pp.index_of(*this);
 			return traverse_get_single<false, T>(table_index, std::forward<Keys>(keys)...);
@@ -424,7 +454,7 @@ namespace sol {
 		basic_table_core& traverse_set(Keys&&... keys) {
 			static_assert(sizeof...(Keys) > 1, "must pass at least 1 key and 1 value to set");
 			constexpr static bool global
-			     = top_level && (meta::count_when_for_to_pack_v<detail::is_not_insert_mode, 1, meta::is_c_str, meta::unqualified_t<Keys>...> > 0);
+			     = (meta::count_when_for_to_pack_v < detail::is_not_insert_mode, 1, is_set_direct_tableless, meta::unqualified_t<Keys>... >> 0);
 			auto pp = stack::push_pop<global>(*this);
 			int table_index = pp.index_of(*this);
 			lua_State* L = base_t::lua_state();
@@ -447,7 +477,7 @@ namespace sol {
 		template <typename... Ret, typename... Keys>
 		decltype(auto) raw_get(Keys&&... keys) const {
 			static_assert(sizeof...(Keys) == sizeof...(Ret), "number of keys and number of return types do not match");
-			constexpr static bool global = top_level && (meta::count_for_to_pack_v<1, meta::is_c_str, meta::unqualified_t<Keys>...> > 0);
+			constexpr static bool global = (meta::count_for_to_pack_v < 1, is_raw_get_direct_tableless, meta::unqualified_t<Keys>... >> 0);
 			auto pp = stack::push_pop<global>(*this);
 			int table_index = pp.index_of(*this);
 			return tuple_get<true, Ret...>(table_index, std::forward<Keys>(keys)...);
@@ -474,7 +504,7 @@ namespace sol {
 
 		template <typename T, typename... Keys>
 		decltype(auto) traverse_raw_get(Keys&&... keys) const {
-			constexpr static bool global = top_level && (meta::count_for_to_pack_v<1, meta::is_c_str, meta::unqualified_t<Keys>...> > 0);
+			constexpr static bool global = (meta::count_for_to_pack_v < 1, is_raw_get_direct_tableless, meta::unqualified_t<Keys>... >> 0);
 			auto pp = stack::push_pop<global>(*this);
 			int table_index = pp.index_of(*this);
 			return traverse_get_single<true, T>(table_index, std::forward<Keys>(keys)...);
@@ -482,7 +512,7 @@ namespace sol {
 
 		template <typename... Keys>
 		basic_table_core& traverse_raw_set(Keys&&... keys) {
-			constexpr static bool global = top_level && (meta::count_for_to_pack_v<1, meta::is_c_str, meta::unqualified_t<Keys>...> > 0);
+			constexpr static bool global = (meta::count_for_to_pack_v < 1, is_raw_set_direct_tableless, meta::unqualified_t<Keys>... >> 0);
 			auto pp = stack::push_pop<global>(*this);
 			lua_State* L = base_t::lua_state();
 			auto pn = stack::pop_n(L, static_cast<int>(sizeof...(Keys) - 2 - meta::count_for_pack_v<detail::is_insert_mode, meta::unqualified_t<Keys>...>));
@@ -499,18 +529,23 @@ namespace sol {
 		template <typename Class, typename Key>
 		usertype<Class> new_usertype(Key&& key);
 
+		template <typename Class, typename Key, automagic_flags enrollment_flags>
+		usertype<Class> new_usertype(Key&& key, constant_automagic_enrollments<enrollment_flags> enrollment);
+
 		template <typename Class, typename Key>
 		usertype<Class> new_usertype(Key&& key, automagic_enrollments enrollment);
 
 		template <typename Class, typename Key, typename Arg, typename... Args,
-		     typename = std::enable_if_t<!std::is_same_v<meta::unqualified_t<Arg>, automagic_enrollments>>>
+		     typename = std::enable_if_t<!std::is_base_of_v<automagic_enrollments, meta::unqualified_t<Arg>>>>
 		usertype<Class> new_usertype(Key&& key, Arg&& arg, Args&&... args);
 
 		template <bool read_only = true, typename... Args>
 		table new_enum(const string_view& name, Args&&... args) {
 			table target = create_with(std::forward<Args>(args)...);
-			if (read_only) {
-				table x = create_with(meta_function::new_index, detail::fail_on_newindex, meta_function::index, target);
+			if constexpr (read_only) {
+				// Need to create a special iterator to handle this
+				table x
+				     = create_with(meta_function::new_index, detail::fail_on_newindex, meta_function::index, target, meta_function::pairs, stack::stack_detail::readonly_pairs);
 				table shim = create_named(name, metatable_key, x);
 				return shim;
 			}
@@ -609,7 +644,7 @@ namespace sol {
 			auto pp = stack::push_pop(*this);
 			int table_index = pp.index_of(*this);
 			lua_State* L = base_t::lua_state();
-			(void)detail::swallow { 0, (stack::set_ref(L, std::forward<Args>(args), table_index), 0)... };
+			(void)detail::swallow { 0, (stack::stack_detail::raw_table_set(L, std::forward<Args>(args), table_index), 0)... };
 			return *this;
 		}
 
