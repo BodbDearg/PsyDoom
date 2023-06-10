@@ -1002,8 +1002,8 @@ gameaction_t MiniLoop(
         // has requested that we hold onto them.
         #if PSYDOOM_MODS
             if (!gbKeepInputEvents) {
-                Utils::checkForRendererToggleInput();
                 Utils::checkForUncappedFramerateToggleInput();
+                Utils::checkForRendererToggleInput();
                 Input::consumeEvents();
             } else {
                 gbKeepInputEvents = false;  // Temporary request only!
