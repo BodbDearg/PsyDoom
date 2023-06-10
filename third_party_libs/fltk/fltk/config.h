@@ -252,7 +252,7 @@
  * Whether or not select() call has its own header file.
  */
 
-#define HAVE_SYS_SELECT_H 0
+#define HAVE_SYS_SELECT_H 1
 
 /*
  * HAVE_SYS_STDTYPES_H:
