@@ -69,7 +69,7 @@ void initCore(Core& core, const uint16_t ramPixelW, const uint16_t ramPixelH) no
     core.clutCacheX = UINT16_MAX;
     core.clutCacheY = UINT16_MAX;
     core.clutCacheFmt = {};
-    std::memset(core.clutCache, 0, sizeof(core.clutCache));
+    std::memset(&core.clutCache->bits, 0, sizeof(core.clutCache));
 }
 
 void destroyCore(Core& core) noexcept {
@@ -206,7 +206,7 @@ void updateClutCache(Core& core) noexcept {
     if (newTexFmt != TexFmt::Bpp16) {
         ASSERT((newTexFmt == TexFmt::Bpp4) || (newTexFmt == TexFmt::Bpp8));
         std::memcpy(
-            core.clutCache,
+            &core.clutCache->bits,
             core.pRam + (core.clutY * core.ramPixelW + core.clutX),
             sizeof(uint16_t) * ((newTexFmt == TexFmt::Bpp4) ? 16 : 256)
         );
