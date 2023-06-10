@@ -43,6 +43,7 @@ class Fl_Window;
 class Fl_RGB_Image;
 class Fl_Group;
 class Fl_Input;
+class Fl_System_Driver;
 
 /**
   A base class describing the interface between FLTK and screen-related operations.
@@ -51,7 +52,7 @@ class Fl_Input;
 
   Each supported platform implements several of the virtual methods of this class.
 */
-class FL_EXPORT Fl_Screen_Driver {
+class Fl_Screen_Driver {
 
 protected:
   Fl_Screen_Driver();
@@ -68,19 +69,48 @@ public:
   static char bg_set;
   static char bg2_set;
   static char fg_set;
+  static Fl_System_Driver *system_driver;
+  // These flags are useful after calling XParseGeometry(). They indicate which of its
+  // arguments contain meaningful data upon return.
+  static const int fl_NoValue;
+  static const int fl_WidthValue;
+  static const int fl_HeightValue;
+  static const int fl_XValue;
+  static const int fl_YValue;
+  static const int fl_XNegative;
+  static const int fl_YNegative;
+  // key_table and key_table_size are used in fl_shortcut to translate key names
+  struct Keyname {
+    unsigned int key;
+    const char* name;
+  } *key_table;
+  int key_table_size;
 
   virtual float scale(int) { return 1; }
   virtual void scale(int /*n*/, float /*f*/) {}
   static Fl_Screen_Driver *newScreenDriver();
-  // --- display management
-  virtual void display(const char *disp);
+  // implement to process the -display argument and support the DISPLAY env var
+  virtual void display(const char *) { }
+  // default implementation should be enough
+  virtual int XParseGeometry(const char* string, int* x, int* y, unsigned int* width, unsigned int* height);
+  // the default implementation is most probably enough
+  virtual void own_colormap() {}
+  // the default implementation of shortcut_add_key_name() is in src/fl_shortcut.cxx
+  virtual const char *shortcut_add_key_name(unsigned key, char *p, char *buf, const char **);
+  // whether a platform uses additional code in Fl_Menu::handle_part1(int e)
+  virtual int need_menu_handle_part1_extra() {return 0;}
+  // whether a platform uses additional code in Fl_Menu::handle(int e)
+  virtual int need_menu_handle_part2() {return 0;}
+  // implement functions telling whether a key is pressed
+  virtual int event_key(int) {return 0;}
+  virtual int get_key(int) {return 0;}
   virtual int visual(int flags);
   // --- screen configuration
   virtual void init() {}
   virtual int x() { return 0; }
   virtual int y() { return 0; }
-  virtual int w() { return 800; } // default, override in driver!
-  virtual int h() { return 600; } // default, override in driver!
+  virtual int w() { return 800; } // default, FL_OVERRIDE in driver!
+  virtual int h() { return 600; } // default, FL_OVERRIDE in driver!
   virtual int screen_count();
   void screen_xywh(int &X, int &Y, int &W, int &H, int mx, int my);
   virtual void screen_xywh(int &X, int &Y, int &W, int &H, int /*n*/) {
@@ -92,7 +122,7 @@ public:
   void screen_xywh(int &X, int &Y, int &W, int &H, int mx, int my, int mw, int mh);
   virtual int screen_num(int x, int y);
   virtual int screen_num(int x, int y, int w, int h);
-  virtual void screen_dpi(float &h, float &v, int n = 0) { // override in driver!
+  virtual void screen_dpi(float &h, float &v, int n = 0) { // FL_OVERRIDE in driver!
     h = 72;
     v = 72;
     (void)n;
@@ -104,7 +134,7 @@ public:
   // --- audible output
   virtual void beep(int) {}
   // --- global events
-  virtual void flush() {}                                  // must override
+  virtual void flush() {}                                  // must FL_OVERRIDE
   virtual void grab(Fl_Window *) {}
   // --- global colors
   /* the default implementation of parse_color() may be enough */
@@ -167,6 +197,7 @@ public:
   static void write_image_inside(Fl_RGB_Image *to, Fl_RGB_Image *from, int to_x, int to_y);
   static Fl_RGB_Image *traverse_to_gl_subwindows(Fl_Group *g, int x, int y, int w, int h,
                                                  Fl_RGB_Image *full_img);
+  static size_t convert_crlf(char *s, size_t len);
   // optional platform-specific key handling for Fl_Input widget
   // the default implementation may be enough
   virtual int input_widget_handle_key(int key, unsigned mods, unsigned shift, Fl_Input *input);
@@ -186,7 +217,8 @@ public:
 
   void rescale_all_windows_from_screen(int screen, float f);
   static void transient_scale_display(float f, int nscreen);
-  static int scale_handler(int event);
+  // need export to fltk_gl.so because used in glut_compatibility.cxx
+  static FL_EXPORT int scale_handler(int event);
   virtual void desktop_scale_factor() {}
   void use_startup_scale_factor();
   enum APP_SCALING_CAPABILITY {

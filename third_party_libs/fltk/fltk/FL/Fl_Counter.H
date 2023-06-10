@@ -1,7 +1,7 @@
 //
 // Counter header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -34,12 +34,10 @@
   Controls a single floating point value with button (or keyboard) arrows.
   Double arrows buttons achieve larger steps than simple arrows.
   \see Fl_Spinner for value input with vertical step arrows.
-  <P align=center>\image html counter.png</P>
+  \image html counter.png
   \image latex counter.png "Fl_Counter" width=4cm
 
-  \todo Refactor the doxygen comments for Fl_Counter type() documentation.
-
-  The type of an Fl_Counter object can be set using type(uchar t) to:
+  The type of an Fl_Counter object can be set using Fl_Widget::type(uchar) to:
   \li \c FL_NORMAL_COUNTER: Displays a counter with 4 arrow buttons.
   \li \c FL_SIMPLE_COUNTER: Displays a counter with only 2 arrow buttons.
 */
@@ -49,18 +47,20 @@ class FL_EXPORT Fl_Counter : public Fl_Valuator {
   Fl_Fontsize textsize_;
   Fl_Color textcolor_;
   double lstep_;
-  uchar mouseobj;
+  uchar mouseobj_;
   static void repeat_callback(void *);
   int calc_mouseobj();
   void increment_cb();
 
 protected:
 
-  void draw();
+  void draw() FL_OVERRIDE;
+  // compute widths of arrow boxes
+  void arrow_widths(int &w1, int &w2);
 
 public:
 
-  int handle(int);
+  int handle(int) FL_OVERRIDE;
 
   Fl_Counter(int X, int Y, int W, int H, const char* L = 0);
   ~Fl_Counter();

@@ -1,7 +1,7 @@
 //
 // Drag & Drop code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2018 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -13,6 +13,9 @@
 //
 //     https://www.fltk.org/bugs.php
 //
+
+// Note: this file contains platform specific code and will therefore
+// not be processed by doxygen (see Doxyfile.in).
 
 // This file contains Windows-specific code for FLTK which is always linked
 // in.  Search other files for "_WIN32" or filenames ending in _win32.cxx
@@ -54,13 +57,13 @@ Fl_Window *fl_dnd_target_window = 0;
  */
 class FLDropTarget : public IDropTarget
 {
-  DWORD m_cRefCount;
+  DWORD m_cRefCount; // for "statistics" only (issue #569)
   DWORD lastEffect;
   int px, py;
 public:
   FLDropTarget() : m_cRefCount(0) { } // initialize
   virtual ~FLDropTarget() { }
-  HRESULT STDMETHODCALLTYPE QueryInterface( REFIID riid, LPVOID *ppvObject ) {
+  HRESULT STDMETHODCALLTYPE QueryInterface( REFIID riid, LPVOID *ppvObject ) FL_OVERRIDE {
     if (IID_IUnknown==riid || IID_IDropTarget==riid)
     {
       *ppvObject=this;
@@ -70,15 +73,14 @@ public:
     *ppvObject = NULL;
     return E_NOINTERFACE;
   }
-  ULONG STDMETHODCALLTYPE AddRef() { return ++m_cRefCount; }
-  ULONG STDMETHODCALLTYPE Release() {
+  ULONG STDMETHODCALLTYPE AddRef() FL_OVERRIDE { return ++m_cRefCount; }
+  ULONG STDMETHODCALLTYPE Release() FL_OVERRIDE {
     long nTemp;
     nTemp = --m_cRefCount;
-    if(nTemp==0)
-      delete this;
+    // this is a static object, do not 'delete this' (issue #569)
     return nTemp;
   }
-  HRESULT STDMETHODCALLTYPE DragEnter( IDataObject *pDataObj, DWORD /*grfKeyState*/, POINTL pt, DWORD *pdwEffect) {
+  HRESULT STDMETHODCALLTYPE DragEnter( IDataObject *pDataObj, DWORD /*grfKeyState*/, POINTL pt, DWORD *pdwEffect) FL_OVERRIDE {
     if( !pDataObj ) return E_INVALIDARG;
     // set e_modifiers here from grfKeyState, set e_x and e_root_x
     // check if FLTK handles this drag and return if it can't (i.e. BMP drag without filename)
@@ -108,7 +110,7 @@ public:
     lastEffect = *pdwEffect;
     return S_OK;
   }
-  HRESULT STDMETHODCALLTYPE DragOver( DWORD /*grfKeyState*/, POINTL pt, DWORD *pdwEffect) {
+  HRESULT STDMETHODCALLTYPE DragOver( DWORD /*grfKeyState*/, POINTL pt, DWORD *pdwEffect) FL_OVERRIDE {
     if ( px==pt.x && py==pt.y )
     {
       *pdwEffect = lastEffect;
@@ -144,7 +146,7 @@ public:
     Fl::flush();
     return S_OK;
   }
-  HRESULT STDMETHODCALLTYPE DragLeave() {
+  HRESULT STDMETHODCALLTYPE DragLeave() FL_OVERRIDE {
     if ( fl_dnd_target_window && fillCurrentDragData(0))
     {
       Fl::handle( FL_DND_LEAVE, fl_dnd_target_window );
@@ -153,7 +155,7 @@ public:
     }
     return S_OK;
   }
-  HRESULT STDMETHODCALLTYPE Drop( IDataObject *data, DWORD /*grfKeyState*/, POINTL pt, DWORD* /*pdwEffect*/) {
+  HRESULT STDMETHODCALLTYPE Drop( IDataObject *data, DWORD /*grfKeyState*/, POINTL pt, DWORD* /*pdwEffect*/) FL_OVERRIDE {
     if ( !fl_dnd_target_window )
       return S_OK;
     Fl_Window *target = fl_dnd_target_window;
@@ -327,7 +329,7 @@ class FLDropSource : public IDropSource
 public:
   FLDropSource() { m_cRefCount = 0; }
   virtual ~FLDropSource() { }
-  HRESULT STDMETHODCALLTYPE QueryInterface( REFIID riid, LPVOID *ppvObject ) {
+  HRESULT STDMETHODCALLTYPE QueryInterface( REFIID riid, LPVOID *ppvObject ) FL_OVERRIDE {
     if (IID_IUnknown==riid || IID_IDropSource==riid)
     {
       *ppvObject=this;
@@ -337,16 +339,16 @@ public:
     *ppvObject = NULL;
     return E_NOINTERFACE;
   }
-  ULONG STDMETHODCALLTYPE AddRef() { return ++m_cRefCount; }
-  ULONG STDMETHODCALLTYPE Release() {
+  ULONG STDMETHODCALLTYPE AddRef() FL_OVERRIDE { return ++m_cRefCount; }
+  ULONG STDMETHODCALLTYPE Release() FL_OVERRIDE {
     long nTemp;
     nTemp = --m_cRefCount;
     if(nTemp==0)
       delete this;
     return nTemp;
   }
-  STDMETHODIMP GiveFeedback( DWORD ) { return DRAGDROP_S_USEDEFAULTCURSORS; }
-  STDMETHODIMP QueryContinueDrag( BOOL esc, DWORD keyState ) {
+  STDMETHODIMP GiveFeedback( DWORD ) FL_OVERRIDE { return DRAGDROP_S_USEDEFAULTCURSORS; }
+  STDMETHODIMP QueryContinueDrag( BOOL esc, DWORD keyState ) FL_OVERRIDE {
     if ( esc )
       return DRAGDROP_S_CANCEL;
     if ( !(keyState & (MK_LBUTTON|MK_MBUTTON|MK_RBUTTON)) )
@@ -360,11 +362,11 @@ public:
   int n;
   LONG m_lRefCount;
 
-  ULONG __stdcall AddRef(void) {
+  ULONG __stdcall AddRef(void) FL_OVERRIDE {
     return InterlockedIncrement(&m_lRefCount);
   }
 
-  ULONG __stdcall Release(void) {
+  ULONG __stdcall Release(void) FL_OVERRIDE {
     LONG count = InterlockedDecrement(&m_lRefCount);
     if(count == 0) {
       delete this;
@@ -375,7 +377,7 @@ public:
   }
 
 
-  HRESULT __stdcall QueryInterface(REFIID iid, void **ppvObject) {
+  HRESULT __stdcall QueryInterface(REFIID iid, void **ppvObject) FL_OVERRIDE {
     if(iid == IID_IEnumFORMATETC || iid == IID_IUnknown) {
        AddRef();
        *ppvObject = this;
@@ -386,7 +388,7 @@ public:
     }
   }
 
-  HRESULT __stdcall Next(ULONG celt, FORMATETC * rgelt, ULONG *pceltFetched) {
+  HRESULT __stdcall Next(ULONG celt, FORMATETC * rgelt, ULONG *pceltFetched) FL_OVERRIDE {
     if (n > 0) return S_FALSE;
     for (ULONG i = 0; i < celt; i++) {
       n++;
@@ -400,17 +402,17 @@ public:
     return S_OK;
   }
 
-  HRESULT __stdcall Skip(ULONG celt) {
+  HRESULT __stdcall Skip(ULONG celt) FL_OVERRIDE {
     n += celt;
     return  (n == 0) ? S_OK : S_FALSE;
   }
 
-  HRESULT __stdcall Reset(void) {
+  HRESULT __stdcall Reset(void) FL_OVERRIDE {
         n = 0;
         return S_OK;
   }
 
-  HRESULT __stdcall Clone(IEnumFORMATETC  **ppenum){
+  HRESULT __stdcall Clone(IEnumFORMATETC  **ppenum) FL_OVERRIDE {
     *ppenum = new FLEnum();
     return S_OK;
   }
@@ -434,11 +436,11 @@ public:
 class FLDataObject : public IDataObject
 {
   DWORD m_cRefCount;
-  FLEnum *m_EnumF;
+  //FLEnum *m_EnumF;
 public:
   FLDataObject() { m_cRefCount = 1; }// m_EnumF = new FLEnum();}
   virtual ~FLDataObject() { }
-  HRESULT STDMETHODCALLTYPE QueryInterface( REFIID riid, LPVOID *ppvObject ) {
+  HRESULT STDMETHODCALLTYPE QueryInterface( REFIID riid, LPVOID *ppvObject ) FL_OVERRIDE {
     if (IID_IUnknown==riid || IID_IDataObject==riid)
     {
       *ppvObject=this;
@@ -448,8 +450,8 @@ public:
     *ppvObject = NULL;
     return E_NOINTERFACE;
   }
-  ULONG STDMETHODCALLTYPE AddRef() { return ++m_cRefCount; }
-  ULONG STDMETHODCALLTYPE Release() {
+  ULONG STDMETHODCALLTYPE AddRef() FL_OVERRIDE { return ++m_cRefCount; }
+  ULONG STDMETHODCALLTYPE Release() FL_OVERRIDE {
     long nTemp;
     nTemp = --m_cRefCount;
     if(nTemp==0)
@@ -457,7 +459,7 @@ public:
     return nTemp;
   }
   // GetData currently allows UNICODE text through Global Memory only
-  HRESULT STDMETHODCALLTYPE GetData( FORMATETC *pformatetcIn, STGMEDIUM *pmedium ) {
+  HRESULT STDMETHODCALLTYPE GetData( FORMATETC *pformatetcIn, STGMEDIUM *pmedium ) FL_OVERRIDE {
     if ((pformatetcIn->dwAspect & DVASPECT_CONTENT) &&
         (pformatetcIn->tymed & TYMED_HGLOBAL) &&
         (pformatetcIn->cfFormat == CF_UNICODETEXT))
@@ -503,7 +505,7 @@ public:
     }
     return DV_E_FORMATETC;
   }
-  HRESULT STDMETHODCALLTYPE QueryGetData( FORMATETC *pformatetc )
+  HRESULT STDMETHODCALLTYPE QueryGetData( FORMATETC *pformatetc ) FL_OVERRIDE
   {
     if ((pformatetc->dwAspect & DVASPECT_CONTENT) &&
         (pformatetc->tymed & TYMED_HGLOBAL) &&
@@ -517,15 +519,15 @@ public:
 //  }
 
   // all the following methods are not really needed for a DnD object
-  HRESULT STDMETHODCALLTYPE GetDataHere( FORMATETC* /*pformatetcIn*/, STGMEDIUM* /*pmedium*/) { return E_NOTIMPL; }
-  HRESULT STDMETHODCALLTYPE GetCanonicalFormatEtc( FORMATETC* /*in*/, FORMATETC* /*out*/) { return E_NOTIMPL; }
-  HRESULT STDMETHODCALLTYPE SetData( FORMATETC* /*pformatetc*/, STGMEDIUM* /*pmedium*/, BOOL /*fRelease*/) { return E_NOTIMPL; }
-  HRESULT STDMETHODCALLTYPE EnumFormatEtc( DWORD /*dir*/, IEnumFORMATETC** /*ppenumFormatEtc*/) { return E_NOTIMPL; }
-//  HRESULT STDMETHODCALLTYPE EnumFormatEtc( DWORD dir, IEnumFORMATETC** ppenumFormatEtc) {*ppenumFormatEtc = m_EnumF; return S_OK;}
+  HRESULT STDMETHODCALLTYPE GetDataHere( FORMATETC* /*pformatetcIn*/, STGMEDIUM* /*pmedium*/) FL_OVERRIDE { return E_NOTIMPL; }
+  HRESULT STDMETHODCALLTYPE GetCanonicalFormatEtc( FORMATETC* /*in*/, FORMATETC* /*out*/) FL_OVERRIDE { return E_NOTIMPL; }
+  HRESULT STDMETHODCALLTYPE SetData( FORMATETC* /*pformatetc*/, STGMEDIUM* /*pmedium*/, BOOL /*fRelease*/) FL_OVERRIDE { return E_NOTIMPL; }
+  HRESULT STDMETHODCALLTYPE EnumFormatEtc( DWORD /*dir*/, IEnumFORMATETC** /*ppenumFormatEtc*/) FL_OVERRIDE { return E_NOTIMPL; }
+//  HRESULT STDMETHODCALLTYPE EnumFormatEtc( DWORD dir, IEnumFORMATETC** ppenumFormatEtc) FL_OVERRIDE {*ppenumFormatEtc = m_EnumF; return S_OK;}
   HRESULT STDMETHODCALLTYPE DAdvise( FORMATETC* /*pformatetc*/, DWORD /*advf*/,
-      IAdviseSink* /*pAdvSink*/, DWORD* /*pdwConnection*/) { return E_NOTIMPL; }
-  HRESULT STDMETHODCALLTYPE DUnadvise( DWORD /*dwConnection*/) { return E_NOTIMPL; }
-  HRESULT STDMETHODCALLTYPE EnumDAdvise( IEnumSTATDATA** /*ppenumAdvise*/) { return E_NOTIMPL; }
+      IAdviseSink* /*pAdvSink*/, DWORD* /*pdwConnection*/) FL_OVERRIDE { return E_NOTIMPL; }
+  HRESULT STDMETHODCALLTYPE DUnadvise( DWORD /*dwConnection*/) FL_OVERRIDE { return E_NOTIMPL; }
+  HRESULT STDMETHODCALLTYPE EnumDAdvise( IEnumSTATDATA** /*ppenumAdvise*/) FL_OVERRIDE { return E_NOTIMPL; }
 };
 
 

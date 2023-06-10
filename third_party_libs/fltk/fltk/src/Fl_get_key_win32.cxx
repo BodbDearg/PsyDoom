@@ -1,7 +1,7 @@
 //
 // Windows keyboard state routines for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2018 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -14,11 +14,14 @@
 //     https://www.fltk.org/bugs.php
 //
 
+// Note: this file contains platform specific code and will therefore
+// not be processed by doxygen (see Doxyfile.in).
+
 // Return the current state of a key.  Keys are named by fltk symbols,
 // which are actually X keysyms.  So this has to translate to Windows
 // VK_x symbols.
 
-#include "drivers/WinAPI//Fl_WinAPI_System_Driver.H"
+#include "drivers/WinAPI/Fl_WinAPI_Screen_Driver.H"
 #include <FL/platform.H>
 
 // Convert an FLTK (X) keysym to a Windows VK symbol:
@@ -113,11 +116,11 @@ static int fltk2ms(int fltk) {
   return 0;
 }
 
-int Fl_WinAPI_System_Driver::event_key(int k) {
+int Fl_WinAPI_Screen_Driver::event_key(int k) {
   return GetKeyState(fltk2ms(k))&~1;
 }
 
-int Fl_WinAPI_System_Driver::get_key(int k) {
+int Fl_WinAPI_Screen_Driver::get_key(int k) {
   uchar foo[256];
   GetKeyboardState(foo);
   return foo[fltk2ms(k)]&~1;

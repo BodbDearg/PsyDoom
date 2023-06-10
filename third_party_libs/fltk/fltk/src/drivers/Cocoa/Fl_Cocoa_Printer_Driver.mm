@@ -56,18 +56,18 @@ private:
   PMPageFormat    pageFormat;
   PMPrintSettings printSettings;
   Fl_Cocoa_Printer_Driver(void);
-  int begin_job(int pagecount = 0, int *frompage = NULL, int *topage = NULL, char **perr_message = NULL);
-  int begin_page (void);
-  int printable_rect(int *w, int *h);
-  void margins(int *left, int *top, int *right, int *bottom);
-  void origin(int *x, int *y);
-  void origin(int x, int y);
-  void scale (float scale_x, float scale_y = 0.);
-  void rotate(float angle);
-  void translate(int x, int y);
-  void untranslate(void);
-  int end_page (void);
-  void end_job (void);
+  int begin_job(int pagecount = 0, int *frompage = NULL, int *topage = NULL, char **perr_message = NULL) FL_OVERRIDE;
+  int begin_page (void) FL_OVERRIDE;
+  int printable_rect(int *w, int *h) FL_OVERRIDE;
+  void margins(int *left, int *top, int *right, int *bottom) FL_OVERRIDE;
+  void origin(int *x, int *y) FL_OVERRIDE;
+  void origin(int x, int y) FL_OVERRIDE;
+  void scale (float scale_x, float scale_y = 0.) FL_OVERRIDE;
+  void rotate(float angle) FL_OVERRIDE;
+  void translate(int x, int y) FL_OVERRIDE;
+  void untranslate(void) FL_OVERRIDE;
+  int end_page (void) FL_OVERRIDE;
+  void end_job (void) FL_OVERRIDE;
   ~Fl_Cocoa_Printer_Driver(void);
 };
 
@@ -111,7 +111,8 @@ int Fl_Cocoa_Printer_Driver::begin_job (int pagecount, int *frompage, int *topag
     NSPrintInfo *info = [NSPrintInfo sharedPrintInfo];
     NSPrintPanel *panel = [NSPrintPanel printPanel];
     //from 10.5
-    [panel setOptions:NSPrintPanelShowsCopies | NSPrintPanelShowsPageRange | NSPrintPanelShowsPageSetupAccessory];
+    [panel setOptions:NSPrintPanelShowsCopies | NSPrintPanelShowsPageRange |
+      NSPrintPanelShowsPageSetupAccessory | NSPrintPanelShowsOrientation | NSPrintPanelShowsPaperSize];
     NSInteger retval = -1;
     Fl_Window *top = Fl::first_window();
     NSWindow *main = (top ? (NSWindow*)fl_xid(top->top_window()) : nil);
@@ -346,7 +347,7 @@ int Fl_Cocoa_Printer_Driver::begin_page (void)
   CGContextSaveGState(gc);
   CGContextSaveGState(gc);
   fl_line_style(FL_SOLID);
-  fl_window = (Window)1; // TODO: something better
+  fl_window = (FLWindow*)1; // TODO: something better
   fl_clip_region(0);
   return status != noErr;
 }

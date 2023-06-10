@@ -30,23 +30,22 @@
   color_average(), desaturate(), or inactive() methods.
 */
 class FL_EXPORT Fl_Tiled_Image : public Fl_Image {
-  protected:
+protected:
 
   Fl_Image      *image_;                // The image that is tiled
   int           alloc_image_;           // Did we allocate this image?
 
-  public:
-
+public:
   Fl_Tiled_Image(Fl_Image *i, int W = 0, int H = 0);
   virtual ~Fl_Tiled_Image();
 
-  virtual Fl_Image *copy(int W, int H) const;
+  Fl_Image *copy(int W, int H) const FL_OVERRIDE;
   Fl_Image *copy() const {
     return Fl_Image::copy();
   }
-  virtual void color_average(Fl_Color c, float i);
-  virtual void desaturate();
-  virtual void draw(int X, int Y, int W, int H, int cx = 0, int cy = 0);
+  void color_average(Fl_Color c, float i) FL_OVERRIDE;
+  void desaturate() FL_OVERRIDE;
+  void draw(int X, int Y, int W, int H, int cx = 0, int cy = 0) FL_OVERRIDE;
   void draw(int X, int Y) { draw(X, Y, w(), h(), 0, 0); }
   /** Gets The image that is tiled */
   Fl_Image *image() { return image_; }

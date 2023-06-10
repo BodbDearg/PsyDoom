@@ -1,7 +1,7 @@
 //
 // MacOS keyboard state routines for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2018 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -14,6 +14,9 @@
 //     https://www.fltk.org/bugs.php
 //
 
+// Note: this file contains platform specific code and will therefore
+// not be processed by doxygen (see Doxyfile.in).
+
 // Return the current state of a key.  Keys are named by fltk symbols,
 // which are actually X keysyms.  So this has to translate to macOS
 // symbols.
@@ -21,6 +24,7 @@
 #include <FL/Fl.H>
 #include <FL/platform.H>
 #include "drivers/Darwin/Fl_Darwin_System_Driver.H"
+#include "drivers/Cocoa/Fl_Cocoa_Screen_Driver.H"
 
 // The list of Mac OS virtual keycodes appears with OS 10.5 in
 // ...../Carbon.framework/Frameworks/HIToolbox.framework/Headers/Events.h
@@ -235,12 +239,12 @@ static int fltk2mac(int fltk) {
 }
 
 //: returns true, if that key was pressed during the last event
-int Fl_Darwin_System_Driver::event_key(int k) {
+int Fl_Cocoa_Screen_Driver::event_key(int k) {
   return get_key(k);
 }
 
 //: returns true, if that key is pressed right now
-int Fl_Darwin_System_Driver::get_key(int k) {
+int Fl_Cocoa_Screen_Driver::get_key(int k) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
   if (&CGEventSourceKeyState != NULL) {
     return (int)CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, fltk2mac(k) );

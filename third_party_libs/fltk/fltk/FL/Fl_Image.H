@@ -60,9 +60,10 @@ enum Fl_RGB_Scaling {
 class FL_EXPORT Fl_Image {
   friend class Fl_Graphics_Driver;
 public:
-  static const int ERR_NO_IMAGE    = -1;
-  static const int ERR_FILE_ACCESS = -2;
-  static const int ERR_FORMAT      = -3;
+  static const int ERR_NO_IMAGE       = -1;
+  static const int ERR_FILE_ACCESS    = -2;
+  static const int ERR_FORMAT         = -3;
+  static const int ERR_MEMORY_ACCESS  = -4;
 
 private:
   int w_, h_, d_, ld_, count_;
@@ -266,11 +267,14 @@ public:
   virtual void color_average(Fl_Color c, float i);
   /**
    The inactive() method calls
-   color_average(FL_BACKGROUND_COLOR, 0.33f) to produce
+   color_average(\ref FL_BACKGROUND_COLOR, 0.33f) to produce
    an image that appears grayed out.
 
    An internal copy is made of the original image before
    changes are applied, to avoid modifying the original image.
+
+   \note The RGB color of \ref FL_BACKGROUND_COLOR may change when the
+   connection to the display is made. See fl_open_display().
    */
   void inactive() { color_average(FL_GRAY, .33f); }
   virtual void desaturate();
@@ -353,17 +357,18 @@ private:
 public:
 
   Fl_RGB_Image(const uchar *bits, int W, int H, int D=3, int LD=0);
+  Fl_RGB_Image(const uchar *bits, int bits_length, int W, int H, int D, int LD);
   Fl_RGB_Image(const Fl_Pixmap *pxm, Fl_Color bg=FL_GRAY);
-  virtual ~Fl_RGB_Image();
-  virtual Fl_Image *copy(int W, int H) const;
+  ~Fl_RGB_Image() FL_OVERRIDE;
+  Fl_Image *copy(int W, int H) const FL_OVERRIDE;
   Fl_Image *copy() const { return Fl_Image::copy(); }
-  virtual void color_average(Fl_Color c, float i);
-  virtual void desaturate();
-  virtual void draw(int X, int Y, int W, int H, int cx=0, int cy=0);
+  void color_average(Fl_Color c, float i) FL_OVERRIDE;
+  void desaturate() FL_OVERRIDE;
+  void draw(int X, int Y, int W, int H, int cx=0, int cy=0) FL_OVERRIDE;
   void draw(int X, int Y) {draw(X, Y, w(), h(), 0, 0);}
-  virtual void label(Fl_Widget*w);
-  virtual void label(Fl_Menu_Item*m);
-  virtual void uncache();
+  void label(Fl_Widget*w) FL_OVERRIDE;
+  void label(Fl_Menu_Item*m) FL_OVERRIDE;
+  void uncache() FL_OVERRIDE;
   /** Sets the maximum allowed image size in bytes when creating an Fl_RGB_Image object.
 
    The image size in bytes of an Fl_RGB_Image object is the value of the product w() * h() * d().

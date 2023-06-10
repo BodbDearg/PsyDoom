@@ -22,12 +22,14 @@
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Bitmap.H>
 #include <FL/Fl_Window.H>
+#include <FL/Fl_Image_Surface.H>
 #include <FL/Fl_Overlay_Window.H>
 #include <FL/platform.H>
 #include "Fl_WinAPI_Window_Driver.H"
 #include "Fl_WinAPI_Screen_Driver.H"
 #include "../GDI/Fl_GDI_Graphics_Driver.H"
 #include <windows.h>
+#include <ole2.h>
 #include <math.h>  // for ceil()
 
 #if USE_COLORMAP
@@ -55,19 +57,8 @@ Fl_WinAPI_Window_Driver::~Fl_WinAPI_Window_Driver()
   delete icon_;
 }
 
-int Fl_WinAPI_Window_Driver::screen_num() {
-  if (pWindow->parent()) {
-    screen_num_ = Fl_Window_Driver::driver(pWindow->top_window())->screen_num();
-  }
-  return screen_num_ >= 0 ? screen_num_ : 0;
-}
 
 //FILE*LOG=fopen("log.log","w");
-
-void Fl_WinAPI_Window_Driver::screen_num(int n) {
-//fprintf(LOG, "screen_num setter old=%d new=%d\n",screen_num_, n);fflush(LOG);
-  screen_num_ = n;
-}
 
 
 RECT // frame of the decorated window in screen coordinates
@@ -296,20 +287,20 @@ void Fl_WinAPI_Window_Driver::flush_double()
 {
   if (!shown()) return;
   pWindow->make_current(); // make sure fl_gc is non-zero
-  Fl_X *i = Fl_X::i(pWindow);
+  Fl_X *i = Fl_X::flx(pWindow);
   if (!i) return; // window not yet created
 
   if (!other_xid) {
-    other_xid = fl_create_offscreen(w(), h());
+    other_xid = new Fl_Image_Surface(w(), h(), 1);
     pWindow->clear_damage(FL_DAMAGE_ALL);
   }
   if (pWindow->damage() & ~FL_DAMAGE_EXPOSE) {
     fl_clip_region(i->region); i->region = 0;
 #if 0 /* Short form that transiently changes the current Fl_Surface_Device */
-    fl_begin_offscreen(other_xid);
+    Fl_Surface_Device::push_current(other_xid);
     fl_graphics_driver->clip_region( 0 );
     draw();
-    fl_end_offscreen();
+    Fl_Surface_Device::pop_current();
 #else
     /* Alternative form that avoids changing the current Fl_Surface_Device.
      The code run in the window draw() method can call Fl_Surface_Device::surface()
@@ -317,7 +308,7 @@ void Fl_WinAPI_Window_Driver::flush_double()
      for an Fl_Double_Window.
      */
     HDC sgc = fl_gc;
-    fl_gc = fl_makeDC(other_xid);
+    fl_gc = fl_makeDC((HBITMAP)other_xid->offscreen());
     int savedc = SaveDC(fl_gc);
     fl_graphics_driver->gc(fl_gc);
     fl_graphics_driver->restore_clip(); // duplicate clip region into new gc
@@ -332,7 +323,7 @@ void Fl_WinAPI_Window_Driver::flush_double()
   }
   int X = 0, Y = 0, W = 0, H = 0;
   fl_clip_box(0, 0, w(), h(), X, Y, W, H);
-  if (other_xid) fl_copy_offscreen(X, Y, W, H, other_xid, X, Y);
+  if (other_xid) fl_copy_offscreen(X, Y, W, H, other_xid->offscreen(), X, Y);
 }
 
 
@@ -342,27 +333,27 @@ void Fl_WinAPI_Window_Driver::flush_overlay()
 
   if (!shown()) return;
   pWindow->make_current(); // make sure fl_gc is non-zero
-  Fl_X *i = Fl_X::i(pWindow);
+  Fl_X *i = Fl_X::flx(pWindow);
   if (!i) return; // window not yet created
 
   int eraseoverlay = (pWindow->damage()&FL_DAMAGE_OVERLAY);
   pWindow->clear_damage((uchar)(pWindow->damage()&~FL_DAMAGE_OVERLAY));
 
   if (!other_xid) {
-    other_xid = fl_create_offscreen(w(), h());
+    other_xid = new Fl_Image_Surface(w(), h(), 1);
     pWindow->clear_damage(FL_DAMAGE_ALL);
   }
   if (pWindow->damage() & ~FL_DAMAGE_EXPOSE) {
     fl_clip_region(i->region); i->region = 0;
-    fl_begin_offscreen(other_xid);
+    Fl_Surface_Device::push_current(other_xid);
     fl_graphics_driver->clip_region(0);
     draw();
-    fl_end_offscreen();
+    Fl_Surface_Device::pop_current();
   }
 
   if (eraseoverlay) fl_clip_region(0);
   int X, Y, W, H; fl_clip_box(0, 0, w(), h(), X, Y, W, H);
-  if (other_xid) fl_copy_offscreen(X, Y, W, H, other_xid, X, Y);
+  if (other_xid) fl_copy_offscreen(X, Y, W, H, other_xid->offscreen(), X, Y);
 
   if (overlay() == oWindow) oWindow->draw_overlay();
 }
@@ -381,7 +372,7 @@ void Fl_WinAPI_Window_Driver::icons(const Fl_RGB_Image *icons[], int count) {
     }
   }
 
-  if (Fl_X::i(pWindow))
+  if (Fl_X::flx(pWindow))
     set_icons();
 }
 
@@ -452,7 +443,7 @@ extern void fl_clipboard_notify_retarget(HWND wnd);
 extern void fl_update_clipboard(void);
 
 void Fl_WinAPI_Window_Driver::hide() {
-  Fl_X* ip = Fl_X::i(pWindow);
+  Fl_X* ip = Fl_X::flx(pWindow);
   // STR#3079: if there remains a window and a non-modal window, and the window is deleted,
   // the app remains running without any apparent window.
   // Bug mechanism: hiding an owner window unmaps the owned (non-modal) window(s)
@@ -462,7 +453,7 @@ void Fl_WinAPI_Window_Driver::hide() {
   int count = 0;
   Fl_Window *win, **doit = NULL;
   for (win = Fl::first_window(); win && ip; win = Fl::next_window(win)) {
-    if (win->non_modal() && GetWindow(fl_xid(win), GW_OWNER) == ip->xid) {
+    if (win->non_modal() && GetWindow(fl_xid(win), GW_OWNER) == (HWND)ip->xid) {
       count++;
     }
   }
@@ -470,7 +461,7 @@ void Fl_WinAPI_Window_Driver::hide() {
     doit = new Fl_Window*[count];
     count = 0;
     for (win = Fl::first_window(); win && ip; win = Fl::next_window(win)) {
-      if (win->non_modal() && GetWindow(fl_xid(win), GW_OWNER) == ip->xid) {
+      if (win->non_modal() && GetWindow(fl_xid(win), GW_OWNER) == (HWND)ip->xid) {
         doit[count++] = win;
       }
     }
@@ -481,18 +472,21 @@ void Fl_WinAPI_Window_Driver::hide() {
     return;
   }
 
+  // Issue #569: undo RegisterDragDrop()
+  RevokeDragDrop((HWND)ip->xid);
+
   // make sure any custom icons get freed
   // icons(NULL, 0); // free_icons() is called by the Fl_Window destructor
   // this little trick keeps the current clipboard alive, even if we are about
   // to destroy the window that owns the selection.
-  if (GetClipboardOwner()==ip->xid)
+  if (GetClipboardOwner() == (HWND)ip->xid)
     fl_update_clipboard();
   // Make sure we unlink this window from the clipboard chain
-  fl_clipboard_notify_retarget(ip->xid);
+  fl_clipboard_notify_retarget((HWND)ip->xid);
   // Send a message to myself so that I'll get out of the event loop...
-  PostMessage(ip->xid, WM_APP, 0, 0);
-  if (private_dc) fl_release_dc(ip->xid, private_dc);
-  if (ip->xid == fl_window && fl_graphics_driver->gc()) {
+  PostMessage((HWND)ip->xid, WM_APP, 0, 0);
+  if (private_dc) fl_release_dc((HWND)ip->xid, private_dc);
+  if ((HWND)ip->xid == fl_window && fl_graphics_driver->gc()) {
     fl_release_dc(fl_window, (HDC)fl_graphics_driver->gc());
     fl_window = (HWND)-1;
     fl_graphics_driver->gc(0);
@@ -505,11 +499,11 @@ void Fl_WinAPI_Window_Driver::hide() {
 
   // this little trickery seems to avoid the popup window stacking problem
   HWND p = GetForegroundWindow();
-  if (p==GetParent(ip->xid)) {
-    ShowWindow(ip->xid, SW_HIDE);
+  if (p==GetParent((HWND)ip->xid)) {
+    ShowWindow((HWND)ip->xid, SW_HIDE);
     ShowWindow(p, SW_SHOWNA);
   }
-  DestroyWindow(ip->xid);
+  DestroyWindow((HWND)ip->xid);
   // end of fix for STR#3079
   if (count) {
     int ii;
@@ -541,7 +535,7 @@ void Fl_WinAPI_Window_Driver::unmap() {
 #if !defined(FL_DOXYGEN) // FIXME - silence Doxygen warning
 
 void Fl_WinAPI_Window_Driver::make_fullscreen(int X, int Y, int W, int H) {
-  Window xid = fl_xid(pWindow);
+  HWND xid = fl_xid(pWindow);
   int top, bottom, left, right;
   int sx, sy, sw, sh;
 
@@ -589,7 +583,7 @@ void Fl_WinAPI_Window_Driver::fullscreen_off(int X, int Y, int W, int H) {
   // Remove the xid temporarily so that Fl_WinAPI_Window_Driver::fake_X_wm() behaves like it
   // does in Fl_WinAPI_Window_Driver::makeWindow().
   HWND xid = fl_xid(pWindow);
-  Fl_X::i(pWindow)->xid = NULL;
+  Fl_X::flx(pWindow)->xid = 0;
   int wx, wy, bt, bx, by;
   switch (fake_X_wm(wx, wy, bt, bx, by)) {
     case 0:
@@ -603,7 +597,7 @@ void Fl_WinAPI_Window_Driver::fullscreen_off(int X, int Y, int W, int H) {
       }
       break;
   }
-  Fl_X::i(pWindow)->xid = xid;
+  Fl_X::flx(pWindow)->xid = (fl_uintptr_t)xid;
   // compute window position and size in scaled units
   float s = Fl::screen_driver()->scale(screen_num());
   int scaledX = int(ceil(X*s)), scaledY= int(ceil(Y*s)), scaledW = int(ceil(W*s)), scaledH = int(ceil(H*s));
@@ -711,4 +705,14 @@ void Fl_WinAPI_Window_Driver::resize_after_screen_change(void *data) {
 
 const Fl_Image* Fl_WinAPI_Window_Driver::shape() {
   return shape_data_ ? shape_data_->shape_ : NULL;
+}
+
+
+HWND fl_win32_xid(const Fl_Window *win) {
+  return (HWND)Fl_Window_Driver::xid(win);
+}
+
+
+Fl_Window *fl_win32_find(HWND xid) {
+  return Fl_Window_Driver::find((fl_uintptr_t)xid);
 }

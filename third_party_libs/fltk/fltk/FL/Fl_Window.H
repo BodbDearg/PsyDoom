@@ -48,6 +48,9 @@ class Fl_Double_Window;
   The window's callback is done if the user tries to close a window
   using the window manager and Fl::modal() is zero or equal to the
   window. Fl_Window has a default callback that calls Fl_Window::hide().
+  Callback reasons can be \p FL_REASON_CANCELLED if the Escape key was pressed,
+  or \p FL_REASON_CLOSED when the close button is clicked. \p FL_WHEN_...
+  flags are ignored.
 */
 class FL_EXPORT Fl_Window : public Fl_Group {
   friend int Fl::arg(int argc, char **argv, int &i);
@@ -69,7 +72,7 @@ private:
   // TODO: it would make sense to merge the use of Fl_X and Fl_Window_Driver, maybe simply by
   // TODO: deriving Fl_Window_Driver from Fl_X. However, there are a lot of historic kludges
   // TODO: for some platforms around Fl_X.
-  Fl_X *i; // points at the system-specific stuff, but exists only after the window is mapped
+  Fl_X *flx_; // points at the system-specific stuff, but exists only after the window is mapped
   Fl_Window_Driver *pWindowDriver; // points at the system-specific stuff at window creation time
 
   const char* iconlabel_;
@@ -93,7 +96,7 @@ protected:
 
   /** Stores the last window that was made current. See current() const */
   static Fl_Window *current_;
-  void draw();
+  void draw() FL_OVERRIDE;
   /** Forces the window to be drawn, this window is also made current and calls draw(). */
   virtual void flush();
 
@@ -170,7 +173,7 @@ public:
   */
     virtual ~Fl_Window();
 
-  virtual int handle(int);
+  int handle(int) FL_OVERRIDE;
 
   /**
     Changes the size and position of the window.  If shown() is true,
@@ -188,7 +191,7 @@ public:
     dimensions. It is up to the application developer to verify window
     parameters after the resize request.
   */
-  virtual void resize(int X,int Y,int W,int H);
+  void resize(int X,int Y,int W,int H) FL_OVERRIDE;
   /** Sets whether or not the window manager border is around the window.
   The default value is true. <I>With some X window
   managers, this does not work after show() has been called.</I>
@@ -201,9 +204,9 @@ public:
   void clear_border()   {set_flag(NOBORDER);}
   /** Returns whether the window possesses a border */
   unsigned int border() const   {return !(flags() & NOBORDER);}
-  /** Activates the flags NOBORDER|FL_OVERRIDE */
+  /** Activates the flags NOBORDER|OVERRIDE */
   void set_override()   {set_flag(NOBORDER|OVERRIDE);}
-  /** Returns non zero if FL_OVERRIDE flag is set, 0 otherwise. */
+  /** Returns non zero if OVERRIDE flag is set, 0 otherwise. */
   unsigned int override() const  { return flags()&OVERRIDE; }
   /**
     A "modal" window, when shown(), will prevent any events from
@@ -351,13 +354,42 @@ public:
   void icon(const Fl_RGB_Image*);
   void icons(const Fl_RGB_Image*[], int);
 
-#if defined(_WIN32) && !defined(FL_DOXYGEN)
+#if defined(_WIN32) || defined(FL_DOXYGEN)
   typedef struct HICON__* HICON;
   // These 2 member functions break the driver model but are kept for back compatibility.
   // They are implemented in Fl_win32.cxx
+
+  /** Sets the default window icons (Windows platform only).
+
+   Convenience function to set the default icons using Windows'
+   native HICON icon handles.
+
+   The given icons are copied. You can free the icons immediately after
+   this call.
+
+   \param[in] big_icon default large icon for all windows
+   subsequently created
+   \param[in] small_icon default small icon for all windows
+   subsequently created
+
+   \see Fl_Window::default_icon(const Fl_RGB_Image *)
+   \see Fl_Window::default_icons(const Fl_RGB_Image *[], int)
+   \see Fl_Window::icon(const Fl_RGB_Image *)
+   \see Fl_Window::icons(const Fl_RGB_Image *[], int)
+   \see Fl_Window::icons(HICON, HICON)
+   */
   static void default_icons(HICON big_icon, HICON small_icon);
+
+  /** Sets the window icons using HICON handles (Windows platform only).
+
+   The given icons are copied. You can free the icons immediately after
+   this call.
+
+   \param[in] big_icon large window icon
+   \param[in] small_icon  small window icon
+   */
   void icons(HICON big_icon, HICON small_icon);
-#endif
+#endif // defined(_WIN32) || defined(FL_DOXYGEN)
 
   /* for legacy compatibility */
   const void* icon() const;
@@ -368,10 +400,10 @@ public:
     ). You can tell if a window is iconified with (w->shown()
     && !w->visible()).
   */
-  int shown() {return i != 0;}
+  int shown() {return flx_ != 0;}
   /**
-    Puts the window on the screen. Usually (on X) this has the side
-    effect of opening the display.
+    Puts the window on the screen. This has the side
+    effect of opening the display, if not done before.
 
     If the window is already shown then it is restored and raised to the
     top.  This is really convenient because your program can call show()
@@ -395,31 +427,31 @@ public:
 
     \see Fl_Window::show(int argc, char **argv)
   */
-  virtual void show();
+  void show() FL_OVERRIDE;
   /**
     Removes the window from the screen.  If the window is already hidden or
     has not been shown then this does nothing and is harmless.
   */
-  virtual void hide();
+  void hide() FL_OVERRIDE;
   /**
-    Puts the window on the screen and parses command-line arguments.
+    Puts the window on the screen with show() and parses command-line arguments.
 
-    Usually (on X) this has the side effect of opening the display.
-
-    This form should be used for top-level windows, at least for the
-    first (main) window. It allows standard arguments to be parsed
+    This call should be used for top-level windows, at least for the
+    first (main) window. It allows standard arguments to be parsed, as done by Fl::args(int, char **),
     from the command-line. You can use \p argc and \p argv from
     main(int argc, char **argv) for this call.
 
-    The first call also sets up some system-specific internal
-    variables like the system colors.
-
-    \todo explain which system parameters are set up.
+    This call also sets up some system-specific internal variables, that is,
+    it sets FL_SELECTION_COLOR and calls Fl::background(), Fl::background2(), Fl::foreground()
+    with default or X resources-given values, and calls Fl::scheme(const char *) for the current scheme.
+    On X11, it also calls Fl::dnd_text_ops(int), Fl_Tooltip::enable(int),
+    Fl::visible_focus(int) with X resources-given values.
 
     \param argc command-line argument count, usually from main()
     \param argv command-line argument vector, usually from main()
 
     \see virtual void Fl_Window::show()
+    \see Fl::args(int, char **)
   */
   void show(int argc, char **argv);
 
@@ -494,17 +526,6 @@ public:
   */
   void make_current();
 
-  /**
-    Changes the cursor for this window.
-
-    This always calls the system. If you are changing the cursor a lot
-    you may want to keep track of how you set it in a static variable
-    and call this only if the new cursor is different.
-
-    The type Fl_Cursor is an enumeration defined in <FL/Enumerations.H>.
-
-    \see cursor(const Fl_RGB_Image*, int, int), default_cursor()
-  */
   void cursor(Fl_Cursor);
   void cursor(const Fl_RGB_Image*, int, int);
   void default_cursor(Fl_Cursor);
@@ -538,7 +559,8 @@ public:
   int decorated_h() const;
 
   // Note: Doxygen docs in Fl_Widget.H to avoid redundancy.
-  virtual Fl_Window* as_window() { return this; }
+  Fl_Window* as_window() FL_OVERRIDE { return this; }
+  Fl_Window const* as_window() const FL_OVERRIDE { return this; }
 
   /**
    Return non-null if this is an Fl_Overlay_Window object.

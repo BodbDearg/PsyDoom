@@ -1,7 +1,7 @@
 //
 // Drag & Drop code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2021 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -13,6 +13,9 @@
 //
 //     https://www.fltk.org/bugs.php
 //
+
+// Note: this file contains platform specific code and will therefore
+// not be processed by doxygen (see Doxyfile.in).
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -85,7 +88,7 @@ int Fl_X11_Screen_Driver::dnd(int unused) {
   Window target_window = 0;
   Fl_Window* local_window = 0;
   int dndversion = 4; int dest_x, dest_y;
-  XSetSelectionOwner(fl_display, fl_XdndSelection, fl_message_window, fl_event_time);
+  XSetSelectionOwner(fl_display, fl_XdndSelection, source_window, fl_event_time);
 
   while (Fl::pushed()) {
     // figure out what window we are pointing at:
@@ -202,6 +205,7 @@ int Fl_X11_Screen_Driver::dnd(int unused) {
   }
 
   fl_local_grab = 0;
+  Fl::handle(FL_RELEASE, source_fl_win);
   source_fl_win->cursor(FL_CURSOR_DEFAULT);
   return 1;
 }

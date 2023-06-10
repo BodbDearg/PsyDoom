@@ -40,7 +40,9 @@
 #include <FL/math.h> // for ceil()
 #include "Fl_Gl_Window_Driver.H"
 #include <FL/Fl_Image_Surface.H>
-#include <FL/glu.h>  // for gluUnProject()
+#if HAVE_GL_GLU_H
+#  include <FL/glu.h>  // for gluUnProject()
+#endif
 #include <FL/glut.H> // for glutStrokeString() and glutStrokeLength()
 #include <stdlib.h>
 
@@ -74,13 +76,21 @@ void  gl_font(int fontid, int size) {
   if (once) {
     once = false;
     if (Fl::draw_GL_text_with_textures()) {
-      // For the font texture pile to work, we need a texture rectangle extension, so check for
-      // one here. First we check for GL_EXT_texture_rectangle and if that fails we try
-      // for GL_ARB_texture_rectangle instead. If that also fails, we fall back to the
-      // legacy methods used by fltk-1.3 and earlier.
-      has_texture_rectangle = (strstr((const char*)glGetString(GL_EXTENSIONS), "GL_EXT_texture_rectangle") != NULL);
-      if (!has_texture_rectangle) has_texture_rectangle =
-        (strstr((const char*)glGetString(GL_EXTENSIONS), "GL_ARB_texture_rectangle") != NULL);
+      int gl_version_major;
+      sscanf((const char *)glGetString(GL_VERSION), "%d", &gl_version_major);
+      //printf("gl_version_major=%d\n", gl_version_major);
+      if (gl_version_major >= 3) {
+        has_texture_rectangle = true;
+      } else {
+        const char *extensions = (const char*)glGetString(GL_EXTENSIONS);
+        if (extensions) {
+          // For the font texture pile to work, we need a texture rectangle extension, so check for
+          // one here. First we check for GL_EXT_texture_rectangle and if that fails we try
+          // for GL_ARB_texture_rectangle instead. If that also fails, we fall back to the
+          // legacy methods used by fltk-1.3 and earlier.
+          has_texture_rectangle = (strstr(extensions, "GL_EXT_texture_rectangle") != NULL || strstr(extensions, "GL_ARB_texture_rectangle") != NULL);
+        }
+      }
       Fl::draw_GL_text_with_textures(has_texture_rectangle);
     }
   }
@@ -206,13 +216,21 @@ void gl_measure(const char* str, int& x, int& y) {
 void gl_rect(int x, int y, int w, int h) {
   if (w < 0) {w = -w; x = x-w;}
   if (h < 0) {h = -h; y = y-h;}
-  glBegin(GL_LINE_STRIP);
-  glVertex2i(x+w-1, y+h-1);
-  glVertex2i(x+w-1, y);
+  glBegin(GL_LINE_LOOP);
+  int r = x+w-1, b = y+h-1;
+  glVertex2i(r, b);
+  glVertex2i(r, y);
   glVertex2i(x, y);
-  glVertex2i(x, y+h-1);
-  glVertex2i(x+w, y+h-1);
+  glVertex2i(x, b);
   glEnd();
+}
+
+/**
+  Fills the given rectangle with the current color.
+  \see gl_rect(int x, int y, int w, int h)
+  */
+void gl_rectf(int x,int y,int w,int h) {
+  glRecti(x,y,x+w,y+h);
 }
 
 void gl_draw_image(const uchar* b, int x, int y, int w, int h, int d, int ld) {
@@ -311,11 +329,6 @@ int gl_texture_fifo::already_known(const char *str, int n)
 
 static gl_texture_fifo *gl_fifo = NULL; // points to the texture pile class instance
 
-void gl_texture_reset()
-{
-  if (gl_fifo) gl_texture_pile_height(gl_texture_pile_height());
-}
-
 
 // Cross-platform implementation of the texture mechanism for text rendering
 // using textures with the alpha channel only.
@@ -375,7 +388,7 @@ void gl_texture_fifo::display_texture(int rank)
   glMatrixMode (GL_PROJECTION);
   glPopMatrix();
   glMatrixMode (matrixMode);
-
+#if HAVE_GL_GLU_H
   //set the raster position to end of string
   pos[0] += width;
   GLdouble modelmat[16];
@@ -392,6 +405,7 @@ void gl_texture_fifo::display_texture(int rank)
     objY *= gl_start_scale;
   }
   glRasterPos2d(objX, objY);
+#endif // HAVE_GL_GLU_H
 } // display_texture
 
 
@@ -456,6 +470,15 @@ int gl_texture_pile_height(void)
   if (! gl_fifo) gl_fifo = new gl_texture_fifo();
   return gl_fifo->size();
 }
+
+/** To call after GL operations that may invalidate textures used to draw text in GL scenes
+ (e.g., switch between FL_DOUBLE / FL_SINGLE modes).
+ */
+void gl_texture_reset()
+{
+  if (gl_fifo) gl_texture_pile_height(gl_texture_pile_height());
+}
+
 
 /**
  Changes the maximum height of the pile of pre-computed string textures
@@ -614,6 +637,7 @@ void Fl_Gl_Window_Driver::draw_string_legacy_glut(const char* str, int n)
   glMatrixMode (GL_PROJECTION);
   glPopMatrix();
   glMatrixMode (matrixMode);
+#if HAVE_GL_GLU_H
   //set the raster position to end of string
   pos[0] += width;
   GLdouble modelmat[16];
@@ -629,6 +653,7 @@ void Fl_Gl_Window_Driver::draw_string_legacy_glut(const char* str, int n)
     objY *= gl_start_scale;
   }
   glRasterPos2d(objX, objY);
+#endif // HAVE_GL_GLU_H
 }
 
 /**

@@ -1,7 +1,7 @@
 //
 // Base widget class for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2017 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -131,10 +131,6 @@ Fl_Widget::Fl_Widget(int X, int Y, int W, int H, const char* L) {
 
   parent_ = 0;
   if (Fl_Group::current()) Fl_Group::current()->add(this);
-  if (!fl_graphics_driver) {
-    // Make sure fl_graphics_driver is initialized. Important if we are called by a static initializer.
-    Fl_Display_Device::display_device();
-  }
 }
 
 void Fl_Widget::resize(int X, int Y, int W, int H) {
@@ -169,6 +165,8 @@ Fl_Widget::~Fl_Widget() {
   Fl::clear_widget_pointer(this);
   if (flags() & COPIED_LABEL) free((void *)(label_.value));
   if (flags() & COPIED_TOOLTIP) free((void *)(tooltip_));
+  image(NULL);
+  deimage(NULL);
   // remove from parent group
   if (parent_) parent_->remove(this);
 #ifdef DEBUG_DELETE
@@ -327,30 +325,73 @@ void Fl_Widget::copy_label(const char *a) {
   }
 }
 
+void Fl_Widget::image(Fl_Image* img) {
+  if (image_bound()) {
+    if (label_.image && (label_.image != img)) {
+      label_.image->release();
+    }
+    bind_image(0);
+  }
+  label_.image = img;
+}
+
+void Fl_Widget::image(Fl_Image& img) {
+  image(&img);
+}
+
+void Fl_Widget::bind_image(Fl_Image* img) {
+  image(img);
+  bind_image( (img != NULL) );
+}
+
+void Fl_Widget::deimage(Fl_Image* img) {
+  if (deimage_bound()) {
+    if (label_.deimage && (label_.deimage != img))  {
+      label_.deimage->release();
+    }
+    bind_deimage(0);
+  }
+  label_.deimage = img;
+}
+
+void Fl_Widget::deimage(Fl_Image& img) {
+  deimage(&img);
+}
+
+void Fl_Widget::bind_deimage(Fl_Image* img) {
+  deimage(img);
+  bind_deimage( (img != NULL) );
+}
+
 /** Calls the widget callback function with arbitrary arguments.
 
-  All overloads of do_callback() call this method.
-  It does nothing if the widget's callback() is NULL.
-  It clears the widget's \e changed flag \b after the callback was
-  called unless the callback is the default callback. Hence it is not
-  necessary to call clear_changed() after calling do_callback()
-  in your own widget's handle() method.
+ All overloads of do_callback() call this method.
+ It does nothing if the widget's callback() is NULL.
+ It clears the widget's \e changed flag \b after the callback was
+ called unless the callback is the default callback. Hence it is not
+ necessary to call clear_changed() after calling do_callback()
+ in your own widget's handle() method.
 
-  \note It is legal to delete the widget in the callback (i.e. in user code),
-        but you must not access the widget in the handle() method after
-        calling do_callback() if the widget was deleted in the callback.
-        We recommend to use Fl_Widget_Tracker to check whether the widget
-        was deleted in the callback.
+ A \p reason must be set for widgets if different actions can trigger
+ the same callback.
 
-  \param[in] widget call the callback with \p widget as the first argument
-  \param[in] arg use \p arg as the user data (second) argument
+ \note It is legal to delete the widget in the callback (i.e. in user code),
+ but you must not access the widget in the handle() method after
+ calling do_callback() if the widget was deleted in the callback.
+ We recommend to use Fl_Widget_Tracker to check whether the widget
+ was deleted in the callback.
 
-  \see default_callback()
-  \see callback()
-  \see class Fl_Widget_Tracker
-*/
+ \param[in] widget call the callback with \p widget as the first argument
+ \param[in] arg use \p arg as the user data (second) argument
+ \param[in] reason give a reason to why this callback was called, defaults to \ref FL_REASON_UNKNOWN
 
-void Fl_Widget::do_callback(Fl_Widget *widget, void *arg) {
+ \see default_callback()
+ \see callback()
+ \see class Fl_Widget_Tracker
+ \see Fl::callback_reason()
+ */
+void Fl_Widget::do_callback(Fl_Widget *widget, void *arg, Fl_Callback_Reason reason) {
+  Fl::callback_reason_ = reason;
   if (!callback_) return;
   Fl_Widget_Tracker wp(this);
   callback_(widget, arg);

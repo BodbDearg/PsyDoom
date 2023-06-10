@@ -1,7 +1,7 @@
 //
 // X specific code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2022 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -14,7 +14,8 @@
 //     https://www.fltk.org/bugs.php
 //
 
-#if !defined(FL_DOXYGEN)
+// Note: this file contains platform specific code and will therefore
+// not be processed by doxygen (see Doxyfile.in).
 
 #  ifndef FLTK_CONSOLIDATE_MOTION
 #  define FLTK_CONSOLIDATE_MOTION 0
@@ -40,8 +41,12 @@
 #  include "flstring.h"
 #  include "drivers/X11/Fl_X11_Screen_Driver.H"
 #  include "drivers/X11/Fl_X11_Window_Driver.H"
-#  include "drivers/X11/Fl_X11_System_Driver.H"
+#  include "drivers/Unix/Fl_Unix_System_Driver.H"
+#if FLTK_USE_CAIRO
+#  include "drivers/Cairo/Fl_X11_Cairo_Graphics_Driver.H"
+#else
 #  include "drivers/Xlib/Fl_Xlib_Graphics_Driver.H"
+#endif
 #  include "print_button.h"
 #  include <unistd.h>
 #  include <time.h>
@@ -52,6 +57,11 @@
 #  include <X11/Xlib.h>
 #  include <X11/keysym.h>
 #  include "Xutf8.h"
+
+#if FLTK_USE_CAIRO
+#  include <cairo-xlib.h>
+#  include <cairo/cairo.h>
+#endif // FLTK_USE_CAIRO
 
 #define USE_XRANDR (HAVE_DLSYM && HAVE_DLFCN_H) // means attempt to dynamically load libXrandr.so
 #if USE_XRANDR
@@ -120,19 +130,18 @@ static void do_queued_events() {
 // This is never called with time_to_wait < 0.0:
 // It should return negative on error, 0 if nothing happens before
 // timeout, and >0 if any callbacks were done.
-int Fl_X11_System_Driver::poll_or_select_with_delay(double time_to_wait) {
-
+int Fl_X11_Screen_Driver::poll_or_select_with_delay(double time_to_wait) {
   // OpenGL and other broken libraries call XEventsQueued
   // unnecessarily and thus cause the file descriptor to not be ready,
   // so we must check for already-read events:
   if (fl_display && XQLength(fl_display)) {do_queued_events(); return 1;}
-  return Fl_Unix_System_Driver::poll_or_select_with_delay(time_to_wait);
+  return Fl_Unix_Screen_Driver::poll_or_select_with_delay(time_to_wait);
 }
 
-// just like Fl_X11_System_Driver::poll_or_select_with_delay(0.0) except no callbacks are done:
-int Fl_X11_System_Driver::poll_or_select() {
+// just like Fl_X11_Screen_Driver::poll_or_select_with_delay(0.0) except no callbacks are done:
+int Fl_X11_Screen_Driver::poll_or_select() {
   if (XQLength(fl_display)) return 1;
-  return Fl_Unix_System_Driver::poll_or_select();
+  return Fl_Unix_Screen_Driver::poll_or_select();
 }
 
 // replace \r\n by \n
@@ -149,6 +158,7 @@ static void convert_crlf(unsigned char *string, long& len) {
 ////////////////////////////////////////////////////////////////
 
 Display *fl_display;
+Display *fl_x11_display() { return fl_display; }
 Window fl_message_window = 0;
 int fl_screen;
 XVisualInfo *fl_visual;
@@ -307,7 +317,7 @@ extern "C" {
 
   static int xerror_handler(Display* d, XErrorEvent* e) {
     char buf1[128], buf2[128];
-    sprintf(buf1, "XRequest.%d", e->request_code);
+    snprintf(buf1, 128, "XRequest.%d", e->request_code);
     XGetErrorDatabaseText(d,"",buf1,buf1,buf2,128);
     XGetErrorText(d, e->error_code, buf1, 128);
     Fl::warning("%s: %s 0x%lx", buf2, buf1, e->resourceid);
@@ -798,13 +808,19 @@ static int get_xwinprop(Window wnd, Atom prop, long max_length,
 ////////////////////////////////////////////////////////////////
 // Code for copying to clipboard and DnD out of the program:
 
+// See Fl::copy() for possible values of the destination (argument clipboard)
+// See also Fl::selection_to_clipboard()
 void Fl_X11_Screen_Driver::copy(const char *stuff, int len, int clipboard, const char *type) {
   if (!stuff || len<0) return;
 
+  // if selection_to_clipboard is enabled *and* destination is 0 (selection buffer),
+  // then copy to both (STR 3229)
+  if (clipboard == 0 && Fl::selection_to_clipboard())
+    clipboard = 2;
+
   if (clipboard >= 2) {
-    copy(stuff, len, 0, type);
-    copy(stuff, len, 1, type);
-    return;
+    copy(stuff, len, 1, type);  // copy to clipboard first (this is a recursion!)
+    clipboard = 0;              // ... and then to selection buffer: fall through
   }
 
   if (len+1 > fl_selection_buffer_length[clipboard]) {
@@ -1510,7 +1526,7 @@ int fl_handle(const XEvent& thisevent)
 
     case DestroyNotify: { // an X11 window was closed externally from the program
       Fl::handle(FL_CLOSE, window);
-      Fl_X* X = Fl_X::i(window);
+      Fl_X* X = Fl_X::flx(window);
       if (X) { // indicates the FLTK window was not closed
         X->xid = (Window)0; // indicates the X11 window was already destroyed
         window->hide();
@@ -1541,7 +1557,7 @@ int fl_handle(const XEvent& thisevent)
         XGetWindowProperty(fl_display, fl_dnd_source_window, fl_XdndTypeList,
                            0, 0x8000000L, False, XA_ATOM, &actual, &format,
                            &count, &remaining, &cm_buffer);
-        if (actual != XA_ATOM || format != 32 || count<4 || !cm_buffer) {
+        if (actual != XA_ATOM || format != 32 || (count<4 && count!=1) || !cm_buffer) {
           if ( cm_buffer ) { XFree(cm_buffer); cm_buffer = 0; }
           goto FAILED;
         }
@@ -1972,7 +1988,7 @@ int fl_handle(const XEvent& thisevent)
 
   case EnterNotify:
     if (xevent.xcrossing.detail == NotifyInferior) break;
-    // XInstallColormap(fl_display, Fl_X::i(window)->colormap);
+    // XInstallColormap(fl_display, Fl_X::flx(window)->colormap);
     set_event_xy(window);
     Fl::e_state = xevent.xcrossing.state << 16;
     event = FL_ENTER;
@@ -2037,6 +2053,8 @@ int fl_handle(const XEvent& thisevent)
       }
       wd->screen_num(num);
     }
+#else // ! USE_XFT
+    Fl_Window_Driver::driver(window)->screen_num( Fl::screen_num(X, Y, W, H) );
 #endif // USE_XFT
 
     // tell Fl_Window about it and set flag to prevent echoing:
@@ -2109,15 +2127,24 @@ int fl_handle(const XEvent& thisevent)
 ////////////////////////////////////////////////////////////////
 
 void Fl_X11_Window_Driver::resize(int X,int Y,int W,int H) {
-  int is_a_move = (X != x() || Y != y() || Fl_Window::is_a_rescale());
-  int is_a_resize = (W != w() || H != h() || Fl_Window::is_a_rescale());
+  int is_a_rescale = Fl_Window::is_a_rescale();
+  int is_a_move = (X != x() || Y != y() || is_a_rescale);
+  int is_a_resize = (W != w() || H != h() || is_a_rescale);
   int resize_from_program = (pWindow != resize_bug_fix);
   if (!resize_from_program) resize_bug_fix = 0;
   if (is_a_move && resize_from_program) force_position(1);
   else if (!is_a_resize && !is_a_move) return;
   if (is_a_resize) {
     pWindow->Fl_Group::resize(X,Y,W,H);
-    if (shown()) {pWindow->redraw();}
+    if (shown()) {
+#if FLTK_USE_CAIRO
+      if (!pWindow->as_gl_window() && cairo_) {
+        float s = Fl::screen_driver()->scale(screen_num());
+        cairo_xlib_surface_set_size(cairo_get_target(cairo_), (W>0 ? int(W*s) : 1), (H>0 ? int(H*s) : 1));
+      }
+#endif
+      pWindow->redraw();
+    }
   } else {
     x(X); y(Y);
     if (Fl_X11_Screen_Driver::xim_win && Fl::focus()) {
@@ -2127,10 +2154,12 @@ void Fl_X11_Window_Driver::resize(int X,int Y,int W,int H) {
     }
   }
 
+  if (is_a_rescale) size_range();
+
   if (resize_from_program && shown()) {
     float s = Fl::screen_driver()->scale(screen_num());
     if (is_a_resize) {
-      size_range();     // calls sendxjunk()
+      if (!pWindow->resizable()) pWindow->size_range(w(),h(),w(),h());
       if (is_a_move) {
         XMoveResizeWindow(fl_display, fl_xid(pWindow), rint(X*s), rint(Y*s), W>0 ? W*s : 1, H>0 ? H*s : 1);
       } else {
@@ -2194,7 +2223,7 @@ int Fl_X11_Screen_Driver::ewmh_supported() {
   return result;
 }
 
-#if HAVE_XRENDER
+#if HAVE_XRENDER && (!FLTK_USE_CAIRO)
 static int xrender_supported() {
   int nop1, nop2;
   fl_open_display();
@@ -2202,6 +2231,7 @@ static int xrender_supported() {
 }
 #endif
 
+#if ! FLTK_USE_CAIRO
 char Fl_Xlib_Graphics_Driver::can_do_alpha_blending() {
 #if HAVE_XRENDER
   static char result = (char)xrender_supported();
@@ -2210,6 +2240,7 @@ char Fl_Xlib_Graphics_Driver::can_do_alpha_blending() {
   return 0;
 #endif
 }
+#endif
 
 extern Fl_Window *fl_xfocus;
 
@@ -2221,7 +2252,7 @@ void Fl_X11_Window_Driver::activate_window() {
   Window prev = 0;
 
   if (fl_xfocus) {
-    Fl_X *x = Fl_X::i(fl_xfocus);
+    Fl_X *x = Fl_X::flx(fl_xfocus);
     if (!x)
       return;
     prev = x->xid;
@@ -2233,6 +2264,7 @@ void Fl_X11_Window_Driver::activate_window() {
 
 /* Change an existing window to fullscreen */
 void Fl_X11_Window_Driver::fullscreen_on() {
+  pWindow->_set_fullscreen();
   if (Fl_X11_Screen_Driver::ewmh_supported()) {
     int top, bottom, left, right;
 
@@ -2252,7 +2284,6 @@ void Fl_X11_Window_Driver::fullscreen_on() {
                   top, bottom, left, right);
     send_wm_state_event(fl_xid(pWindow), 1, fl_NET_WM_STATE_FULLSCREEN);
   } else {
-    pWindow->_set_fullscreen();
     hide();
     show();
     /* We want to grab the window, not a widget, so we cannot use Fl::grab */
@@ -2262,10 +2293,10 @@ void Fl_X11_Window_Driver::fullscreen_on() {
 }
 
 void Fl_X11_Window_Driver::fullscreen_off(int X, int Y, int W, int H) {
+  pWindow->_clear_fullscreen();
   if (Fl_X11_Screen_Driver::ewmh_supported()) {
     send_wm_state_event(fl_xid(pWindow), 0, fl_NET_WM_STATE_FULLSCREEN);
   } else {
-    pWindow->_clear_fullscreen();
     /* The grab will be lost when the window is destroyed */
     hide();
     resize(X,Y,W,H);
@@ -2285,7 +2316,7 @@ Fl_X* Fl_X::set_xid(Fl_Window* win, Window winxid) {
   Fl_X *xp = new Fl_X;
   xp->xid = winxid;
   Fl_Window_Driver::driver(win)->other_xid = 0;
-  xp->w = win; win->i = xp;
+  xp->w = win; win->flx_ = xp;
   xp->next = Fl_X::first;
   xp->region = 0;
   Fl_Window_Driver::driver(win)->wait_for_expose_value = 1;
@@ -2357,7 +2388,7 @@ void Fl_X::make_xid(Fl_Window* win, XVisualInfo *visual, Colormap colormap)
   // if the window is a subwindow and our parent is not mapped yet, we
   // mark this window visible, so that mapping the parent at a later
   // point in time will call this function again to finally map the subwindow.
-  if (win->parent() && !Fl_X::i(win->window())) {
+  if (win->parent() && !Fl_X::flx(win->window())) {
     win->set_visible();
     return;
   }
@@ -2537,7 +2568,8 @@ void Fl_X::make_xid(Fl_Window* win, XVisualInfo *visual, Colormap colormap)
       Fl_Window::show_iconic_ = 0;
       showit = 0;
     }
-    if (Fl_X11_Window_Driver::driver(win)->icon_->legacy_icon) {
+    if (Fl_X11_Window_Driver::driver(win)->icon_ &&
+        Fl_X11_Window_Driver::driver(win)->icon_->legacy_icon) {
       hints->icon_pixmap = (Pixmap)Fl_X11_Window_Driver::driver(win)->icon_->legacy_icon;
       hints->flags       |= IconPixmapHint;
     }
@@ -2671,7 +2703,7 @@ static void icons_to_property(const Fl_RGB_Image *icons[], int count,
 
   sz = 0;
   for (int i = 0;i < count;i++)
-    sz += 2 + icons[i]->w() * icons[i]->h();
+    sz += 2 + icons[i]->data_w() * icons[i]->data_h();
 
   // FIXME: Might want to sort the icons
 
@@ -2682,16 +2714,21 @@ static void icons_to_property(const Fl_RGB_Image *icons[], int count,
     const Fl_RGB_Image *image;
 
     image = icons[i];
+    bool need_delete = false;
+    if (image->w() != image->data_w() || image->h() != image->data_h()) {
+      image = (Fl_RGB_Image*)image->copy();
+      need_delete = true;
+    }
 
-    data[0] = image->w();
-    data[1] = image->h();
+    data[0] = image->data_w();
+    data[1] = image->data_h();
     data += 2;
 
-    const int extra_data = image->ld() ? (image->ld()-image->w()*image->d()) : 0;
+    const int extra_data = image->ld() ? (image->ld() - image->data_w() * image->d()) : 0;
 
     const uchar *in = (const uchar*)*image->data();
-    for (int y = 0; y < image->h(); y++) {
-      for (int x = 0; x < image->w(); x++) {
+    for (int y = 0; y < image->data_h(); y++) {
+      for (int x = 0; x < image->data_w(); x++) {
         switch (image->d()) {
         case 1:
           *data = ( 0xff<<24) | (in[0]<<16) | (in[0]<<8) | in[0];
@@ -2711,6 +2748,7 @@ static void icons_to_property(const Fl_RGB_Image *icons[], int count,
       }
       in += extra_data;
     }
+    if (need_delete) delete image;
   }
 }
 
@@ -2730,7 +2768,7 @@ void Fl_X11_Window_Driver::set_icons() {
   unsigned long *net_wm_icons;
   size_t net_wm_icons_size;
 
-  if (icon_->count) {
+  if (icon_ && icon_->count) {
     icons_to_property((const Fl_RGB_Image **)icon_->icons, icon_->count,
                       &net_wm_icons, &net_wm_icons_size);
   } else {
@@ -2741,7 +2779,7 @@ void Fl_X11_Window_Driver::set_icons() {
   XChangeProperty (fl_display, fl_xid(pWindow), fl_NET_WM_ICON, XA_CARDINAL, 32,
       PropModeReplace, (unsigned char*) net_wm_icons, net_wm_icons_size);
 
-  if (icon_->count) {
+  if (icon_ && icon_->count) {
     delete [] net_wm_icons;
     net_wm_icons = 0L;
     net_wm_icons_size = 0;
@@ -2897,6 +2935,7 @@ int Fl_X11_Window_Driver::set_cursor(const Fl_RGB_Image *image, int hotx, int ho
   if (!cursor)
     return 0;
 
+  image = (Fl_RGB_Image*)image->copy();
   const int extra_data = image->ld() ? (image->ld()-image->w()*image->d()) : 0;
   const uchar *i = (const uchar*)*image->data();
   XcursorPixel *o = cursor->pixels;
@@ -2947,7 +2986,7 @@ int Fl_X11_Window_Driver::set_cursor(const Fl_RGB_Image *image, int hotx, int ho
   XFreeCursor(fl_display, xc);
 
   XcursorImageDestroy(cursor);
-
+  delete image;
   return 1;
 #endif
 }
@@ -2988,5 +3027,3 @@ void Fl_X11_Window_Driver::show() {
     XMapRaised(fl_display, fl_xid(pWindow));
   }
 }
-
-#endif // !defined(FL_DOXYGEN)

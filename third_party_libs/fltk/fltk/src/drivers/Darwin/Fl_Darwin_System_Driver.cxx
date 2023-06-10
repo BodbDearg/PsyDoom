@@ -35,46 +35,6 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 
-// This key table is used for the Darwin system driver. It is defined here
-// "static" and assigned in the constructor to avoid static initialization
-// race conditions. It is used in fl_shortcut.cxx.
-//
-// This table must be in numeric order by fltk (X) keysym number:
-
-Fl_System_Driver::Keyname darwin_key_table[] = {
-  //              v - this column may contain UTF-8 characters
-  {' ',           "Space"},
-  {FL_BackSpace,  "\xe2\x8c\xab"}, // erase to the left
-  {FL_Tab,        "\xe2\x87\xa5"}, // rightwards arrow to bar
-  {0xff0b,        "\xe2\x8c\xa6"}, // erase to the right
-  {FL_Enter,      "\xe2\x86\xa9"}, // leftwards arrow with hook
-  {FL_Pause,      "Pause"},
-  {FL_Scroll_Lock, "Scroll_Lock"},
-  {FL_Escape,     "\xe2\x90\x9b"},
-  {FL_Home,       "\xe2\x86\x96"}, // north west arrow
-  {FL_Left,       "\xe2\x86\x90"}, // leftwards arrow
-  {FL_Up,         "\xe2\x86\x91"}, // upwards arrow
-  {FL_Right,      "\xe2\x86\x92"}, // rightwards arrow
-  {FL_Down,       "\xe2\x86\x93"}, // downwards arrow
-  {FL_Page_Up,    "\xe2\x87\x9e"}, // upwards arrow with double stroke
-  {FL_Page_Down,  "\xe2\x87\x9f"}, // downwards arrow with double stroke
-  {FL_End,        "\xe2\x86\x98"}, // south east arrow
-  {FL_Print,      "Print"},
-  {FL_Insert,     "Insert"},
-  {FL_Menu,       "Menu"},
-  {FL_Num_Lock,   "Num_Lock"},
-  {FL_KP_Enter,   "\xe2\x8c\xa4"}, // up arrow head between two horizontal bars
-  {FL_Shift_L,    "Shift_L"},
-  {FL_Shift_R,    "Shift_R"},
-  {FL_Control_L,  "Control_L"},
-  {FL_Control_R,  "Control_R"},
-  {FL_Caps_Lock,  "\xe2\x87\xaa"}, // upwards white arrow from bar
-  {FL_Meta_L,     "Meta_L"},
-  {FL_Meta_R,     "Meta_R"},
-  {FL_Alt_L,      "Alt_L"},
-  {FL_Alt_R,      "Alt_R"},
-  {FL_Delete,     "\xe2\x8c\xa7"}  // x in a rectangle box
-};
 
 const char *Fl_Darwin_System_Driver::shift_name() {
   return "⇧\\"; // "\xe2\x87\xa7\\"; // U+21E7 (upwards white arrow)
@@ -91,9 +51,8 @@ const char *Fl_Darwin_System_Driver::control_name() {
 
 Fl_Darwin_System_Driver::Fl_Darwin_System_Driver() : Fl_Posix_System_Driver() {
   if (fl_mac_os_version == 0) fl_mac_os_version = calc_mac_os_version();
-  // initialize key table
-  key_table = darwin_key_table;
-  key_table_size = sizeof(darwin_key_table)/sizeof(*darwin_key_table);
+  command_key = FL_META;
+  control_key = FL_CTRL;
 }
 
 int Fl_Darwin_System_Driver::single_arg(const char *arg) {
@@ -172,7 +131,7 @@ int Fl_Darwin_System_Driver::filename_list(const char *d, dirent ***list,
   int dirlen;
   char *dirloc;
   // Assume that locale encoding is no less dense than UTF-8
-  dirlen = strlen(d);
+  dirlen = (int)strlen(d);
   dirloc = (char *)d;
 # if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_8
   int n = scandir(dirloc, list, 0, (int(*)(const struct dirent**,const struct dirent**))sort);
@@ -194,7 +153,7 @@ int Fl_Darwin_System_Driver::filename_list(const char *d, dirent ***list,
   for (i=0; i<n; i++) {
     int newlen;
     dirent *de = (*list)[i];
-    int len = strlen(de->d_name);
+    int len = (int)strlen(de->d_name);
     newlen = len;
     dirent *newde = (dirent*)malloc(de->d_name - (char*)de + newlen + 2); // Add space for a / and a nul
     // Conversion to UTF-8
@@ -267,7 +226,7 @@ void Fl_Darwin_System_Driver::newUUID(char *uuidBuffer)
 {
   CFUUIDRef theUUID = CFUUIDCreate(NULL);
   CFUUIDBytes b = CFUUIDGetUUIDBytes(theUUID);
-  sprintf(uuidBuffer, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+  snprintf(uuidBuffer, 36+1, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
           b.byte0, b.byte1, b.byte2, b.byte3, b.byte4, b.byte5, b.byte6, b.byte7,
           b.byte8, b.byte9, b.byte10, b.byte11, b.byte12, b.byte13, b.byte14, b.byte15);
   CFRelease(theUUID);
@@ -339,7 +298,7 @@ static int n_buf = 0;
 
 const char *Fl_Darwin_System_Driver::latin1_to_local(const char *t, int n)
 {
-  if (n==-1) n = strlen(t);
+  if (n==-1) n = (int)strlen(t);
   if (n<=n_buf) {
     n_buf = (n + 257) & 0x7fffff00;
     if (buf) free(buf);
@@ -360,7 +319,7 @@ const char *Fl_Darwin_System_Driver::latin1_to_local(const char *t, int n)
 
 const char *Fl_Darwin_System_Driver::local_to_latin1(const char *t, int n)
 {
-  if (n==-1) n = strlen(t);
+  if (n==-1) n = (int)strlen(t);
   if (n<=n_buf) {
     n_buf = (n + 257) & 0x7fffff00;
     if (buf) free(buf);

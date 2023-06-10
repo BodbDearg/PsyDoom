@@ -1,7 +1,7 @@
 //
 // Header file for Fl_Text_Display class.
 //
-// Copyright 2001-2020 by Bill Spitzak and others.
+// Copyright 2001-2023 by Bill Spitzak and others.
 // Original code Copyright Mark Edel.  Permission to distribute under
 // the LGPL for the FLTK library granted by Mark Edel.
 //
@@ -47,7 +47,7 @@
 
  \b Example \b Use
  \code
-     #include <FL/FL_Text_Display.H>
+     #include <FL/Fl_Text_Display.H>
      ..
      int main() {
          ..
@@ -124,6 +124,7 @@ public:
     WRAP_AT_BOUNDS  /**< wrap text so that it fits into the widget width */
   };
 
+  friend int fl_text_drag_prepare(int pos, int key, Fl_Text_Display* d);
   friend void fl_text_drag_me(int pos, Fl_Text_Display* d);
 
   typedef void (*Unfinished_Style_Cb)(int, void *);
@@ -160,13 +161,13 @@ public:
     ATTR_GRAMMAR        = 0x0008, ///< grammar suggestion (blue dotted underline)
     ATTR_SPELLING       = 0x000C, ///< spelling suggestion (red dotted underline)
     ATTR_STRIKE_THROUGH = 0x0010, ///< line through the middle of the text
-    ATTR_LINES_MASK     = 0x001C, ///< the mask for all underline and strike through types
+    ATTR_LINES_MASK     = 0x001C  ///< the mask for all underline and strike through types
   };
 
   Fl_Text_Display(int X, int Y, int W, int H, const char *l = 0);
   ~Fl_Text_Display();
 
-  virtual int handle(int e);
+  int handle(int e) FL_OVERRIDE;
 
   void buffer(Fl_Text_Buffer* buf);
 
@@ -432,7 +433,7 @@ public:
   void wrap_mode(int wrap, int wrap_margin);
 
   virtual void recalc_display();
-  virtual void resize(int X, int Y, int W, int H);
+  void resize(int X, int Y, int W, int H) FL_OVERRIDE;
 
   /**
    Convert an x pixel position into a column number.
@@ -470,7 +471,7 @@ protected:
   // Anything with "vline" indicates thats it deals with currently
   // visible lines.
 
-  virtual void draw();
+  void draw() FL_OVERRIDE;
   void draw_text(int X, int Y, int W, int H);
   void draw_range(int start, int end);
   void draw_cursor(int, int);

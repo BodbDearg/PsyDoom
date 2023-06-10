@@ -2571,7 +2571,7 @@ int Fl_Tree::is_hscroll_visible() const {
 void Fl_Tree::do_callback_for_item(Fl_Tree_Item* item, Fl_Tree_Reason reason) {
   callback_reason(reason);
   callback_item(item);
-  do_callback((Fl_Widget*)this, user_data());
+  do_callback((Fl_Widget*)this, user_data(), (Fl_Callback_Reason)reason);
 }
 
 /// Sets the item that was changed for this callback.
@@ -2657,11 +2657,11 @@ void Fl_Tree::load(Fl_Preferences &prefs) {
     if (vn<40) {
       size_t sze = pn + strlen(key) + vn;
       p = (char*)malloc(sze+5);
-      sprintf(p, "%s/%s = %s", path, key, val);
+      snprintf(p, sze+5, "%s/%s = %s", path, key, val);
     } else {
       size_t sze = pn + strlen(key) + 40;
       p = (char*)malloc(sze+5);
-      sprintf(p, "%s/%s = %.40s...", path, key, val);
+      snprintf(p, sze+5, "%s/%s = %.40s...", path, key, val);
     }
     add(p[0]=='/'?p+1:p);
     free(p);

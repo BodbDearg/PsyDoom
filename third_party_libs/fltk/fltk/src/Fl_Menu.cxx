@@ -1,7 +1,7 @@
 //
 // Menu code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2015 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -21,7 +21,7 @@
 // Fl_Menu_ widget.
 
 #include <FL/Fl.H>
-#include "Fl_System_Driver.H"
+#include "Fl_Screen_Driver.H"
 #include "Fl_Window_Driver.H"
 #include <FL/Fl_Menu_Window.H>
 #include <FL/Fl_Menu_.H>
@@ -106,33 +106,50 @@ const Fl_Menu_Item* Fl_Menu_Item::next(int n) const {
 static const Fl_Menu_* button=0;
 
 ////////////////////////////////////////////////////////////////
+class menuwindow;
 
-// tiny window for title of menu:
-class menutitle : public Fl_Menu_Window {
-  void draw();
+// utility class covering both menuwindow and menutitle
+class window_with_items : public Fl_Menu_Window {
+protected:
+  window_with_items(int X, int Y, int W, int H, const Fl_Menu_Item *m) :
+    Fl_Menu_Window(X, Y, W, H, 0) {
+      menu = m;
+      set_menu_window();
+      end();
+      set_modal();
+      clear_border();
+    }
 public:
   const Fl_Menu_Item* menu;
-  menutitle(int X, int Y, int W, int H, const Fl_Menu_Item*);
+  virtual menuwindow* as_menuwindow() { return NULL; }
+};
+
+// tiny window for title of menu:
+class menutitle : public window_with_items {
+  void draw() FL_OVERRIDE;
+public:
+  menutitle(int X, int Y, int W, int H, const Fl_Menu_Item*, bool menubar = false);
+  bool in_menubar;
 };
 
 // each vertical menu has one of these:
-class menuwindow : public Fl_Menu_Window {
+class menuwindow : public window_with_items {
   friend class Fl_Window_Driver;
   friend struct Fl_Menu_Item;
-  void draw();
+  void draw() FL_OVERRIDE;
   void drawentry(const Fl_Menu_Item*, int i, int erase);
   int handle_part1(int);
   int handle_part2(int e, int ret);
   static Fl_Window *parent_;
+  static int display_height_;
 public:
   menutitle* title;
-  int handle(int);
+  int handle(int) FL_OVERRIDE;
   int itemheight;       // zero == menubar
   int numitems;
   int selected;
   int drawn_selected;   // last redraw has this selected
   int shortcutWidth;
-  const Fl_Menu_Item* menu;
   menuwindow(const Fl_Menu_Item* m, int X, int Y, int W, int H,
              const Fl_Menu_Item* picked, const Fl_Menu_Item* title,
              int menubar = 0, int menubar_title = 0, int right_edge = 0);
@@ -143,9 +160,14 @@ public:
   void autoscroll(int);
   void position(int x, int y);
   int is_inside(int x, int y);
+  menuwindow* as_menuwindow() FL_OVERRIDE { return this; }
+  int menubartitle;
+  menuwindow *origin;
+  int offset_y;
 };
 
 Fl_Window *menuwindow::parent_ = NULL;
+int menuwindow::display_height_ = 0;
 
 /**
  \cond DriverDev
@@ -153,8 +175,75 @@ Fl_Window *menuwindow::parent_ = NULL;
  \{
  */
 
-Fl_Window *Fl_Window_Driver::menu_parent() {
+/** The Fl_Window from which currently displayed popups originate.
+ Optionally, gives also the height of the display containing this window */
+Fl_Window *Fl_Window_Driver::menu_parent(int *display_height) {
+  if (display_height) *display_height = menuwindow::display_height_;
   return menuwindow::parent_;
+}
+
+static menuwindow *to_menuwindow(Fl_Window *win) {
+  if (!win->menu_window()) return NULL;
+  return ((window_with_items*)win)->as_menuwindow();
+}
+
+/** Returns whether win is a menutitle window */
+bool Fl_Window_Driver::is_menutitle(Fl_Window *win) {
+  if (!win->menu_window()) return false;
+  return (((window_with_items*)win)->as_menuwindow() == NULL);
+}
+
+/** Accessor to the "origin" member variable of class menuwindow.
+ Variable origin is not NULL when 2 menuwindow's occur, one being a submenu of the other;
+ it links the menuwindow at right to the one at left. */
+Fl_Window *Fl_Window_Driver::menu_leftorigin(Fl_Window *win) {
+  menuwindow *mwin = to_menuwindow(win);
+  return (mwin ? mwin->origin : NULL);
+}
+
+/** Accessor to the "title" member variable of class menuwindow */
+Fl_Window *Fl_Window_Driver::menu_title(Fl_Window *win) {
+  menuwindow *mwin = to_menuwindow(win);
+  return (mwin ? mwin->title : NULL);
+}
+
+/** Accessor to the "itemheight" member variable of class menuwindow */
+int Fl_Window_Driver::menu_itemheight(Fl_Window *win) {
+  menuwindow *mwin = to_menuwindow(win);
+  return (mwin ? mwin->itemheight : 0);
+}
+
+/** Accessor to the "menubartitle" member variable of class menuwindow */
+int Fl_Window_Driver::menu_bartitle(Fl_Window *win) {
+  menuwindow *mwin = to_menuwindow(win);
+  return (mwin ? mwin->menubartitle : 0);
+}
+
+/** Accessor to the "selected" member variable of class menuwindow */
+int Fl_Window_Driver::menu_selected(Fl_Window *win) {
+  menuwindow *mwin = to_menuwindow(win);
+  return (mwin ? mwin->selected : -1);
+}
+
+/** Accessor to the address of the offset_y member variable of class menuwindow */
+int *Fl_Window_Driver::menu_offset_y(Fl_Window *win) {
+  menuwindow *mwin = to_menuwindow(win);
+  return (mwin ? &(mwin->offset_y) : NULL);
+}
+
+/** Returns whether win is a non-menubar menutitle */
+bool Fl_Window_Driver::is_floating_title(Fl_Window *win) {
+  if (!win->menu_window()) return false;
+  Fl_Window *mwin = ((window_with_items*)win)->as_menuwindow();
+  return !mwin && !((menutitle*)win)->in_menubar;
+}
+
+/** Makes sure that the tall menu's selected item is visible in display */
+void Fl_Window_Driver::scroll_to_selected_item(Fl_Window *win) {
+  menuwindow *mwin = to_menuwindow(win);
+  if (mwin && mwin->selected > 0) {
+    mwin->autoscroll(mwin->selected);
+  }
 }
 
 /**
@@ -236,33 +325,11 @@ void Fl_Menu_Item::draw(int x, int y, int w, int h, const Fl_Menu_* m,
           tW --;
           fl_pie(x + td + 1, y + d + td - 1, tW + 3, tW + 3, 0.0, 360.0);
           fl_color(fl_color_average(FL_WHITE, FL_SELECTION_COLOR, 0.2f));
-        } else fl_color(labelcolor_);
-
-        switch (tW) {
-          // Larger circles draw fine...
-          default :
-            fl_pie(x + td + 2, y + d + td, tW, tW, 0.0, 360.0);
-            break;
-
-          // Small circles don't draw well on many systems...
-          case 6 :
-            fl_rectf(x + td + 4, y + d + td, tW - 4, tW);
-            fl_rectf(x + td + 3, y + d + td + 1, tW - 2, tW - 2);
-            fl_rectf(x + td + 2, y + d + td + 2, tW, tW - 4);
-            break;
-
-          case 5 :
-          case 4 :
-          case 3 :
-            fl_rectf(x + td + 3, y + d + td, tW - 2, tW);
-            fl_rectf(x + td + 2, y + d + td + 1, tW, tW - 2);
-            break;
-
-          case 2 :
-          case 1 :
-            fl_rectf(x + td + 2, y + d + td, tW, tW);
-            break;
+        } else {
+          fl_color(labelcolor_);
         }
+
+        fl_draw_circle(x + td + 2, y + d + td, tW, fl_color());
 
         if (Fl::is_scheme("gtk+")) {
           fl_color(fl_color_average(FL_WHITE, FL_SELECTION_COLOR, 0.5));
@@ -297,36 +364,31 @@ void Fl_Menu_Item::draw(int x, int y, int w, int h, const Fl_Menu_* m,
   fl_draw_shortcut = 0;
 }
 
-menutitle::menutitle(int X, int Y, int W, int H, const Fl_Menu_Item* L) :
-  Fl_Menu_Window(X, Y, W, H, 0) {
-  end();
-  set_modal();
-  clear_border();
-  set_menu_window();
-  menu = L;
+menutitle::menutitle(int X, int Y, int W, int H, const Fl_Menu_Item* L, bool inbar) :
+  window_with_items(X, Y, W, H, L) {
+  in_menubar = inbar;
 }
 
 menuwindow::menuwindow(const Fl_Menu_Item* m, int X, int Y, int Wp, int Hp,
                        const Fl_Menu_Item* picked, const Fl_Menu_Item* t,
                        int menubar, int menubar_title, int right_edge)
-  : Fl_Menu_Window(X, Y, Wp, Hp, 0)
+  : window_with_items(X, Y, Wp, Hp, m)
 {
   int scr_x, scr_y, scr_w, scr_h;
   int tx = X, ty = Y;
+  menubartitle = menubar_title;
+  origin = NULL;
+  offset_y = 0;
 
   Fl_Window_Driver::driver(this)->menu_window_area(scr_x, scr_y, scr_w, scr_h);
   if (!right_edge || right_edge > scr_x+scr_w) right_edge = scr_x+scr_w;
 
-  end();
-  set_modal();
-  clear_border();
-  set_menu_window();
-  menu = m;
   if (m) m = m->first(); // find the first item that needs to be rendered
   drawn_selected = -1;
   if (button) {
     box(button->box());
-    if (box() == FL_NO_BOX || box() == FL_FLAT_BOX) box(FL_UP_BOX);
+    // don't force a box type, but make sure that the background is redrawn
+    if (box() == FL_NO_BOX) box(FL_FLAT_BOX);
   } else {
     box(FL_UP_BOX);
   }
@@ -397,7 +459,7 @@ menuwindow::menuwindow(const Fl_Menu_Item* m, int X, int Y, int Wp, int Hp,
   //if (X > scr_x+scr_w-W) X = right_edge-W;
   if (X > scr_x+scr_w-W) X = scr_x+scr_w-W;
   x(X); w(W);
-  h((numitems ? itemheight*numitems-Fl::menu_linespacing() : 0)+2*BW+3);
+  h((numitems ? itemheight*numitems-4 : 0)+2*BW+3);
   if (selected >= 0) {
     Y = Y+(Hp-itemheight)/2-selected*itemheight-BW;
   } else {
@@ -432,7 +494,7 @@ menuwindow::menuwindow(const Fl_Menu_Item* m, int X, int Y, int Wp, int Hp,
     if (menubar_title) {
       int dy = Fl::box_dy(button->box())+1;
       int ht = button->h()-dy*2;
-      title = new menutitle(tx, ty-ht-dy, Wtitle, ht, t);
+      title = new menutitle(tx, ty-ht-dy, Wtitle, ht, t, true);
     } else {
       int dy = 2;
       int ht = Htitle+2*BW+3;
@@ -480,7 +542,7 @@ void menuwindow::drawentry(const Fl_Menu_Item* m, int n, int eraseit) {
   int xx = BW;
   int W = w();
   int ww = W-2*BW-1;
-  int yy = BW+1+n*itemheight;
+  int yy = BW+1+n*itemheight+Fl::menu_linespacing()/2-2;
   int hh = itemheight - Fl::menu_linespacing();
 
   if (eraseit && n != selected) {
@@ -493,10 +555,15 @@ void menuwindow::drawentry(const Fl_Menu_Item* m, int n, int eraseit) {
 
   // the shortcuts and arrows assume fl_color() was left set by draw():
   if (m->submenu()) {
-    int sz = (hh-7)&-2;
-    int y1 = yy+(hh-sz)/2;
-    int x1 = xx+ww-sz-3;
-    fl_polygon(x1+2, y1, x1+2, y1+sz, x1+sz/2+2, y1+sz/2);
+
+    // calculate the bounding box of the submenu pointer (arrow)
+    int sz = (hh-2) & -2;
+    int x1 = xx + ww - sz - 2;
+    int y1 = yy + (hh-sz)/2 + 1;
+
+    // draw an arrow whose style dependends on the active scheme
+    fl_draw_arrow(Fl_Rect(x1, y1, sz, sz), FL_ARROW_SINGLE, FL_ORIENT_RIGHT, fl_color());
+
   } else if (m->shortcut_) {
     Fl_Font f = m->labelsize_ || m->labelfont_ ? (Fl_Font)m->labelfont_ :
                     button ? button->textfont() : FL_HELVETICA;
@@ -530,6 +597,12 @@ void menutitle::draw() {
 
 void menuwindow::draw() {
   if (damage() != FL_DAMAGE_CHILD) {    // complete redraw
+    if ( box() != FL_FLAT_BOX && ( Fl::is_scheme( "gtk+" ) ||
+        Fl::is_scheme( "plastic") || Fl::is_scheme( "gleam" ) )) {
+      // Draw a FL_FLAT_BOX to avoid on macOS the white corners of the menus
+      fl_draw_box( FL_FLAT_BOX, 0, 0, w(), h(),
+                  button ? button->color() : color());
+    }
     fl_draw_box(box(), 0, 0, w(), h(), button ? button->color() : color());
     if (menu) {
       const Fl_Menu_Item* m; int j;
@@ -690,11 +763,11 @@ int menuwindow::handle(int e) {
    then STR #2619 does not occur. need_menu_handle_part1_extra() activates this fix.
 
    FLTK 1.3.4 behavior:
-    Fl::system_driver()->need_menu_handle_part2() returns true on Mac + X11
-    Fl::system_driver()->need_menu_handle_part1_extra() returns true on X11
+    Fl::screen_driver()->need_menu_handle_part2() returns true on Mac + X11
+    Fl::screen_driver()->need_menu_handle_part1_extra() returns true on X11
 
    Alternative behavior that seems equally correct:
-    Fl::system_driver()->need_menu_handle_part2() returns true on Mac
+    Fl::screen_driver()->need_menu_handle_part2() returns true on Mac
     need_menu_handle_part1_extra() does not exist
 
    Other alternative:
@@ -704,7 +777,7 @@ int menuwindow::handle(int e) {
     the menu disappears after the end of the resize rather than at its beginning.
     Apple applications do close popups at the beginning of resizes.
    */
-  static int use_part2 = Fl::system_driver()->need_menu_handle_part2();
+  static int use_part2 = Fl::screen_driver()->need_menu_handle_part2();
   int ret = handle_part1(e);
   if (use_part2) ret = handle_part2(e, ret);
   return ret;
@@ -804,7 +877,7 @@ int menuwindow::handle_part1(int e) {
     }
     break;
   case FL_MOVE: {
-    static int use_part1_extra = Fl::system_driver()->need_menu_handle_part1_extra();
+    static int use_part1_extra = Fl::screen_driver()->need_menu_handle_part1_extra();
     if (use_part1_extra && pp.state == DONE_STATE) {
       return 1; // Fix for STR #2619
     }
@@ -835,9 +908,10 @@ int menuwindow::handle_part1(int e) {
             return 1;
           }
           if (pp.current_item && pp.menu_number==0 && !pp.current_item->submenu()) {
-            if (e==FL_PUSH)
+            if (e==FL_PUSH) {
               pp.state = DONE_STATE;
-            setitem(0, -1, 0);
+              setitem(0, -1, 0);
+            }
             return 1;
           }
           // all others can stay selected
@@ -916,6 +990,8 @@ const Fl_Menu_Item* Fl_Menu_Item::pulldown(
     Y += Fl::event_y_root()-Fl::event_y();
     menuwindow::parent_ = Fl::first_window();
   }
+  int XX, YY, WW;
+  Fl::screen_xywh(XX, YY, WW, menuwindow::display_height_, menuwindow::parent_->screen_num());
   menuwindow mw(this, X, Y, W, H, initial_item, title, menubar);
   Fl::grab(mw);
   menustate pp; p = &pp;
@@ -1009,6 +1085,7 @@ const Fl_Menu_Item* Fl_Menu_Item::pulldown(
       if (initial_item) { // bring up submenu containing initial item:
         menuwindow* n = new menuwindow(menutable,X,Y,W,H,initial_item,title,0,0,cw.x());
         pp.p[pp.nummenus++] = n;
+        if (pp.nummenus >= 2) pp.p[pp.nummenus-1]->origin = pp.p[pp.nummenus-2];
         // move all earlier menus to line up with this new one:
         if (n->selected>=0) {
           int dy = n->y()-nY;
@@ -1035,6 +1112,9 @@ const Fl_Menu_Item* Fl_Menu_Item::pulldown(
         pp.p[pp.nummenus++]= new menuwindow(menutable, nX, nY,
                                           title?1:0, 0, 0, title, 0, menubar,
                                             (title ? 0 : cw.x()) );
+        if (pp.nummenus >= 2 && pp.p[pp.nummenus-2]->itemheight) {
+          pp.p[pp.nummenus-1]->origin = pp.p[pp.nummenus-2];
+        }
       }
     } else { // !m->submenu():
       while (pp.nummenus > pp.menu_number+1) delete pp.p[--pp.nummenus];

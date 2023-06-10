@@ -36,6 +36,7 @@ class Fl_Window;
 @class FLWindow;
 @class NSOpenGLContext;
 @class NSOpenGLPixelFormat;
+@class NSView;
 #else
 class CALayer;
 class NSCursor;
@@ -43,6 +44,7 @@ class NSImage;
 class FLWindow;
 class NSOpenGLContext;
 class NSOpenGLPixelFormat;
+class NSView;
 #endif // __OBJC__
 
 /**
@@ -72,7 +74,7 @@ class NSOpenGLPixelFormat;
  */
 
 
-class FL_EXPORT Fl_Cocoa_Window_Driver : public Fl_Window_Driver
+class Fl_Cocoa_Window_Driver : public Fl_Window_Driver
 {
 private:
   struct shape_data_type {
@@ -80,12 +82,11 @@ private:
     CGImageRef mask;
   } *shape_data_;
   void shape_bitmap_(Fl_Image* b);
-  void shape_alpha_(Fl_Image* img, int offset);
+  void shape_alpha_(Fl_Image* img, int offset) FL_OVERRIDE;
   CGRect* subRect_;           // makes sure subwindow remains inside its parent window
   // stores 3 binary flags: whether window is mapped to retina display; whether resolution just changed;
   // whether window's view received the [FLView view_did_resize] message
   unsigned window_flags_;
-  int screen_num_; // number of screen where window is mapped
 public:
   Fl_Cocoa_Window_Driver(Fl_Window*);
   ~Fl_Cocoa_Window_Driver();
@@ -109,60 +110,46 @@ public:
   CGImageRef CGImage_from_window_rect(int x, int y, int w, int h, bool capture_subwins = true);
 
   // --- window data
-  virtual int decorated_w();
-  virtual int decorated_h();
-  virtual const Fl_Image* shape();
+  int decorated_w() FL_OVERRIDE;
+  int decorated_h() FL_OVERRIDE;
+  const Fl_Image* shape() FL_OVERRIDE;
 
   // --- window management
-  virtual Fl_X *makeWindow();
-  virtual void take_focus();
-  virtual void flush();
-  virtual void flush_overlay();
-  virtual void draw_begin();
-  virtual void draw_end();
-  virtual void make_current();
-  virtual void label(const char *name, const char *mininame);
-  virtual void destroy_double_buffer();
-  virtual void show();
-  virtual void resize(int X,int Y,int W,int H);
-  virtual void hide();
-  virtual void map();
-  virtual void unmap();
-  virtual void fullscreen_on();
-  virtual void fullscreen_off(int X, int Y, int W, int H);
-  virtual void use_border();
-  virtual void size_range();
-  virtual void iconize();
-  virtual void decoration_sizes(int *top, int *left,  int *right, int *bottom);
-  virtual int screen_num();
-  virtual void screen_num(int n);
+  void makeWindow() FL_OVERRIDE;
+  void take_focus() FL_OVERRIDE;
+  void flush() FL_OVERRIDE;
+  void flush_overlay() FL_OVERRIDE;
+  void draw_begin() FL_OVERRIDE;
+  void draw_end() FL_OVERRIDE;
+  void make_current() FL_OVERRIDE;
+  void label(const char *name, const char *mininame) FL_OVERRIDE;
+  void show() FL_OVERRIDE;
+  void resize(int X,int Y,int W,int H) FL_OVERRIDE;
+  void hide() FL_OVERRIDE;
+  void map() FL_OVERRIDE;
+  void unmap() FL_OVERRIDE;
+  void fullscreen_on() FL_OVERRIDE;
+  void fullscreen_off(int X, int Y, int W, int H) FL_OVERRIDE;
+  void use_border() FL_OVERRIDE;
+  void size_range() FL_OVERRIDE;
+  void iconize() FL_OVERRIDE;
+  void decoration_sizes(int *top, int *left,  int *right, int *bottom) FL_OVERRIDE;
   // --- window cursor stuff
-  virtual int set_cursor(Fl_Cursor);
-  virtual int set_cursor(const Fl_RGB_Image*, int, int);
+  int set_cursor(Fl_Cursor) FL_OVERRIDE;
+  int set_cursor(const Fl_RGB_Image*, int, int) FL_OVERRIDE;
 
-  virtual void shape(const Fl_Image* img);
+  void shape(const Fl_Image* img) FL_OVERRIDE;
   // next 4 are in Fl_cocoa.mm because they use Objective-c
-  virtual void capture_titlebar_and_borders(Fl_RGB_Image*& top, Fl_RGB_Image*& left, Fl_RGB_Image*& bottom, Fl_RGB_Image*& right);
-  virtual void wait_for_expose();
+  void capture_titlebar_and_borders(Fl_RGB_Image*& top, Fl_RGB_Image*& left, Fl_RGB_Image*& bottom, Fl_RGB_Image*& right) FL_OVERRIDE;
+  void wait_for_expose() FL_OVERRIDE;
   void draw_titlebar_to_context(CGContextRef gc, int w, int h);
-  virtual int scroll(int src_x, int src_y, int src_w, int src_h, int dest_x, int dest_y, void (*draw_area)(void*, int,int,int,int), void* data);
-
-  // these functions are OpenGL-related and use objective-c
-  // they are put here to avoid libfltk_gl dependency in Fl_cocoa.mm
-  static NSOpenGLContext* create_GLcontext_for_window(NSOpenGLPixelFormat *pixelformat, NSOpenGLContext *shared_ctx, Fl_Window *window);
-  static NSOpenGLPixelFormat *mode_to_NSOpenGLPixelFormat(int mode, const int*); // uses Objective-c
-  static void GLcontext_update(NSOpenGLContext*); // uses Objective-c
-  static void GLcontext_release(NSOpenGLContext*); // uses Objective-c
-  static void flush_context(NSOpenGLContext*); // uses Objective-c
-  static void GLcontext_makecurrent(NSOpenGLContext*); // uses Objective-c
-  static void GL_cleardrawable(void); // uses Objective-c
-  static void gl_start(NSOpenGLContext*); // uses Objective-c
+  int scroll(int src_x, int src_y, int src_w, int src_h, int dest_x, int dest_y, void (*draw_area)(void*, int,int,int,int), void* data) FL_OVERRIDE;
 
   //icons
-  virtual void icons(const Fl_RGB_Image *icons[], int count);
+  void icons(const Fl_RGB_Image *icons[], int count) FL_OVERRIDE;
   NSImage *icon_image;
 
-  virtual fl_uintptr_t os_id();
+  fl_uintptr_t os_id() FL_OVERRIDE;
 };
 
 class Fl_Cocoa_Plugin : public Fl_Plugin {

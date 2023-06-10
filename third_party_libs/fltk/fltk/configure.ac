@@ -3,7 +3,7 @@ dnl the "configure" script is made from this by running GNU "autoconf"
 dnl
 dnl Configuration script for the Fast Light Tool Kit (FLTK).
 dnl
-dnl Copyright 1998-2022 by Bill Spitzak and others.
+dnl Copyright 1998-2023 by Bill Spitzak and others.
 dnl
 dnl This library is free software. Distribution and use rights are outlined in
 dnl the file "COPYING" which should have been included with this file.  If this
@@ -85,8 +85,8 @@ AC_SUBST(OPTIM)
 
 
 dnl Other options
-AC_ARG_ENABLE([cairo], AS_HELP_STRING([--enable-cairo], [use Cairo library]))
-AC_ARG_ENABLE([cairoext], AS_HELP_STRING([--enable-cairoext], [use FLTK code instrumentation for cairo extended use]))
+AC_ARG_ENABLE([cairo], AS_HELP_STRING([--enable-cairo], [add support for Fl_Cairo_Window]))
+AC_ARG_ENABLE([cairoext], AS_HELP_STRING([--enable-cairoext], [use FLTK code instrumentation for Cairo extended use]))
 
 AC_ARG_ENABLE([cp936], AS_HELP_STRING([--enable-cp936], [turn on CP936]))
 AS_IF([test x$enable_cp936 = xyes], [
@@ -110,7 +110,9 @@ AC_ARG_ENABLE([localzlib], AS_HELP_STRING([--enable-localzlib], [use local ZLIB 
 
 AC_ARG_ENABLE([pango], AS_HELP_STRING([--enable-pango], [turn on Pango support]))
 
-AC_ARG_ENABLE([wayland], AS_HELP_STRING([--enable-wayland], [turn on Wayland support]))
+AC_ARG_ENABLE([wayland], AS_HELP_STRING([--disable-wayland], [turn off hybrid Wayland/X11 support]))
+
+AC_ARG_ENABLE([usecairo], AS_HELP_STRING([--enable-usecairo], [all drawing to X11 windows uses Cairo]))
 
 AC_ARG_ENABLE([print], AS_HELP_STRING([--disable-print], [turn off print support (X11)]))
 AS_IF([test x$enable_print = xno], [
@@ -137,6 +139,8 @@ AC_ARG_ENABLE([xft], AS_HELP_STRING([--disable-xft], [turn off Xft support]))
 AC_ARG_ENABLE([xinerama], AS_HELP_STRING([--disable-xinerama], [turn off Xinerama support]))
 
 AC_ARG_ENABLE([xrender], AS_HELP_STRING([--disable-xrender], [turn off Xrender support]))
+
+AC_ARG_ENABLE([fluid], AS_HELP_STRING([--disable-fluid], [turn off fluid building]))
 
 AS_CASE([$host_os], [cygwin* | mingw*], [
   AC_ARG_ENABLE([gdiplus], AS_HELP_STRING([--disable-gdiplus], [don't use GDI+ for antialiased graphics]))
@@ -183,7 +187,6 @@ AS_CASE([$host_os], [cygwin*], [
 ], [darwin*], [
     AS_IF([test x$enable_x11 = xyes], [
         host_os_gui="X11"
-        OPTIM="-U__APPLE__ $OPTIM"
         macosversion=$(sw_vers -productVersion | cut -d. -f2)
         macosversion_maj=$(sw_vers -productVersion | cut -d. -f1)
         AS_IF([test $macosversion_maj -ge 11 -o $macosversion -ge 13], [
@@ -234,7 +237,7 @@ AS_IF([test x$enable_cairoext = xyes], [
         LIBS="$CAIROLIBS $LIBS"
         LINKFLTK="$LINKFLTK $LINKFLTKCAIRO"
     ], [
-        AC_MSG_ERROR([Cairo requested but not available.])
+        AC_MSG_ERROR([Cairo requested but not found.])
     ])
 ], [test x$enable_cairo = xyes], [
     AS_IF([$PKGCONFIG --exists cairo], [
@@ -246,7 +249,7 @@ AS_IF([test x$enable_cairoext = xyes], [
         LINKFLTKCAIRO="../lib/libfltk_cairo.a"
         FLTKCAIROOPTION="-L ../cairo -lfltk_cairo$SHAREDSUFFIX"
     ], [
-        AC_MSG_ERROR([Cairo requested but not available.])
+        AC_MSG_ERROR([Cairo requested but not found.])
     ])
 ])
 
@@ -258,7 +261,6 @@ AC_SUBST(FLTKCAIROOPTION)
 
 AC_SUBST(FLLIBNAME)
 AC_SUBST(GLDEMOS)
-AC_SUBST(GLWLDEMO)
 AC_SUBST(GLLIBNAME)
 AC_SUBST(IMGLIBNAME)
 AC_SUBST(CAIROLIBNAME)
@@ -290,6 +292,7 @@ AS_IF([test "x$enable_shared" = xyes], [
     PICFLAG=1
     SHAREDSUFFIX=""
     FLUID="fluid-shared"
+    FLTK_OPTIONS="fltk-options-shared"
 
     AS_CASE([$host_os], [darwin*], [
         DSONAME="libfltk.$FL_DSO_VERSION.dylib"
@@ -304,7 +307,7 @@ AS_IF([test "x$enable_shared" = xyes], [
         GLDSONAME="libfltk_gl.so.$FL_DSO_VERSION"
         IMGDSONAME="libfltk_images.so.$FL_DSO_VERSION"
         CAIRODSONAME="libfltk_cairo.so.$FL_DSO_VERSION"
-        DSOCOMMAND="\$(CXX) \$(DSOFLAGS) -h \$@ \$(LDLIBS) -G $DEBUGFLAG -o"
+        DSOCOMMAND="\$(CXX) \$(DSOFLAGS) -Wl,-soname,\$@ \$(LDLIBS) -shared -fPIC $DEBUGFLAG -o"
         AS_IF([test "x$libdir" != "x/usr/lib"], [
             DSOLINK="-R$libdir"
         ])
@@ -439,6 +442,7 @@ AS_IF([test "x$enable_shared" = xyes], [
     PICFLAG=0
     SHAREDSUFFIX=""
     FLUID="fluid"
+    FLTK_OPTIONS="fltk-options"
     LINKSHARED="$LINKFLTKCAIRO ../lib/libfltk_images.a ../lib/libfltk_forms.a ../lib/libfltk.a"
 ])
 
@@ -465,6 +469,7 @@ AC_SUBST([SHAREDSUFFIX])
 AC_SUBST([LINKSHARED])
 AC_SUBST([FLUID])
 AC_SUBST([FLUID_BUILD])
+AC_SUBST([FLTK_OPTIONS])
 
 
 dnl Find commands...
@@ -664,95 +669,6 @@ STATICIMAGELIBS=""
 AC_SUBST([IMAGELIBS])
 AC_SUBST([STATICIMAGELIBS])
 
-# Handle the ZLIB lib linking mode (use fltk local or system lib)
-# If --enable-(resp. --disable-)localzlib parameter is not set by user
-# Then we check the ZLIB lib usability, with result in syszlib_ok variable
-# Check for System lib use if automatic mode or --disable-localzlib is requested
-syszlib_ok=no
-syszinc_ok=no
-AS_IF([test x$enable_localzlib != xyes], [
-    AC_CHECK_LIB([z], [gzgets], [
-        AC_CHECK_HEADER([zlib.h], [syszinc_ok=yes])
-        AS_IF([test x$syszinc_ok = xyes], [
-            syszlib_ok=yes
-        ])
-    ])
-])
-
-# Now set the Z lib and include flags according to the requested mode and availability
-AS_IF([test x$enable_localzlib = xyes -o x$syszlib_ok = xno], [
-    ZLIBINC="-I../zlib"
-    ZLIB="zlib"
-    LIBS="-lfltk_z $LIBS"
-    IMAGELIBS="-lfltk_z $IMAGELIBS"
-    STATICIMAGELIBS="\$libdir/libfltk_z.a $STATICIMAGELIBS"
-    AC_DEFINE([HAVE_LIBZ])
-    ac_cv_lib_z_gzgets=no # fc: is still necessary ?
-    # Finally, warn user if system lib was requested but not found
-    AS_IF([test x$enable_localzlib = xno], [
-        AC_MSG_WARN([Cannot find system z lib or header: choosing the local lib mode.])
-    ])
-], [
-    ZLIBINC=""
-    ZLIB=""
-    LIBS="-lz $LIBS"
-    IMAGELIBS="-lz $IMAGELIBS"
-    STATICIMAGELIBS="-lz $STATICIMAGELIBS"
-    AC_DEFINE([HAVE_LIBZ])
-])
-
-
-# Handle the PNG lib linking mode (use fltk local or system lib)
-# If --enable-(resp. --disable-)localpng parameter is not set by user
-# Then we check the png lib usability with result in syspng_lib variable
-
-# Now check if system lib is usable, we check Lib AND include availability with inc variant,
-# but only, if the builtin lib is not requested
-syspnglib_ok=no
-syspnginc_ok=no
-AS_IF([test x$enable_localpng != xyes], [
-    AC_CHECK_LIB([png], [png_read_info], [
-        AC_CHECK_HEADER([png.h], [
-            AC_DEFINE([HAVE_PNG_H])
-            syspnginc_ok=yes
-        ])
-        AC_CHECK_HEADER([libpng/png.h], [
-            syspnginc_ok=yes
-        ])
-        AS_IF([test x$syspnginc_ok = xyes], [
-            syspnglib_ok=yes
-        ])
-    ])
-])
-
-# The following is executed if the lib was not found usable or if local lib is required explicitly
-AS_IF([test x$enable_localpng = xyes -o x$syspnglib_ok = xno], [
-    PNGINC="-I../png"
-    PNG="png"
-    IMAGELIBS="-lfltk_png $IMAGELIBS"
-    STATICIMAGELIBS="\$libdir/libfltk_png.a $STATICIMAGELIBS"
-    AC_DEFINE([HAVE_LIBPNG])
-    AC_DEFINE([HAVE_PNG_H])
-    AC_DEFINE([HAVE_PNG_GET_VALID])
-    AC_DEFINE([HAVE_PNG_SET_TRNS_TO_ALPHA])
-    # Finally, warn user if system lib was requested but not found
-    AS_IF([test x$enable_localpng = xno], [
-        AC_MSG_WARN([Cannot find system png lib or header: choosing the local lib mode.])
-    ])
-], [
-    PNGINC=""
-    PNG=""
-    IMAGELIBS="-lpng $IMAGELIBS"
-    STATICIMAGELIBS="-lpng $STATICIMAGELIBS"
-    AC_DEFINE([HAVE_LIBPNG])
-    AC_CHECK_LIB([png], [png_get_valid], [
-        AC_DEFINE([HAVE_PNG_GET_VALID])
-    ])
-    AC_CHECK_LIB([png], [png_set_tRNS_to_alpha], [
-        AC_DEFINE([HAVE_PNG_SET_TRNS_TO_ALPHA])
-    ])
-])
-
 
 # Handle the JPEG lib linking mode (use fltk local or system lib)
 # If --enable-(resp. --disable-)localjpeg parameter is not set by user
@@ -787,6 +703,113 @@ AS_IF([test x$enable_localjpeg = xyes -o x$sysjpeglib_ok = xno], [
     STATICIMAGELIBS="-ljpeg $STATICIMAGELIBS"
     AC_DEFINE([HAVE_LIBJPEG])
 ])
+
+
+# Handle the ZLIB lib linking mode (use fltk local or system lib)
+# If --enable-(resp. --disable-)localzlib parameter is not set by user
+# Then we check the ZLIB lib usability, with result in syszlib_ok variable
+# Check for System lib use if automatic mode or --disable-localzlib is requested
+syszlib_ok=no
+syszinc_ok=no
+AS_IF([test x$enable_localzlib != xyes], [
+    AC_CHECK_LIB([z], [gzgets], [
+        AC_CHECK_HEADER([zlib.h], [syszinc_ok=yes])
+        AS_IF([test x$syszinc_ok = xyes], [
+            syszlib_ok=yes
+        ])
+    ])
+])
+
+
+# Handle the PNG lib linking mode (use fltk local or system lib)
+# If --enable-(resp. --disable-)localpng parameter is not set by user
+# Then we check the png lib usability with result in syspng_lib variable
+
+# Now check if system lib is usable, we check Lib AND include availability with inc variant,
+# but only, if the builtin lib is not requested
+syspnglib_ok=no
+syspnginc_ok=no
+AS_IF([test x$enable_localpng != xyes], [
+    AC_CHECK_LIB([png], [png_read_info], [
+        AC_CHECK_HEADER([png.h], [
+            AC_DEFINE([HAVE_PNG_H])
+            syspnginc_ok=yes
+        ])
+        AC_CHECK_HEADER([libpng/png.h], [
+            syspnginc_ok=yes
+        ])
+        AS_IF([test x$syspnginc_ok = xyes], [
+            syspnglib_ok=yes
+        ])
+    ])
+])
+
+
+# If we use the system zlib, we must also use the system png lib and vice versa.
+# If either of them is not available, we fall back to using both local libraries
+AS_IF([test x$syspnglib_ok = xyes -a x$syszlib_ok != xyes], [
+    syspnglib_ok=no
+    enable_localpng=yes
+    AC_MSG_WARN([Local z lib selected: overriding png lib to local for compatibility.])
+])
+AS_IF([test x$syszlib_ok = xyes -a x$syspnglib_ok != xyes], [
+    syszlib_ok=no
+    enable_localzlib=yes
+    AC_MSG_WARN([Local png lib selected: overriding z lib to local for compatibility.])
+])
+
+
+# Now set the Z lib and include flags according to the requested mode and availability
+AS_IF([test x$enable_localzlib = xyes -o x$syszlib_ok = xno], [
+    ZLIBINC="-I../zlib"
+    ZLIB="zlib"
+    LIBS="-lfltk_z $LIBS"
+    IMAGELIBS="-lfltk_z $IMAGELIBS"
+    STATICIMAGELIBS="\$libdir/libfltk_z.a $STATICIMAGELIBS"
+    AC_DEFINE([HAVE_LIBZ])
+    ac_cv_lib_z_gzgets=no # fc: is still necessary ?
+    # Finally, warn user if system lib was requested but not found
+    AS_IF([test x$enable_localzlib = xno], [
+        AC_MSG_WARN([Cannot find system z lib or header: choosing the local lib mode.])
+    ])
+], [
+    ZLIBINC=""
+    ZLIB=""
+    LIBS="-lz $LIBS"
+    IMAGELIBS="-lz $IMAGELIBS"
+    STATICIMAGELIBS="-lz $STATICIMAGELIBS"
+    AC_DEFINE([HAVE_LIBZ])
+])
+
+
+# The following is executed if the png lib was not found usable or if local lib is required explicitly
+AS_IF([test x$enable_localpng = xyes -o x$syspnglib_ok = xno], [
+    PNGINC="-I../png"
+    PNG="png"
+    IMAGELIBS="-lfltk_png $IMAGELIBS"
+    STATICIMAGELIBS="\$libdir/libfltk_png.a $STATICIMAGELIBS"
+    AC_DEFINE([HAVE_LIBPNG])
+    AC_DEFINE([HAVE_PNG_H])
+    AC_DEFINE([HAVE_PNG_GET_VALID])
+    AC_DEFINE([HAVE_PNG_SET_TRNS_TO_ALPHA])
+    # Finally, warn user if system lib was requested but not found
+    AS_IF([test x$enable_localpng = xno], [
+        AC_MSG_WARN([Cannot find system png lib or header: choosing the local lib mode.])
+    ])
+], [
+    PNGINC=""
+    PNG=""
+    IMAGELIBS="-lpng $IMAGELIBS"
+    STATICIMAGELIBS="-lpng $STATICIMAGELIBS"
+    AC_DEFINE([HAVE_LIBPNG])
+    AC_CHECK_LIB([png], [png_get_valid], [
+        AC_DEFINE([HAVE_PNG_GET_VALID])
+    ])
+    AC_CHECK_LIB([png], [png_set_tRNS_to_alpha], [
+        AC_DEFINE([HAVE_PNG_SET_TRNS_TO_ALPHA])
+    ])
+])
+
 
 AC_SUBST([JPEG])
 AC_SUBST([JPEGINC])
@@ -878,11 +901,15 @@ HLINKS=
 OSX_ONLY=:
 THREADS=
 LIBDECORDIR=""
+LIBDECORDBUS=""
+FLUIDDIR=""
 
 AC_ARG_WITH([links], AS_HELP_STRING([--with-links], [make header links for common misspellings (default=no)]))
 
 INSTALL_DESKTOP=""
 UNINSTALL_DESKTOP=""
+
+AS_IF([test x$enable_fluid != xno], [FLUIDDIR="fluid"])
 
 AS_CASE([$host_os_gui], [cygwin* | mingw*], [
     dnl Cygwin environment, using windows GDI ...
@@ -934,8 +961,6 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
         HLINKS="#"
     ])
 ], [darwin*], [
-    AC_DEFINE([__APPLE_QUARTZ__])
-
     BUILD="OSX"
 
     # MacOS X uses Cocoa for graphics.
@@ -976,52 +1001,89 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
         THREADS="threads$EXEEXT"
     ])
 
-    AS_IF([test x$enable_wayland = xyes], [
-      dnl Prepare for Wayland...
-
+    AS_IF([test x$enable_wayland != xno], [
       AS_IF([test x$PKGCONFIG = x], [
-          dnl pkg-config is not available, issue warning and abort...
+        dnl pkg-config is not available, issue warning and possibly abort...
+        AS_IF([test x$enable_wayland = xyes], [
           AC_MSG_WARN([--enable-wayland: please install pkg-config.])
           AC_MSG_ERROR([Aborting.])
+        ],[
+          AC_MSG_WARN([pkg-config is not found. Continuing with --disable-wayland])
+          enable_wayland="no"
+        ])
+      ],[
+        missing="no"
+        AS_IF([$PKGCONFIG --exists 'wayland-client >= 1.18'],[],[missing="yes"])
+        AS_IF([$PKGCONFIG --exists 'wayland-protocols >= 1.15'],[],[missing="yes"])
+        AS_IF([$PKGCONFIG --exists wayland-cursor],[],[missing="yes"])
+        AS_IF([$PKGCONFIG --exists xkbcommon],[],[missing="yes"])
+        AS_IF([$PKGCONFIG --exists pangocairo],[],[missing="yes"])
+        AS_IF([test x$missing = xyes], [
+            AC_MSG_WARN([These packages 'wayland-client>=1.18 wayland-protocols>=1.15 wayland-cursor xkbcommon  pangocairo' are required to build FLTK for wayland.])
+            AC_MSG_WARN([At least one of them is missing.])
+          AS_IF([test x$enable_wayland = xyes], [
+            AC_MSG_ERROR([Building for Wayland is not possible. Aborting.])
+          ],[
+            AC_MSG_WARN([Continuing with --disable-wayland])
+            enable_wayland="no"
+          ])
+        ])
       ])
+    ])
+
+    AS_IF([test x$enable_wayland != xno], [
+      dnl Prepare for Wayland...
+      dnl Turn option usecairo ON
+      AC_DEFINE([FLTK_USE_CAIRO])
+      AC_MSG_NOTICE([Turning on the usecairo option])
 
       BUILD="WAYLAND"
       AC_DEFINE([FLTK_USE_WAYLAND])
-      CFLAGS="$CFLAGS -DUSE_SYSTEM_LIBDECOR=0"
-      CXXFLAGS="$CXXFLAGS -DUSE_SYSTEM_LIBDECOR=0"
       graphics="Wayland"
-      LIBS="$LIBS $($PKGCONFIG --libs wayland-cursor) $($PKGCONFIG --libs wayland-client) $($PKGCONFIG --libs xkbcommon)"
-      LIBS="$LIBS $($PKGCONFIG --libs dbus-1) -ldl"
-      CXXFLAGS="$CXXFLAGS -I../libdecor/src"
+      AS_IF([test x$enable_x11 != xno], [
+       AC_DEFINE([FLTK_USE_X11]) # to build a hybrid Wayland/X11 library
+       BUILD="WAYLANDX11"
+       graphics="Wayland or X11 with cairo"
+       ])
+#     CFLAGS="$CFLAGS -DUSE_SYSTEM_LIBDECOR=0"
+#     CXXFLAGS="$CXXFLAGS -DUSE_SYSTEM_LIBDECOR=0"
+      LIBS="$LIBS $($PKGCONFIG --libs wayland-cursor) $($PKGCONFIG --libs wayland-client) $($PKGCONFIG --libs xkbcommon) $($PKGCONFIG --libs pangocairo) "
+      AS_IF([test x$enable_x11 != xno], [LIBS="$LIBS $($PKGCONFIG --libs x11)"] )
+      LIBS="$LIBS -ldl"
+#     CXXFLAGS="$CXXFLAGS -I../libdecor/src"
       DSOFLAGS="$LIBS $DSOFLAGS"
       enable_pango=yes
       LIBDECORDIR="libdecor/build"
+      AS_IF([$PKGCONFIG --exists dbus-1], 
+       [LIBDECORDBUS="-DHAS_DBUS $($PKGCONFIG --cflags dbus-1)" LIBS="$LIBS $($PKGCONFIG --libs dbus-1)"]
+      )
       LDFLAGS="$LDFLAGS -rdynamic"
       AC_SUBST([UNAME])
       UNAME="$(uname -s)"
-      AS_CASE([$UNAME], 
-         [Linux], [LDFLAGS="$LDFLAGS -no-pie"],
-         [*], [CXXFLAGS="$CXXFLAGS -I../libdecor/build"]
+      AS_CASE([$UNAME],
+         [Linux], [LDFLAGS="$LDFLAGS -no-pie"]
       )
 
       AC_SEARCH_LIBS([dlopen], [dl])
 
       AS_IF([test x$enable_gl != xno], [
-          AS_IF([$PKGCONFIG --exists gl], [ 
-             AC_DEFINE([HAVE_GL]) 
-             GLLIBS="$($PKGCONFIG --libs wayland-egl) $($PKGCONFIG --libs egl) $($PKGCONFIG --libs gl) $GLLIBS"
-          ])
-          AS_IF([$PKGCONFIG --exists glu], [ 
-             AC_DEFINE([HAVE_GL_GLU_H]) 
+          AS_IF([$PKGCONFIG --exists gl], [
+            AS_IF([$PKGCONFIG --exists egl], [
+              AS_IF([$PKGCONFIG --exists wayland-egl], [
+                AC_DEFINE([HAVE_GL])
+                GLLIBS="$($PKGCONFIG --libs wayland-egl) $($PKGCONFIG --libs egl) $($PKGCONFIG --libs gl) $GLLIBS"
+          ])])])
+          AS_IF([$PKGCONFIG --exists glu], [
+             AC_DEFINE([HAVE_GL_GLU_H])
              GLLIBS="$($PKGCONFIG --libs glu) $GLLIBS"
           ])
-           GLWLDEMO="egl"
+          AC_CHECK_LIB([GL], [glXGetProcAddressARB], [AC_DEFINE([HAVE_GLXGETPROCADDRESSARB])
+             ],, [-lm])
       ], [
           LINKFLTKGL=""
           GLLIBNAME=""
           GLDSONAME=""
           GLDEMOS=""
-          GLWLDEMO=""
       ])
 
       dnl Check for GTK-3 ...
@@ -1051,6 +1113,41 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
           AC_MSG_ERROR([Aborting.])
       ])
 
+      dnl check for Xinerama, Xcursor, Xfixes, Xrender, Xregion.h
+      AS_IF([test x$enable_x11 != xno], [
+        xinerama_found=no
+        AS_IF([$PKGCONFIG --exists xinerama], [
+          AC_DEFINE(HAVE_XINERAMA)
+          LIBS="$LIBS $($PKGCONFIG --libs xinerama)"
+          xinerama_found=yes
+        ])
+
+        xcursor_found=no
+        AS_IF([$PKGCONFIG --exists xcursor], [
+          AC_DEFINE(HAVE_XCURSOR)
+          LIBS="$LIBS $($PKGCONFIG --libs xcursor)"
+          xcursor_found=yes
+        ])
+
+        xfixes_found=no
+        AS_IF([$PKGCONFIG --exists xfixes], [
+          AC_DEFINE(HAVE_XFIXES)
+          LIBS="$LIBS $($PKGCONFIG --libs xfixes)"
+          xfixes_found=yes
+        ])
+
+        xrender_found=no
+        AS_IF([$PKGCONFIG --exists xrender], [
+          AC_DEFINE(HAVE_XRENDER)
+          LIBS="$LIBS $($PKGCONFIG --libs xrender)"
+          xrender_found=yes
+        ])
+
+        AC_CHECK_HEADER([X11/Xregion.h], [
+          AC_DEFINE([HAVE_X11_XREGION_H])
+        ], [], [#include <X11/Xlib.h>])
+      ])
+
     ], [
 
     dnl Check for X11...
@@ -1067,6 +1164,9 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
     LIBS="$LIBS -lX11 $X_EXTRA_LIBS"
     CFLAGS="$CFLAGS $X_CFLAGS"
     CXXFLAGS="$CXXFLAGS $X_CFLAGS"
+    AS_CASE([$host_os], [darwin*], [
+      DARWIN_LDFLAGS="$LDFLAGS"
+    ])
     LDFLAGS="$X_LIBS $LDFLAGS"
     DSOFLAGS="$X_LIBS $DSOFLAGS"
     AC_DEFINE([FLTK_USE_X11])
@@ -1128,7 +1228,7 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
 
     dnl Check for the Xft library unless disabled...
     xft_found=no
-    AS_IF([test x$enable_xft != xno], [
+    AS_IF([test x$enable_xft != xno -a x$enable_wayland = xno], [
         # Try pkg-config first (freetype2 deprecated freetype-config from some version on)
         FT_FLAGS=""
         AS_IF([test "x$PKGCONFIG" != x], [
@@ -1174,6 +1274,15 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
         ])
     ])
 
+    dnl Option usecairo
+    AS_IF([test x$enable_usecairo = xyes], [
+      enable_pango=yes
+      BUILD="CAIRO"
+      AC_DEFINE([FLTK_USE_CAIRO])
+      AC_MSG_NOTICE([Processing usecairo option])
+      ]
+    )
+
     dnl test if Pango is asked but xft was not found
     AS_IF([test x$enable_pango = xyes -a x$xft_found = xno], [
         AC_MSG_WARN([could not find the Xft headers and/or libraries required for Pango.])
@@ -1187,21 +1296,40 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
         AS_IF([test x$PKGCONFIG != x], [
             dnl pkg-config is available, use it...
             dnl AC_MSG_NOTICE([--enable-pango: using pkg-config ...])
-            CXXFLAGS="$($PKGCONFIG --cflags pangoxft pangocairo) $CXXFLAGS"
-            LIBS="$($PKGCONFIG --libs pangoxft pangocairo) $LIBS"
+            CXXFLAGS="$($PKGCONFIG --cflags pangocairo) $CXXFLAGS"
+            AS_CASE([$host_os], [darwin*], [], [*], [
+              CXXFLAGS="$($PKGCONFIG --cflags pangoxft) $CXXFLAGS"
+            ])
+            AS_CASE([$host_os], [darwin*], [
+              DARWIN_SAVE_LIBS=$LIBS
+              DARWIN_PANGO_LIBS="$($PKGCONFIG --libs pangocairo)"
+              LIBS="$($PKGCONFIG --libs pangocairo) $LIBS"
+            ], [*], [
+              LIBS="$($PKGCONFIG --libs pangocairo --libs pangoxft) $LIBS"
+            ])
         ], [
             dnl pkg-config is not available, issue warning and continue...
             AC_MSG_WARN([--enable-pango: please install pkg-config. Continuing anyway.])
         ])
 
         CPPFLAGS="$CXXFLAGS"
-        AC_CHECK_HEADERS([pango/pango.h pango/pangoxft.h], [
+        AS_CASE([$host_os], [darwin*],
+          [AC_CHECK_HEADERS([pango/pango.h], [
+            AC_CHECK_LIB([pango-1.0], [pango_layout_new], [
+              AC_DEFINE([USE_PANGO])
+              pango_found=yes
+              LIBS=$DARWIN_SAVE_LIBS
+              ])
+          ])
+        ],[*], [
+          AC_CHECK_HEADERS([pango/pango.h pango/pangoxft.h], [
             AC_CHECK_LIB([pango-1.0], [pango_layout_new], [
                 AC_CHECK_LIB([pangoxft-1.0], [pango_xft_render_layout], [
                     AC_DEFINE([USE_PANGO])
                     pango_found=yes
                 ])
             ])
+          ])
         ])
 
         dnl Early abort if --enable-pango was requested but Pango could not be found
@@ -1247,6 +1375,15 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
         ], [], [#include <X11/Xlib.h>])
     ])
 
+    AS_CASE([$host_os], [darwin*], [
+      AS_IF([test x$pango_found = xyes], [
+        #place X_LIBS after homebrew's pango libs
+        LIBS="$DARWIN_PANGO_LIBS $X_LIBS $LIBS"
+        #remove X_LIBS from LDFLAGS while keeping its initial content
+        LDFLAGS="$DARWIN_LDFLAGS"
+      ])
+    ])
+
     dnl Check for the X11/Xregion.h header file...
     AC_CHECK_HEADER([X11/Xregion.h], [
         AC_DEFINE([HAVE_X11_XREGION_H])
@@ -1277,7 +1414,10 @@ AC_SUBST([HLINKS])
 AC_SUBST([OSX_ONLY])
 AC_SUBST([THREADS])
 
+AC_SUBST([FLUIDDIR])
+
 AC_SUBST([LIBDECORDIR])
+AC_SUBST([LIBDECORDBUS])
 
 AC_SUBST([INSTALL_DESKTOP])
 AC_SUBST([UNINSTALL_DESKTOP])
@@ -1406,21 +1546,17 @@ AS_IF([test -n "$GCC"], [
         [AC_MSG_RESULT(no)])
     CFLAGS="$OLDCFLAGS"
 
-    AS_IF([test x$enable_wayland = xyes],[
-        DSOFLAGS="$DSOFLAGS -Wl,--allow-shlib-undefined"
-    ] , [
-        dnl Make sure that shared libraries don't have undefined references
-        # See if ld supports -no-undefined...
-        AC_MSG_CHECKING([if ld supports -no-undefined])
-        OLDLDFLAGS="$LDFLAGS"
-        LDFLAGS="$LDFLAGS -Wl,-no-undefined"
-        AC_LINK_IFELSE(
-          [AC_LANG_PROGRAM([[]], [[]])],
-          [DSOFLAGS="$DSOFLAGS -Wl,-no-undefined"
-          AC_MSG_RESULT(yes)],
-          [AC_MSG_RESULT(no)])
-        LDFLAGS="$OLDLDFLAGS"
-    ])
+    dnl Make sure that shared libraries don't have undefined references
+    # See if ld supports -no-undefined...
+    AC_MSG_CHECKING([if ld supports -no-undefined])
+    OLDLDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS -Wl,-no-undefined"
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM([[]], [[]])],
+      [DSOFLAGS="$DSOFLAGS -Wl,-no-undefined"
+      AC_MSG_RESULT(yes)],
+      [AC_MSG_RESULT(no)])
+    LDFLAGS="$OLDLDFLAGS"
 
     # See if ld supports -Bsymbolic-functions...
     AC_MSG_CHECKING([if ld supports -Bsymbolic-functions])
@@ -1595,7 +1731,7 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
 ], [darwin*], [
     graphics="Quartz"
 ], [*], [
-    AS_IF([test x$enable_wayland != xyes], [
+    AS_IF([test x$enable_wayland = xno], [
         graphics="X11"
     ])
     AS_IF([test x$xft_found = xyes], [
@@ -1612,6 +1748,9 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
     ])
     AS_IF([test x$xrender_found = xyes], [
         graphics="$graphics + Xrender"
+    ])
+    AS_IF([test x$enable_usecairo = xyes], [
+        graphics="$graphics + Cairo"
     ])
     AS_IF([test x$pango_found = xyes], [
         graphics="$graphics + Pango"
@@ -1630,6 +1769,12 @@ AS_CASE([$host_os], [mingw*], [
     echo "                 MSys docpath=$msyspath/local/share/doc/fltk"
 ])
 
+AS_IF([test x$enable_fluid != xno], [
+    echo "    Build fluid: YES"
+    ],[
+    echo "    Build fluid: NO"
+    ])
+    
 dnl
 echo "Cross-compiling: $fltk_cross_compiling"
 AS_IF([test "$fltk_cross_compiling" = "yes"], [

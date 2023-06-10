@@ -1,7 +1,7 @@
 #
 # CMakeLists.txt to build the FLTK library using CMake (www.cmake.org)
 #
-# Copyright 1998-2022 by Bill Spitzak and others.
+# Copyright 1998-2023 by Bill Spitzak and others.
 #
 # This library is free software. Distribution and use rights are outlined in
 # the file "COPYING" which should have been included with this file.  If this
@@ -39,6 +39,7 @@ set (CPPFILES
   Fl_File_Chooser2.cxx
   Fl_File_Icon.cxx
   Fl_File_Input.cxx
+  Fl_Flex.cxx
   Fl_Graphics_Driver.cxx
   Fl_Group.cxx
   Fl_Help_View.cxx
@@ -47,6 +48,7 @@ set (CPPFILES
   Fl_Input.cxx
   Fl_Input_.cxx
   Fl_Input_Choice.cxx
+  Fl_Int_Vector.cxx
   Fl_Light_Button.cxx
   Fl_Menu.cxx
   Fl_Menu_.cxx
@@ -70,10 +72,13 @@ set (CPPFILES
   Fl_Return_Button.cxx
   Fl_Roller.cxx
   Fl_Round_Button.cxx
+  Fl_Scheme.cxx
+  Fl_Scheme_Choice.cxx
   Fl_Screen_Driver.cxx
   Fl_Scroll.cxx
   Fl_Scrollbar.cxx
   Fl_Shared_Image.cxx
+  Fl_Shortcut_Button.cxx
   Fl_Simple_Terminal.cxx
   Fl_Single_Window.cxx
   Fl_Slider.cxx
@@ -130,10 +135,12 @@ set (CPPFILES
   fl_ask.cxx
   fl_boxtype.cxx
   fl_color.cxx
+  fl_contrast.cxx
   fl_cursor.cxx
   fl_curve.cxx
   fl_diamond_box.cxx
   fl_draw.cxx
+  fl_draw_arrow.cxx
   fl_draw_pixmap.cxx
   fl_encoding_latin1.cxx
   fl_encoding_mac_roman.cxx
@@ -146,6 +153,7 @@ set (CPPFILES
   fl_open_uri.cxx
   fl_oval_box.cxx
   fl_overlay.cxx
+  fl_oxy.cxx
   fl_plastic.cxx
   fl_read_image.cxx
   fl_rect.cxx
@@ -163,6 +171,10 @@ set (CPPFILES
   print_button.cxx
   screen_xywh.cxx
 )
+
+if (FLTK_HAVE_CAIRO) # OPTION_CAIRO or OPTION_CAIROEXT
+  list (APPEND CPPFILES Fl_Cairo.cxx)
+endif ()
 
 # find all header files in source directory <FL/...>
 file (GLOB
@@ -190,7 +202,7 @@ endif (FLTK_USE_X11 AND NOT OPTION_PRINT_SUPPORT)
 
 set (DRIVER_FILES)
 
-if (FLTK_USE_X11)
+if (FLTK_USE_X11 AND NOT OPTION_USE_WAYLAND)
 
   # X11 (including APPLE with X11)
 
@@ -200,14 +212,7 @@ if (FLTK_USE_X11)
     drivers/X11/Fl_X11_Window_Driver.cxx
     drivers/Posix/Fl_Posix_System_Driver.cxx
     drivers/Unix/Fl_Unix_System_Driver.cxx
-    drivers/X11/Fl_X11_System_Driver.cxx
-    drivers/Xlib/Fl_Xlib_Graphics_Driver.cxx
-    drivers/Xlib/Fl_Xlib_Graphics_Driver_arci.cxx
-    drivers/Xlib/Fl_Xlib_Graphics_Driver_color.cxx
-    drivers/Xlib/Fl_Xlib_Graphics_Driver_image.cxx
-    drivers/Xlib/Fl_Xlib_Graphics_Driver_line_style.cxx
-    drivers/Xlib/Fl_Xlib_Graphics_Driver_rect.cxx
-    drivers/Xlib/Fl_Xlib_Graphics_Driver_vertex.cxx
+    drivers/Unix/Fl_Unix_Screen_Driver.cxx
     drivers/Xlib/Fl_Xlib_Copy_Surface_Driver.cxx
     drivers/Xlib/Fl_Xlib_Image_Surface_Driver.cxx
     drivers/X11/fl_X11_platform_init.cxx
@@ -219,41 +224,68 @@ if (FLTK_USE_X11)
   )
 
   if (OPTION_USE_KDIALOG)
-    set (DRIVER_FILES ${DRIVER_FILES} Fl_Native_File_Chooser_Kdialog.cxx)
+    set (DRIVER_FILES ${DRIVER_FILES} Fl_Native_File_Chooser_Kdialog.cxx
+      Fl_Native_File_Chooser_Zenity.cxx)
   endif (OPTION_USE_KDIALOG)
 
-  if (USE_XFT)
+  if (FLTK_USE_CAIRO)
     set (DRIVER_FILES ${DRIVER_FILES}
-      drivers/Xlib/Fl_Xlib_Graphics_Driver_font_xft.cxx
+      drivers/Cairo/Fl_Cairo_Graphics_Driver.cxx
+      drivers/Cairo/Fl_X11_Cairo_Graphics_Driver.cxx
     )
-    if (USE_PANGO)
-      set (DRIVER_FILES ${DRIVER_FILES} drivers/Cairo/Fl_Cairo_Graphics_Driver.cxx)
-    endif (USE_PANGO)
   else ()
+    if (USE_XFT)
+      set (DRIVER_FILES ${DRIVER_FILES}
+        drivers/Xlib/Fl_Xlib_Graphics_Driver_font_xft.cxx
+      )
+      if (USE_PANGO)
+        set (DRIVER_FILES ${DRIVER_FILES} drivers/Cairo/Fl_Cairo_Graphics_Driver.cxx)
+      endif (USE_PANGO)
+    else ()
+      set (DRIVER_FILES ${DRIVER_FILES}
+        drivers/Xlib/Fl_Xlib_Graphics_Driver_font_x.cxx
+      )
+    endif (USE_XFT)
     set (DRIVER_FILES ${DRIVER_FILES}
-      drivers/Xlib/Fl_Xlib_Graphics_Driver_font_x.cxx
+      drivers/Xlib/Fl_Xlib_Graphics_Driver.cxx
+      drivers/Xlib/Fl_Xlib_Graphics_Driver_arci.cxx
+      drivers/Xlib/Fl_Xlib_Graphics_Driver_color.cxx
+      drivers/Xlib/Fl_Xlib_Graphics_Driver_image.cxx
+      drivers/Xlib/Fl_Xlib_Graphics_Driver_line_style.cxx
+      drivers/Xlib/Fl_Xlib_Graphics_Driver_rect.cxx
+      drivers/Xlib/Fl_Xlib_Graphics_Driver_vertex.cxx
     )
-  endif (USE_XFT)
+  endif (FLTK_USE_CAIRO)
 
   set (DRIVER_HEADER_FILES
     drivers/Posix/Fl_Posix_System_Driver.H
     drivers/X11/Fl_X11_Screen_Driver.H
     drivers/X11/Fl_X11_Window_Driver.H
-    drivers/X11/Fl_X11_System_Driver.H
+    drivers/Xlib/Fl_Xlib_Graphics_Driver.H
     drivers/Xlib/Fl_Font.H
     drivers/Xlib/Fl_Xlib_Copy_Surface_Driver.H
     drivers/Xlib/Fl_Xlib_Image_Surface_Driver.H
     drivers/Unix/Fl_Unix_System_Driver.H
  )
+ if (FLTK_USE_CAIRO)
+   set (DRIVER_HEADER_FILES ${DRIVER_HEADER_FILES}
+     drivers/Cairo/Fl_Cairo_Graphics_Driver.H
+     drivers/Cairo/Fl_X11_Cairo_Graphics_Driver.H
+   )
+ elseif (USE_PANGO)
+   set (DRIVER_HEADER_FILES ${DRIVER_HEADER_FILES}
+     drivers/Cairo/Fl_Cairo_Graphics_Driver.H
+   )
+ endif (FLTK_USE_CAIRO)
 
 elseif (OPTION_USE_WAYLAND)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${CMAKE_CURRENT_BINARY_DIR}")
   set (DRIVER_FILES
     drivers/Posix/Fl_Posix_System_Driver.cxx
     drivers/Posix/Fl_Posix_Printer_Driver.cxx
+    drivers/Unix/Fl_Unix_Screen_Driver.cxx
     drivers/Wayland/Fl_Wayland_Screen_Driver.cxx
     drivers/Wayland/Fl_Wayland_Window_Driver.cxx
-    drivers/Wayland/Fl_Wayland_System_Driver.cxx
     drivers/Unix/Fl_Unix_System_Driver.cxx
     drivers/Wayland/Fl_Wayland_Graphics_Driver.cxx
     drivers/Wayland/Fl_Wayland_Copy_Surface_Driver.cxx
@@ -263,14 +295,30 @@ elseif (OPTION_USE_WAYLAND)
     drivers/Cairo/Fl_Cairo_Graphics_Driver.cxx
     Fl_Native_File_Chooser_FLTK.cxx
     Fl_Native_File_Chooser_GTK.cxx
-    Fl_Native_File_Chooser_Kdialog.cxx
-  )
+    )
+    if (OPTION_USE_KDIALOG)
+      set (DRIVER_FILES ${DRIVER_FILES} Fl_Native_File_Chooser_Kdialog.cxx
+        Fl_Native_File_Chooser_Zenity.cxx)
+    endif (OPTION_USE_KDIALOG)
+    if (FLTK_USE_X11)
+      list (APPEND DRIVER_FILES
+        drivers/Cairo/Fl_X11_Cairo_Graphics_Driver.cxx
+        drivers/X11/Fl_X11_Screen_Driver.cxx
+        drivers/X11/Fl_X11_Window_Driver.cxx
+        drivers/Xlib/Fl_Xlib_Copy_Surface_Driver.cxx
+        drivers/Xlib/Fl_Xlib_Image_Surface_Driver.cxx
+        Fl_x.cxx
+        fl_dnd_x.cxx
+        Fl_get_key.cxx
+      )
+    endif (FLTK_USE_X11)
   set (DRIVER_HEADER_FILES
     drivers/Posix/Fl_Posix_System_Driver.H
-    drivers/Wayland/Fl_Wayland_System_Driver.H
     drivers/Wayland/Fl_Wayland_Screen_Driver.H
     drivers/Wayland/Fl_Wayland_Window_Driver.H
     drivers/Wayland/Fl_Wayland_Graphics_Driver.H
+    drivers/Cairo/Fl_Cairo_Graphics_Driver.H
+    drivers/Cairo/Fl_X11_Cairo_Graphics_Driver.H
     drivers/Wayland/Fl_Wayland_Copy_Surface_Driver.H
     drivers/Wayland/Fl_Wayland_Image_Surface_Driver.H
     drivers/Unix/Fl_Unix_System_Driver.H
@@ -345,7 +393,7 @@ else ()
     drivers/GDI/Fl_GDI_Image_Surface_Driver.H
   )
 
-endif (FLTK_USE_X11)
+endif (FLTK_USE_X11 AND NOT OPTION_USE_WAYLAND)
 
 source_group("Header Files" FILES ${HEADER_FILES})
 source_group("Driver Source Files" FILES ${DRIVER_FILES})
@@ -391,19 +439,23 @@ set (GL_DRIVER_FILES
   drivers/OpenGL/Fl_OpenGL_Graphics_Driver_rect.cxx
   drivers/OpenGL/Fl_OpenGL_Graphics_Driver_vertex.cxx
 )
-if (FLTK_USE_X11)
-  set (GL_DRIVER_FILES ${GL_DRIVER_FILES} drivers/X11/Fl_X11_Gl_Window_Driver.cxx drivers/X11/fl_X11_gl_platform_init.cxx)
-  set (GL_DRIVER_HEADER_FILES drivers/X11/Fl_X11_Gl_Window_Driver.H)
-elseif (OPTION_USE_WAYLAND)
-  set (GL_DRIVER_FILES ${GL_DRIVER_FILES} drivers/Wayland/Fl_Wayland_Gl_Window_Driver.cxx drivers/Wayland/fl_wayland_gl_platform_init.cxx)
+if (OPTION_USE_WAYLAND)
+  set (GL_DRIVER_FILES ${GL_DRIVER_FILES} drivers/Wayland/Fl_Wayland_Gl_Window_Driver.cxx)
   set (GL_DRIVER_HEADER_FILES drivers/Wayland/Fl_Wayland_Gl_Window_Driver.H)
+  if (FLTK_USE_X11)
+    list (APPEND GL_DRIVER_FILES drivers/X11/Fl_X11_Gl_Window_Driver.cxx)
+    list (APPEND GL_DRIVER_HEADER_FILES drivers/X11/Fl_X11_Gl_Window_Driver.H)
+  endif (FLTK_USE_X11)
+elseif (FLTK_USE_X11)
+  set (GL_DRIVER_FILES ${GL_DRIVER_FILES} drivers/X11/Fl_X11_Gl_Window_Driver.cxx)
+  set (GL_DRIVER_HEADER_FILES drivers/X11/Fl_X11_Gl_Window_Driver.H)
 elseif (APPLE)
-  set (GL_DRIVER_FILES ${GL_DRIVER_FILES} drivers/Cocoa/Fl_Cocoa_Gl_Window_Driver.cxx drivers/Cocoa/fl_macOS_gl_platform_init.cxx)
+  set (GL_DRIVER_FILES ${GL_DRIVER_FILES} drivers/Cocoa/Fl_Cocoa_Gl_Window_Driver.mm)
   set (GL_DRIVER_HEADER_FILES drivers/Cocoa/Fl_Cocoa_Gl_Window_Driver.H)
 elseif (WIN32)
-  set (GL_DRIVER_FILES ${GL_DRIVER_FILES} drivers/WinAPI/Fl_WinAPI_Gl_Window_Driver.cxx drivers/WinAPI/fl_WinAPI_gl_platform_init.cxx)
+  set (GL_DRIVER_FILES ${GL_DRIVER_FILES} drivers/WinAPI/Fl_WinAPI_Gl_Window_Driver.cxx)
   set (GL_DRIVER_HEADER_FILES drivers/WinAPI/Fl_WinAPI_Gl_Window_Driver.H)
-endif (FLTK_USE_X11)
+endif (OPTION_USE_WAYLAND)
 
 set (GL_DRIVER_HEADER_FILES ${GL_DRIVER_FILES}
   drivers/OpenGL/Fl_OpenGL_Display_Device.H
@@ -424,7 +476,9 @@ set (IMGCPPFILES
   Fl_BMP_Image.cxx
   Fl_File_Icon2.cxx
   Fl_GIF_Image.cxx
+  Fl_Anim_GIF_Image.cxx
   Fl_Help_Dialog.cxx
+  Fl_ICO_Image.cxx
   Fl_JPEG_Image.cxx
   Fl_PNG_Image.cxx
   Fl_PNM_Image.cxx
@@ -457,9 +511,12 @@ if (FLTK_USE_X11)
 endif (FLTK_USE_X11)
 
 if (OPTION_USE_WAYLAND)
-  pkg_check_modules(DBUS dbus-1)
   include_directories(${DBUS_INCLUDE_DIRS})
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I${CMAKE_CURRENT_BINARY_DIR} -fPIC -D_GNU_SOURCE  -DHAS_DBUS")
+  pkg_check_modules(DBUS dbus-1)
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I${CMAKE_CURRENT_BINARY_DIR} -fPIC -D_GNU_SOURCE")
+  if (DBUS_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAS_DBUS")
+  endif (DBUS_FOUND)
   if (OPTION_USE_SYSTEM_LIBDECOR)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_SYSTEM_LIBDECOR")
     get_filename_component(PATH_TO_SHARED_LIBS ${HAVE_LIB_PANGO} DIRECTORY)
@@ -467,25 +524,26 @@ if (OPTION_USE_WAYLAND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLIBDECOR_PLUGIN_DIR=${LIBDECOR_PLUGIN_DIR} ")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_SYSTEM_LIBDECOR")
   else()
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I${CMAKE_CURRENT_SOURCE_DIR}/../libdecor/src   -DLIBDECOR_PLUGIN_API_VERSION=1 -DLIBDECOR_PLUGIN_DIR=\\\"/usr/local/lib/libdecor/plugins-1\\\" ")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I${CMAKE_CURRENT_SOURCE_DIR}/../libdecor/src  -I${CMAKE_CURRENT_SOURCE_DIR}/../libdecor/src/plugins  -DLIBDECOR_PLUGIN_API_VERSION=1 -DLIBDECOR_PLUGIN_DIR=\\\"\\\" ")
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_SYSTEM_LIBDECOR=0 -DHAVE_MEMFD_CREATE -DHAVE_MKOSTEMP -DHAVE_POSIX_FALLOCATE")
+    if (GTK_FOUND AND OPTION_ALLOW_GTK_PLUGIN)
+      set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_GTK")
+    endif (GTK_FOUND AND OPTION_ALLOW_GTK_PLUGIN)
   endif (OPTION_USE_SYSTEM_LIBDECOR)
 
-  if (GTK_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_GTK")
-  endif (GTK_FOUND)
-
   list (APPEND CFILES
-    xutf8/keysym2Ucs.c
     scandir_posix.c
     ../libdecor/src/cursor-settings.c
     ../libdecor/src/os-compatibility.c
     ../libdecor/build/fl_libdecor-plugins.c
     )
+  if (FLTK_USE_X11)
+    list (APPEND CFILES xutf8/keysym2Ucs.c)
+  endif (FLTK_USE_X11)
   if (NOT OPTION_USE_SYSTEM_LIBDECOR)
     list (APPEND CFILES
     ../libdecor/build/fl_libdecor.c
-    ../libdecor/src/plugins/cairo/libdecor-cairo-blur.c
+    ../libdecor/src/plugins/common/libdecor-cairo-blur.c
     )
   endif (NOT OPTION_USE_SYSTEM_LIBDECOR)
 endif (OPTION_USE_WAYLAND)
@@ -565,10 +623,17 @@ if (HAVE_XRENDER)
   list (APPEND OPTIONAL_LIBS ${X11_Xrender_LIB})
 endif (HAVE_XRENDER)
 
+if (FLTK_HAVE_CAIRO) # OPTION_CAIRO or OPTION_CAIROEXT
+  list (APPEND OPTIONAL_LIBS ${PKG_CAIRO_LIBRARIES})
+endif()
+
 if (USE_PANGO)
   ### FIXME ###  This needs to use the PKG_* variables directly
-  list (APPEND OPTIONAL_LIBS ${HAVE_LIB_PANGO} ${HAVE_LIB_PANGOXFT} ${HAVE_LIB_PANGOCAIRO})
+  list (APPEND OPTIONAL_LIBS ${HAVE_LIB_PANGO} ${HAVE_LIB_PANGOCAIRO})
   list (APPEND OPTIONAL_LIBS ${HAVE_LIB_CAIRO} ${HAVE_LIB_GOBJECT})
+  if (USE_PANGOXFT)
+    list (APPEND OPTIONAL_LIBS ${HAVE_LIB_PANGOXFT})
+  endif (USE_PANGOXFT)
 endif (USE_PANGO)
 
 if (USE_XFT)
@@ -578,12 +643,33 @@ if (USE_XFT)
   endif (LIB_fontconfig)
 endif (USE_XFT)
 
-if (OPTION_USE_WAYLAND)
-  if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "FreeBSD")
-    set(PROTOCOLS /usr/local/share/wayland-protocols)
-  else ()
-    set(PROTOCOLS /usr/share/wayland-protocols)
-  endif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "FreeBSD")
+if (UNIX AND OPTION_USE_WAYLAND)
+  if (NOT (CMAKE_VERSION VERSION_LESS 3.4))
+    pkg_get_variable(PROTOCOLS wayland-protocols pkgdatadir) # requires cmake 3.4
+  else()
+    execute_process(COMMAND pkg-config --variable=pkgdatadir wayland-protocols
+      OUTPUT_VARIABLE PROTOCOLS)
+    # strip trailing newline
+    string (REPLACE "\n" "" PROTOCOLS ${PROTOCOLS})
+  endif (NOT (CMAKE_VERSION VERSION_LESS 3.4))
+  # replace "//" with "/"
+  string (REPLACE "//" "/" PROTOCOLS ${PROTOCOLS})
+  if (NOT(EXISTS ${PROTOCOLS}/stable/xdg-shell/xdg-shell.xml))
+    message(WARNING "Install necessary file ${PROTOCOLS}/stable/xdg-shell/xdg-shell.xml")
+  endif ()
+  if (NOT(EXISTS ${PROTOCOLS}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml))
+    message(WARNING
+      "Install necessary file ${PROTOCOLS}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml")
+  endif ()
+  if (NOT(EXISTS ${PROTOCOLS}/unstable/text-input/text-input-unstable-v3.xml))
+    message(WARNING
+      "Install necessary file ${PROTOCOLS}/unstable/text-input/text-input-unstable-v3.xml")
+  endif ()
+  if (NOT((EXISTS ${PROTOCOLS}/stable/xdg-shell/xdg-shell.xml) AND
+          (EXISTS ${PROTOCOLS}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml) AND
+          (EXISTS ${PROTOCOLS}/unstable/text-input/text-input-unstable-v3.xml)))
+      message(FATAL_ERROR "*** Terminating: one or more required file(s) missing.")
+  endif ()
   add_custom_command(
     OUTPUT xdg-shell-protocol.c xdg-shell-client-protocol.h
     COMMAND wayland-scanner private-code ${PROTOCOLS}/stable/xdg-shell/xdg-shell.xml xdg-shell-protocol.c
@@ -619,20 +705,29 @@ if (OPTION_USE_WAYLAND)
   endif (OPTION_USE_GL)
   if (OPTION_USE_SYSTEM_LIBDECOR)
     list (APPEND OPTIONAL_LIBS "-ldecor-0")
+  elseif (GTK_FOUND AND OPTION_ALLOW_GTK_PLUGIN)
+      list (APPEND OPTIONAL_LIBS ${GTK_LDFLAGS} )
   endif (OPTION_USE_SYSTEM_LIBDECOR)
-  list (APPEND OPTIONAL_LIBS "-lwayland-cursor -lwayland-client -lxkbcommon -ldl -ldbus-1")
-  if (GTK_FOUND)
-    list (APPEND OPTIONAL_LIBS ${GTK_LDFLAGS} )
-  endif (GTK_FOUND)
+  list (APPEND OPTIONAL_LIBS "-lwayland-cursor -lwayland-client -lxkbcommon -ldl")
+  if (DBUS_FOUND)
+    list (APPEND OPTIONAL_LIBS "${DBUS_LDFLAGS}")
+  endif (DBUS_FOUND)
+  if (NOT OPTION_WAYLAND_ONLY)
+    list (APPEND OPTIONAL_LIBS "-lXcursor -lXrender -lXinerama -lXfixes -lXft -lXext -lX11")
+  endif (NOT OPTION_WAYLAND_ONLY)
   if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux" AND NOT OPTION_BUILD_SHARED_LIBS)
     list (APPEND OPTIONAL_LIBS "-no-pie")
   endif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux" AND NOT OPTION_BUILD_SHARED_LIBS)
-endif (OPTION_USE_WAYLAND)
+endif (UNIX AND OPTION_USE_WAYLAND)
 
 #######################################################################
 
 FL_ADD_LIBRARY (fltk STATIC "${STATIC_FILES}")
 target_link_libraries (fltk ${OPTIONAL_LIBS})
+
+if (FLTK_HAVE_CAIRO)
+  fl_target_link_directories (fltk PUBLIC "${PKG_CAIRO_LIBRARY_DIRS}")
+endif()
 
 #######################################################################
 
@@ -678,7 +773,8 @@ endif (OPENGL_FOUND)
 if (OPTION_BUILD_SHARED_LIBS AND NOT MSVC)
 
   FL_ADD_LIBRARY (fltk SHARED "${SHARED_FILES}")
-  target_link_libraries (fltk_SHARED ${OPTIONAL_LIBS})
+  target_link_libraries (fltk_SHARED ${OPTIONAL_LIBS} ${PKG_CAIRO_LIBRARIES})
+  fl_target_link_directories (fltk_SHARED PUBLIC "${PKG_CAIRO_LIBRARY_DIRS}")
 
   ###################################################################
 

@@ -26,27 +26,6 @@
 #include <stdlib.h>             // realloc/free
 
 
-// An STL-ish vector without templates (private to Fl_Table)
-
-void Fl_Table::IntVector::copy(int *newarr, unsigned int newsize) {
-    size(newsize);
-    memcpy(arr, newarr, newsize * sizeof(int));
-}
-
-Fl_Table::IntVector::~IntVector() { // DTOR
-  if (arr)
-    free(arr);
-  arr = 0;
-}
-
-void Fl_Table::IntVector::size(unsigned int count) {
-  if (count != _size) {
-    arr = (int*)realloc(arr, count * sizeof(int));
-    _size = count;
-  }
-}
-
-
 /** Sets the vertical scroll position so 'row' is at the top,
     and causes the screen to redraw.
 */
@@ -415,8 +394,8 @@ int Fl_Table::find_cell(TableContext context, int R, int C, int &X, int &Y, int 
     X=Y=W=H=0;
     return(-1);
   }
-  X = col_scroll_position(C) - hscrollbar->value() + tix;
-  Y = row_scroll_position(R) - vscrollbar->value() + tiy;
+  X = (int)col_scroll_position(C) - hscrollbar->value() + tix;
+  Y = (int)row_scroll_position(R) - vscrollbar->value() + tiy;
   W = col_width(C);
   H = row_height(R);
 
@@ -601,8 +580,8 @@ void Fl_Table::table_scrolled() {
   Calls recall_dimensions(), and recalculates scrollbar sizes.
 */
 void Fl_Table::table_resized() {
-  table_h = row_scroll_position(rows());
-  table_w = col_scroll_position(cols());
+  table_h = (int)row_scroll_position(rows());
+  table_w = (int)col_scroll_position(cols());
   recalc_dimensions();
   // Recalc scrollbar sizes
   //    Clamp scrollbar value() after a resize.

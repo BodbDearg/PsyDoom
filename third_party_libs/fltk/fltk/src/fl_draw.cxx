@@ -1,7 +1,7 @@
 //
 // Label drawing code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2020 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -28,6 +28,8 @@
 #include <FL/platform.H>        // fl_open_display()
 
 #include "flstring.h"
+#include "fl_oxy.h"
+
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
@@ -41,15 +43,17 @@ static char* underline_at;
  */
 static const char* expand_text_(const char* from, char*& buf, int maxbuf, double maxw, int& n,
                double &width, int wrap, int draw_symbols) {
-  char* e = buf+(maxbuf-4);
   underline_at = 0;
   double w = 0;
   static int l_local_buff = 500;
   static char *local_buf = (char*)malloc(l_local_buff); // initial buffer allocation
+  char* e;
   if (maxbuf == 0) {
     buf = local_buf;
     e = buf + l_local_buff - 4;
-    }
+  } else {
+    e = buf+(maxbuf-4);
+  }
   char* o = buf;
   char* word_end = o;
   const char* word_start = from;
@@ -79,11 +83,13 @@ static const char* expand_text_(const char* from, char*& buf, int maxbuf, double
     if (o > e) {
       if (maxbuf) break; // don't overflow buffer
       l_local_buff += int(o - e) + 200; // enlarge buffer
-      buf = (char*)realloc(local_buf, l_local_buff);
-      e = buf + l_local_buff - 4; // update pointers to buffer content
-      o = buf + (o - local_buf);
-      word_end = buf + (word_end - local_buf);
-      local_buf = buf;
+      size_t delta_o = (o - local_buf);
+      size_t delta_end = (word_end - local_buf);
+      local_buf = (char*)realloc(local_buf, l_local_buff);
+      buf = local_buf;
+      e = local_buf + l_local_buff - 4; // update pointers to buffer content
+      o = local_buf + delta_o;
+      word_end = local_buf + delta_end;
     }
 
     if (c == '\t') {
@@ -249,8 +255,9 @@ void fl_draw(
   if (str) {
     int desc = fl_descent();
     for (p=str; ; ypos += height) {
-      if (lines>1) e = expand_text_(p, linebuf, 0, w - symtotal - imgtotal, buflen,
-                                width, align&FL_ALIGN_WRAP, draw_symbols);
+      if (lines>1)
+        e = expand_text_(p, linebuf, 0, w - symtotal - imgtotal, buflen,
+                         width, align&FL_ALIGN_WRAP, draw_symbols);
       else e = "";
 
       if (width > symoffset) symoffset = (int)(width + 0.5);
@@ -537,7 +544,7 @@ void fl_draw_check(Fl_Rect bb, Fl_Color col) {
     d2 = 4;
   }
   // reduce line height (width) for small sizes
-  if (d1 < 4)
+  if (d1 < 3)
     lh = 2;
 
   tw = d1 + d2 + 1; // total width
@@ -583,3 +590,59 @@ void fl_draw_check(Fl_Rect bb, Fl_Color col) {
   fl_color(saved_color);
 
 } // fl_draw_check()
+
+/**
+  Draw a potentially small, filled circle as a GUI element.
+
+  This method draws a filled circle, using fl_pie() if the given diameter
+  \p d is larger than 6 pixels (aka FLTK units).
+
+  If \p d is 6 or smaller it approximates a filled circle by drawing several
+  filled rectangles, depending on the size because fl_pie() might not draw
+  well on many systems for smaller sizes.
+
+  \param[in]  x0,y0   coordinates of top left of the bounding box
+  \param[in]  d       diameter == width and height of the bounding box
+  \param[in]  color   drawing color
+*/
+void fl_draw_circle(int x0, int y0, int d, Fl_Color color) {
+
+#define DEBUG_DRAW_CIRCLE (0) // bit 1 = draw bounding box (green)
+
+  Fl_Color saved_color = fl_color();
+
+#if (DEBUG_DRAW_CIRCLE & 1)
+  fl_rectf(x0, y0, d, d, FL_GREEN);
+#endif
+
+  // draw the circle
+
+  switch (d) {
+    // Larger circles draw fine...
+    default:
+      fl_pie(x0, y0, d, d, 0.0, 360.0);
+      break;
+
+    // Small circles don't draw well on many systems...
+    case 6:
+      fl_rectf(x0 + 2, y0, d - 4, d);
+      fl_rectf(x0 + 1, y0 + 1, d - 2, d - 2);
+      fl_rectf(x0, y0 + 2, d, d - 4);
+      break;
+
+    case 5:
+    case 4:
+    case 3:
+      fl_rectf(x0 + 1, y0, d - 2, d);
+      fl_rectf(x0, y0 + 1, d, d - 2);
+      break;
+
+    case 2:
+    case 1:
+      fl_rectf(x0, y0, d, d);
+      break;
+  }
+
+  fl_color(saved_color);
+
+} // fl_draw_circle()

@@ -1,7 +1,7 @@
 //
 // Standard dialog header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2021 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -15,8 +15,8 @@
 //
 
 /** \file fl_ask.H
- API for common dialogs.
- */
+  API for common dialogs.
+*/
 
 #ifndef _FL_fl_ask_H_
 #define _FL_fl_ask_H_
@@ -27,8 +27,13 @@
 
 class Fl_Widget;
 
-/** Different system beeps available.
- \sa fl_beep(int) */
+/** Defines the different system beeps available.
+
+  Some systems may play different sounds or use different sound volume
+  depending on the Fl_Beep value. The implementation is platform dependent.
+
+  \sa fl_beep(int)
+*/
 enum Fl_Beep {
   FL_BEEP_DEFAULT = 0, ///< Default beep.
   FL_BEEP_MESSAGE,     ///< Message beep.
@@ -67,8 +72,14 @@ FL_EXPORT int fl_choice_n(const char *q, const char *b0, const char *b1, const c
 FL_EXPORT Fl_String fl_input_str(int maxchar, const char *label, const char *deflt = 0, ...)
     __fl_attr((__format__(__printf__, 2, 4)));
 
+FL_EXPORT Fl_String fl_input_str(int &ret, int maxchar, const char *label, const char *deflt = 0, ...)
+    __fl_attr((__format__(__printf__, 3, 5)));
+
 FL_EXPORT Fl_String fl_password_str(int maxchar, const char *label, const char *deflt = 0, ...)
     __fl_attr((__format__(__printf__, 2, 4)));
+
+FL_EXPORT Fl_String fl_password_str(int &ret, int maxchar, const char *label, const char *deflt = 0, ...)
+    __fl_attr((__format__(__printf__, 3, 5)));
 
 FL_EXPORT Fl_Widget *fl_message_icon();
 extern FL_EXPORT Fl_Font fl_message_font_;

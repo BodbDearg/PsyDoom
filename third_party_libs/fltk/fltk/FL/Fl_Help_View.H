@@ -3,6 +3,7 @@
 //
 // Copyright 1997-2010 by Easy Software Products.
 // Image support by Matthias Melcher, Copyright 2000-2009.
+// Copyright 2011-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -52,6 +53,8 @@ struct Fl_Help_Block {
                 w,              // Width
                 h;              // Height
   int           line[32];       // Left starting position for each line
+  int           ol;             // is ordered list <OL> element
+  int           ol_num;         // item number in ordered list
 };
 
 //
@@ -259,7 +262,7 @@ class FL_EXPORT Fl_Help_View : public Fl_Group {        // Help viewer widget
   static int    compare_targets(const Fl_Help_Target *t0, const Fl_Help_Target *t1);
   int           do_align(Fl_Help_Block *block, int line, int xx, int a, int &l);
 protected:
-  void          draw();
+  void          draw() FL_OVERRIDE;
 private:
   void          format();
   void          format_table(int *table_width, int *columns, const char *table);
@@ -270,7 +273,7 @@ private:
   Fl_Shared_Image *get_image(const char *name, int W, int H);
   int           get_length(const char *l);
 public:
-  int           handle(int);
+  int           handle(int) FL_OVERRIDE;
 private:
 
   void          hv_draw(const char *t, int x, int y, int entity_extra_length = 0);
@@ -316,7 +319,7 @@ public:
   */
   void          link(Fl_Help_Func *fn) { link_ = fn; }
   int           load(const char *f);
-  void          resize(int,int,int,int);
+  void          resize(int,int,int,int) FL_OVERRIDE;
   /** Gets the size of the help view. */
   int           size() const { return (size_); }
   void          size(int W, int H) { Fl_Widget::size(W, H); }

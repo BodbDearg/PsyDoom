@@ -19,13 +19,11 @@
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
+#include <FL/Fl_Tooltip.H>
 #include "Fl_Window_Driver.H"
 #include "Fl_System_Driver.H"
-#include <FL/Fl_Tooltip.H>
-#include <FL/filename.H>
-#include <FL/fl_draw.H>
+#include "Fl_Screen_Driver.H"
 #include <ctype.h>
-#include "flstring.h"
 
 static int fl_match(const char *a, const char *s, int atleast = 1) {
   const char *b = s;
@@ -167,12 +165,12 @@ int Fl::arg(int argc, char **argv, int &i) {
   if (fl_match(s, "geometry")) {
 
     int flags, gx, gy; unsigned int gw, gh;
-    flags = Fl::system_driver()->XParseGeometry(v, &gx, &gy, &gw, &gh);
+    flags = Fl::screen_driver()->XParseGeometry(v, &gx, &gy, &gw, &gh);
     if (!flags) return 0;
     geometry = v;
 
   } else if (fl_match(s, "display", 2)) {
-    Fl::system_driver()->display_arg(v);
+    Fl::screen_driver()->display(v);
 
   } else if (Fl::system_driver()->arg_and_value(s, v)) {
     // nothing to do
@@ -279,20 +277,20 @@ void Fl_Window::show(int argc, char **argv) {
 
   // note: background_pixel is no longer used since 1.4.0, but anyway ...
   // set colors first, so background_pixel is correct:
-  static char beenhere;
+  static char beenhere = 0;
   if (!beenhere) {
     if (geometry) {
       int fl = 0, gx = x(), gy = y(); unsigned int gw = w(), gh = h();
-      fl = Fl::system_driver()->XParseGeometry(geometry, &gx, &gy, &gw, &gh);
-      if (fl & Fl_System_Driver::fl_XNegative) gx = Fl::w()-w()+gx;
-      if (fl & Fl_System_Driver::fl_YNegative) gy = Fl::h()-h()+gy;
+      fl = Fl::screen_driver()->XParseGeometry(geometry, &gx, &gy, &gw, &gh);
+      if (fl & Fl_Screen_Driver::fl_XNegative) gx = Fl::w()-w()+gx;
+      if (fl & Fl_Screen_Driver::fl_YNegative) gy = Fl::h()-h()+gy;
       //  int mw,mh; minsize(mw,mh);
       //  if (mw > gw) gw = mw;
       //  if (mh > gh) gh = mh;
       Fl_Widget *r = resizable();
       if (!r) resizable(this);
       // for Windows we assume window is not mapped yet:
-      if (fl & (Fl_System_Driver::fl_XValue | Fl_System_Driver::fl_YValue))
+      if (fl & (Fl_Screen_Driver::fl_XValue | Fl_Screen_Driver::fl_YValue))
         x(-1), resize(gx,gy,gw,gh);
       else
         size(gw,gh);

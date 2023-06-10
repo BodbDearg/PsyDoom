@@ -33,7 +33,7 @@ void Fl_Value_Input::input_cb(Fl_Widget*, void* v) {
   if (nv != t.value() || t.when() & FL_WHEN_NOT_CHANGED) {
     t.set_value(nv);
     t.set_changed();
-    if (t.when()) t.do_callback();
+    if (t.when()) t.do_callback(FL_REASON_CHANGED);
   }
 }
 
@@ -54,7 +54,7 @@ void Fl_Value_Input::value_damage() {
   char buf[128];
   format(buf);
   input.value(buf);
-  input.mark(input.position()); // turn off selection highlight
+  input.mark(input.insert_position()); // turn off selection highlight
 }
 
 int Fl_Value_Input::handle(int event) {

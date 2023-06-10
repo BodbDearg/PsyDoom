@@ -1,7 +1,7 @@
 //
 // PostScript priting support for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 2010-2020 by Bill Spitzak and others.
+// Copyright 2010-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -27,7 +27,7 @@
 
 /** Support for printing on the Unix/Linux platform */
 class Fl_Posix_Printer_Driver : public Fl_PostScript_File_Device {
-  virtual int begin_job(int pagecount = 0, int *frompage = NULL, int *topage = NULL, char **perr_message=NULL);
+  int begin_job(int pagecount = 0, int *frompage = NULL, int *topage = NULL, char **perr_message=NULL) FL_OVERRIDE;
 };
 
 #if HAVE_DLSYM && HAVE_DLFCN_H
@@ -35,7 +35,7 @@ class Fl_Posix_Printer_Driver : public Fl_PostScript_File_Device {
 #include <dlfcn.h>   // for dlopen et al
 #include <unistd.h>  // for mkstemp
 #include <FL/filename.H>
-#include "../X11/Fl_X11_System_Driver.H"
+#include "Fl_Posix_System_Driver.H"
 #define GTK_PAPER_NAME_LETTER "na_letter"
 #define GTK_RESPONSE_NONE 0
 #define GTK_RESPONSE_OK -5
@@ -56,8 +56,8 @@ public:
 
   GtkPrintJob *pjob; // data shared between begin_job() and end_job()
   char tmpfilename[50]; // name of temporary PostScript file containing to-be-printed data
-  virtual int begin_job(int pagecount = 0, int *frompage = NULL, int *topage = NULL, char **perr_message=NULL);
-  virtual void end_job();
+  int begin_job(int pagecount = 0, int *frompage = NULL, int *topage = NULL, char **perr_message=NULL) FL_OVERRIDE;
+  void end_job() FL_OVERRIDE;
   static bool probe_for_GTK();
   static void *ptr_gtk; // points to the GTK dynamic lib or NULL
 
@@ -112,7 +112,7 @@ int Fl_GTK_Printer_Driver::begin_job(int pagecount, int *firstpage, int *lastpag
   GtkPrintSettings *psettings = CALL_GTK(gtk_print_unix_dialog_get_settings)(pdialog); //2.10
   CALL_GTK(gtk_print_settings_set)(psettings, "output-file-format", "ps"); //2.10
   char line[FL_PATH_MAX + 20], cwd[FL_PATH_MAX];
-  sprintf(line, "file://%s/FLTK.ps", fl_getcwd(cwd, FL_PATH_MAX));
+  snprintf(line, FL_PATH_MAX + 20, "file://%s/FLTK.ps", fl_getcwd(cwd, FL_PATH_MAX));
   CALL_GTK(gtk_print_settings_set)(psettings, "output-uri", line); //2.10
   CALL_GTK(gtk_print_unix_dialog_set_settings)(pdialog, psettings); //2.10
   CALL_GTK(g_object_unref)(psettings);
@@ -160,7 +160,7 @@ int Fl_GTK_Printer_Driver::begin_job(int pagecount, int *firstpage, int *lastpag
         response_id = GTK_RESPONSE_NONE + GTK_RESPONSE_OK + 1;
         if (perr_message) {
           *perr_message = new char[strlen(line)+50];
-          sprintf(*perr_message, "Can't open output file %s", line);
+          snprintf(*perr_message, strlen(line)+50, "Can't open output file %s", line);
         }
       }
     } else if ( CALL_GTK(gtk_printer_accepts_ps)(gprinter) && //2.10
@@ -176,7 +176,7 @@ int Fl_GTK_Printer_Driver::begin_job(int pagecount, int *firstpage, int *lastpag
         response_id = GTK_RESPONSE_NONE + GTK_RESPONSE_OK + 1;
         if (perr_message) {
           *perr_message = new char[strlen(tmpfilename)+50];
-          sprintf(*perr_message, "Can't create temporary file %s", tmpfilename);
+          snprintf(*perr_message, strlen(tmpfilename)+50, "Can't create temporary file %s", tmpfilename);
         }
       }
     }
@@ -322,7 +322,7 @@ int Fl_Posix_Printer_Driver::begin_job(int pages, int *firstpage, int *lastpage,
   if (!ps->output) {
     if (perr_message) {
       *perr_message = new char[strlen(command) + 50];
-      sprintf(*perr_message, "could not run command: %s", command);
+      snprintf(*perr_message, strlen(command) + 50, "could not run command: %s", command);
     }
     return 2;
   }

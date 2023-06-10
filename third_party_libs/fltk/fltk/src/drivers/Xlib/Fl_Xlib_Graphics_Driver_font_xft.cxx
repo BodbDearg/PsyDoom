@@ -1,7 +1,7 @@
 //
 // More font utilities for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2018 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -22,6 +22,7 @@
 #include <FL/fl_draw.H>
 #include <FL/fl_string_functions.h>  // fl_strdup()
 #include <FL/platform.H>
+#include <FL/fl_utf8.h>
 #include "Fl_Font.H"
 
 #include <stdio.h>
@@ -34,6 +35,52 @@
 
 Fl_XFont_On_Demand fl_xfont = 0;
 
+
+#if ! USE_PANGO
+
+// The predefined fonts that FLTK has with Xft but without Pango:
+static Fl_Fontdesc built_in_table[] = {
+#if 1
+  {" sans"},
+  {"Bsans"},
+  {"Isans"},
+  {"Psans"},
+  {" mono"},
+  {"Bmono"},
+  {"Imono"},
+  {"Pmono"},
+  {" serif"},
+  {"Bserif"},
+  {"Iserif"},
+  {"Pserif"},
+  {" symbol"},
+  {" screen"},
+  {"Bscreen"},
+  {" zapf dingbats"},
+#else
+  {" helvetica"},
+  {"Bhelvetica"},
+  {"Ihelvetica"},
+  {"Phelvetica"},
+  {" courier"},
+  {"Bcourier"},
+  {"Icourier"},
+  {"Pcourier"},
+  {" times"},
+  {"Btimes"},
+  {"Itimes"},
+  {"Ptimes"},
+  {" symbol"},
+  {" lucidatypewriter"},
+  {"Blucidatypewriter"},
+  {" zapf dingbats"},
+#endif
+};
+
+FL_EXPORT Fl_Fontdesc* fl_fonts = (Fl_Fontdesc*)built_in_table;
+
+#endif // ! USE_PANGO
+
 static void fl_xft_font(Fl_Xlib_Graphics_Driver *driver, Fl_Font fnum, Fl_Fontsize size, int angle);
 
 // For some reason Xft produces errors if you destroy a window whose id
@@ -42,8 +89,6 @@ static void fl_xft_font(Fl_Xlib_Graphics_Driver *driver, Fl_Font fnum, Fl_Fontsi
 
 XftDraw* Fl_Xlib_Graphics_Driver::draw_ = 0;
 Window Fl_Xlib_Graphics_Driver::draw_window = (Window)0;
-
-extern Fl_Fontdesc* fl_fonts;
 
 Fl_Fontsize Fl_Xlib_Graphics_Driver::size_unscaled() {
   return (Fl_Fontsize)(size_);
@@ -722,7 +767,7 @@ void Fl_Xlib_Graphics_Driver::draw_unscaled(const char *str, int n, int x, int y
   else //if (draw_window != fl_window)
     XftDrawChange(draw_, draw_window = fl_window);
 
-  Region region = fl_clip_region();
+  Region region = (Region)fl_clip_region();
   if (!(region && XEmptyRegion(region))) {
     XftDrawSetClip(draw_, region);
 
@@ -758,7 +803,7 @@ void Fl_Xlib_Graphics_Driver::drawUCS4(const void *str, int n, int x, int y) {
   else //if (draw_window != fl_window)
     XftDrawChange(draw_, draw_window = fl_window);
 
-  Region region = fl_clip_region();
+  Region region = (Region)fl_clip_region();
   if (region && XEmptyRegion(region)) return;
   XftDrawSetClip(draw_, region);
 
@@ -905,10 +950,6 @@ const char* Fl_Xlib_Graphics_Driver::get_font_name(Fl_Font fnum, int* ap) {
   }
   if (ap) *ap = f->fontname[ENDOFBUFFER];
   return f->fontname;
-}
-
-float Fl_Xlib_Graphics_Driver::scale_bitmap_for_PostScript() {
-  return 2;
 }
 
 Fl_Xlib_Font_Descriptor::~Fl_Xlib_Font_Descriptor() {
@@ -1198,7 +1239,7 @@ static void fl_pango_layout_get_pixel_extents(PangoLayout *layout, int &dx, int 
 
 void Fl_Xlib_Graphics_Driver::do_draw(int from_right, const char *str, int n, int x, int y) {
   if (!fl_display || n == 0) return;
-  Region region = clip_region();
+  Region region = (Region)clip_region();
   if (region && XEmptyRegion(region)) return;
   if (!playout_) context();
 
@@ -1279,6 +1320,7 @@ double Fl_Xlib_Graphics_Driver::width_unscaled(unsigned int utf32) {
 }
 
 double Fl_Xlib_Graphics_Driver::width_unscaled(const char* str, int n) {
+  if ((str == NULL) || (n == 0)) return 0.;
   if (n == fl_utf8len(*str)) { // str contains a single unicode character
     int l;
     unsigned c = fl_utf8decode(str, str+n, &l);
@@ -1318,14 +1360,17 @@ int Fl_Xlib_Graphics_Driver::descent_unscaled() {
   else return -1;
 }
 
+// FIXME: this (static) function should likely be in Fl_Graphics_Driver.
+// The code is the same as in src/drivers/Cairo/Fl_Cairo_Graphics_Driver.cxx
+
 static int font_name_process(const char *name, char &face) {
   int l = strlen(name);
   face = ' ';
-  if (l > 8 && !memcmp(name + l - 8, " Regular", 8)) l -= 8;
-  else if (l > 6 && !memcmp(name + l - 6, " Plain", 6)) l -= 6;
-  else if (l > 12 && !memcmp(name + l - 12, " Bold Italic", 12)) {l -= 12; face='P';}
-  else if (l > 7 && !memcmp(name + l - 7, " Italic", 7)) {l -= 7; face='I';}
-  else if (l > 5 && !memcmp(name + l - 5, " Bold", 5)) {l -= 5; face='B';}
+  if      (l >  8 && !memcmp(name + l -  8, " Regular", 8)) l -= 8;
+  else if (l >  6 && !memcmp(name + l -  6, " Plain", 6)) l -= 6;
+  else if (l > 12 && !memcmp(name + l - 12, " Bold Italic", 12)) {l -= 12; face = 'P';}
+  else if (l >  7 && !memcmp(name + l -  7, " Italic", 7)) {l -= 7; face = 'I';}
+  else if (l >  5 && !memcmp(name + l -  5, " Bold", 5)) {l -= 5; face = 'B';}
   return l;
 }
 
@@ -1344,6 +1389,18 @@ Fl_Font Fl_Xlib_Graphics_Driver::set_fonts(const char* pattern_name)
   fl_open_display();
   int n_families, count = 0;
   PangoFontFamily **families;
+  char *saved_lang = fl_getenv("LANG");
+  const char *Clang = "LANG=C";
+  if (saved_lang && strcmp(saved_lang, Clang)) {
+    // Force LANG=C to prevent pango_font_face_get_face_name() below from returning
+    // translated versions of Bold, Italic, etc… (see issue #732).
+    // Unfortunately, using setlocale() doesn't do the job.
+    char *p = saved_lang;
+    saved_lang = (char*)malloc(strlen(p) + 6);
+    memcpy(saved_lang, "LANG=", 5);
+    strcpy(saved_lang + 5, p);
+    fl_putenv(Clang);
+  } else saved_lang = NULL;
   Fl_Xlib_Graphics_Driver::context();
   Fl_Xlib_Graphics_Driver::init_built_in_fonts();
   pango_font_map_list_families(Fl_Xlib_Graphics_Driver::pfmap_, &families, &n_families);
@@ -1351,19 +1408,26 @@ Fl_Font Fl_Xlib_Graphics_Driver::set_fonts(const char* pattern_name)
     PangoFontFace **faces;
     int n_faces;
     const char *fam_name = pango_font_family_get_name (families[fam]);
-    int l = strlen(fam_name);
+    int lfam = strlen(fam_name);
     pango_font_family_list_faces(families[fam], &faces, &n_faces);
     for (int j = 0; j < n_faces; j++) {
       const char *p = pango_font_face_get_face_name(faces[j]);
+      // Remove " Regular" suffix from font names
+      if (!strcasecmp(p, "regular")) p = NULL;
       // build the font's FLTK name
-      l += strlen(p) + 2;
-      char *q = new char[l];
-      sprintf(q, "%s %s", fam_name, p);
+      int lfont = lfam + (p ? strlen(p) + 2 : 1);
+      char *q = new char[lfont];
+      if (p) snprintf(q, lfont, "%s %s", fam_name, p);
+      else strcpy(q, fam_name);
       Fl::set_font((Fl_Font)(count++ + FL_FREE_FONT), q);
     }
     /*g_*/free(faces); // glib source code shows that g_free is equivalent to free
   }
   /*g_*/free(families);
+  if (saved_lang) {
+    fl_putenv(saved_lang);
+    free(saved_lang);
+  }
   // Sort the list into alphabetic order
   qsort(fl_fonts + FL_FREE_FONT, count, sizeof(Fl_Fontdesc), (sort_f_type)font_sort);
   return FL_FREE_FONT + count;

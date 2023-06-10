@@ -1,7 +1,7 @@
 //
 // Roller header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -32,14 +32,14 @@
   corresponding arrow keys when the roller has the keyboard focus, or by the
   mousewheels when the mouse pointer is positioned over the roller widget.
 
-  <P ALIGN=CENTER>\image html Fl_Roller.png
+  \image html Fl_Roller.png
   \image latex Fl_Roller.png "Fl_Roller" width=4cm
 */
 class FL_EXPORT Fl_Roller : public Fl_Valuator {
 protected:
-  void draw();
+  void draw() FL_OVERRIDE;
 public:
-  int handle(int);
+  int handle(int) FL_OVERRIDE;
   Fl_Roller(int X,int Y,int W,int H,const char* L=0);
 };
 

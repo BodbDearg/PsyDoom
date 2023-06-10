@@ -1,6 +1,6 @@
 Note: I have stripped down this library to just the stuff needed for this project.
 The full version is available at the link below.
 
-Version 1.4.0 (pre-release, July 23rd 2022):
-    https://github.com/fltk/fltk/archive/cd60ea17b021ce4442bc5efea8b7082463c682b8.zip
-    https://github.com/fltk/fltk/tree/cd60ea17b021ce4442bc5efea8b7082463c682b8
+Version 1.4.0 (pre-release, June 7th 2023):
+    https://github.com/fltk/fltk/archive/7d7edcf50fc23ffac2c3abba66f981629b000150.zip
+    https://github.com/fltk/fltk/tree/7d7edcf50fc23ffac2c3abba66f981629b000150

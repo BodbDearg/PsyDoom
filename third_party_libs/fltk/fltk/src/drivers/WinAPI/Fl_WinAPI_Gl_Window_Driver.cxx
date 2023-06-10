@@ -1,7 +1,7 @@
 //
 // Class Fl_WinAPI_Gl_Window_Driver for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 2021 by Bill Spitzak and others.
+// Copyright 2021-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -25,6 +25,10 @@
 #include "../GDI/Fl_Font.H"
 extern void fl_save_dc(HWND, HDC);
 
+#ifndef GL_CURRENT_PROGRAM
+#  define GL_CURRENT_PROGRAM 0x8B8D // from glew.h
+#endif
+
 // STR #3119: select pixel format with composition support
 // ... and no more than 32 color bits (8 bits/color)
 // Ref: PixelFormatDescriptor Object
@@ -47,6 +51,12 @@ public:
     pixelformat = 0;
   }
 };
+
+
+Fl_Gl_Window_Driver *Fl_Gl_Window_Driver::newGlWindowDriver(Fl_Gl_Window *w)
+{
+  return new Fl_WinAPI_Gl_Window_Driver(w);
+}
 
 
 Fl_Gl_Choice *Fl_WinAPI_Gl_Window_Driver::find(int m, const int *alistp)
@@ -124,13 +134,14 @@ Fl_Gl_Choice *Fl_WinAPI_Gl_Window_Driver::find(int m, const int *alistp)
 }
 
 
-GLContext Fl_WinAPI_Gl_Window_Driver::create_gl_context(Fl_Window* window, const Fl_Gl_Choice* g, int layer)
+GLContext Fl_WinAPI_Gl_Window_Driver::do_create_gl_context(Fl_Window* window,
+                      const Fl_Gl_Choice* g, int layer)
 {
-  Fl_X* i = Fl_X::i(window);
+  Fl_X* i = Fl_X::flx(window);
   HDC hdc = Fl_WinAPI_Window_Driver::driver(window)->private_dc;
   if (!hdc) {
-    hdc = Fl_WinAPI_Window_Driver::driver(window)->private_dc = GetDCEx(i->xid, 0, DCX_CACHE);
-    fl_save_dc(i->xid, hdc);
+    hdc = Fl_WinAPI_Window_Driver::driver(window)->private_dc = GetDCEx((HWND)i->xid, 0, DCX_CACHE);
+    fl_save_dc((HWND)i->xid, hdc);
     SetPixelFormat(hdc, ((Fl_WinAPI_Gl_Choice*)g)->pixelformat, (PIXELFORMATDESCRIPTOR*)(&((Fl_WinAPI_Gl_Choice*)g)->pfd));
 #    if USE_COLORMAP
     if (fl_palette) SelectPalette(hdc, fl_palette, FALSE);
@@ -139,18 +150,23 @@ GLContext Fl_WinAPI_Gl_Window_Driver::create_gl_context(Fl_Window* window, const
   GLContext context = layer ? wglCreateLayerContext(hdc, layer) : wglCreateContext(hdc);
   if (context) {
     if (context_list && nContext)
-      wglShareLists(context_list[0], context);
+      wglShareLists((HGLRC)context_list[0], (HGLRC)context);
     add_context(context);
   }
   return context;
 }
 
 
+GLContext Fl_WinAPI_Gl_Window_Driver::create_gl_context(Fl_Window* window, const Fl_Gl_Choice* g)
+{
+  return do_create_gl_context(window, g, 0);
+}
+
 void Fl_WinAPI_Gl_Window_Driver::set_gl_context(Fl_Window* w, GLContext context) {
   if (context != cached_context || w != cached_window) {
     cached_context = context;
     cached_window = w;
-    wglMakeCurrent(Fl_WinAPI_Window_Driver::driver(w)->private_dc, context);
+    wglMakeCurrent(Fl_WinAPI_Window_Driver::driver(w)->private_dc, (HGLRC)context);
   }
 }
 
@@ -160,7 +176,7 @@ void Fl_WinAPI_Gl_Window_Driver::delete_gl_context(GLContext context) {
     cached_window = 0;
     wglMakeCurrent(0, 0);
   }
-  wglDeleteContext(context);
+  wglDeleteContext((HGLRC)context);
   del_context(context);
 }
 
@@ -170,7 +186,7 @@ void Fl_WinAPI_Gl_Window_Driver::make_overlay_current() {
   if (overlay() != this) {
     set_gl_context(pWindow, (GLContext)overlay());
     //  if (fl_overlay_depth)
-    //    wglRealizeLayerPalette(Fl_X::i(this)->private_dc, 1, TRUE);
+    //    wglRealizeLayerPalette(Fl_X::flx(this)->private_dc, 1, TRUE);
   } else
 #endif
     glDrawBuffer(GL_FRONT);
@@ -204,7 +220,7 @@ void Fl_WinAPI_Gl_Window_Driver::gl_hide_before(void *& overlay) {
 void Fl_WinAPI_Gl_Window_Driver::make_overlay(void*&overlay) {
   if (overlay) return;
 
-  GLContext context = create_gl_context(pWindow, g(), 1);
+  GLContext context = do_create_gl_context(pWindow, g(), 1);
   if (!context) {overlay = pWindow; return;} // fake the overlay
 
   HDC hdc = Fl_WinAPI_Window_Driver::driver(pWindow)->private_dc;
@@ -367,5 +383,23 @@ void Fl_WinAPI_Gl_Window_Driver::get_list(Fl_Font_Descriptor *fd, int r) {
   SelectObject((HDC)fl_graphics_driver->gc(), oldFid);
 }
 
+
+typedef void (WINAPI *glUseProgram_type)(GLint);
+static glUseProgram_type glUseProgram_f = NULL;
+
+void Fl_WinAPI_Gl_Window_Driver::switch_to_GL1() {
+  if (!glUseProgram_f) {
+    glUseProgram_f = (glUseProgram_type)GetProcAddress("glUseProgram");
+  }
+  glGetIntegerv(GL_CURRENT_PROGRAM, &current_prog);
+  if (current_prog) glUseProgram_f(0);
+}
+
+void Fl_WinAPI_Gl_Window_Driver::switch_back() {
+  if (current_prog) glUseProgram_f((GLuint)current_prog);
+}
+
+
+FL_EXPORT HGLRC fl_win32_glcontext(GLContext rc) { return (HGLRC)rc; }
 
 #endif // HAVE_GL

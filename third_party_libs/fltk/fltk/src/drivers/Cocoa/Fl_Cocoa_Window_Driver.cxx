@@ -54,28 +54,19 @@ void Fl_Cocoa_Window_Driver::flush_overlay()
   if (!oWindow->shown()) return;
   pWindow->make_current(); // make sure fl_gc is non-zero
   if (!other_xid) {
-    other_xid = fl_create_offscreen(oWindow->w(), oWindow->h());
+    other_xid = new Fl_Image_Surface(oWindow->w(), oWindow->h(), 1);
     oWindow->clear_damage(FL_DAMAGE_ALL);
   }
   if (oWindow->damage() & ~FL_DAMAGE_EXPOSE) {
-    Fl_X *myi = Fl_X::i(pWindow);
+    Fl_X *myi = Fl_X::flx(pWindow);
     fl_clip_region(myi->region); myi->region = 0;
-    fl_begin_offscreen(other_xid);
+    Fl_Surface_Device::push_current(other_xid);
     draw();
-    fl_end_offscreen();
+    Fl_Surface_Device::pop_current();
   }
   if (erase_overlay) fl_clip_region(0);
-  if (other_xid) {
-    fl_copy_offscreen(0, 0, oWindow->w(), oWindow->h(), other_xid, 0, 0);
-  }
+  fl_copy_offscreen(0, 0, oWindow->w(), oWindow->h(), other_xid->offscreen(), 0, 0);
   if (overlay() == oWindow) oWindow->draw_overlay();
-}
-
-
-void Fl_Cocoa_Window_Driver::destroy_double_buffer()
-{
-  if (pWindow->as_overlay_window()) fl_delete_offscreen(other_xid);
-  other_xid = 0;
 }
 
 
@@ -89,8 +80,6 @@ void Fl_Cocoa_Window_Driver::draw_begin()
       CGContextClipToMask(my_gc, CGRectMake(0,0,w(),h()), shape_data_->mask); // requires Mac OS 10.4
     }
     CGContextSaveGState(my_gc);
-   CGAffineTransform mat = CGContextGetCTM(my_gc);
-    printf("mat.a=%g\n",mat.a);
 # endif
   }
 }
@@ -217,17 +206,17 @@ void Fl_Cocoa_Window_Driver::shape(const Fl_Image* img) {
 
 
 void Fl_Cocoa_Window_Driver::hide() {
-  Fl_X* ip = Fl_X::i(pWindow);
+  Fl_X* ip = Fl_X::flx(pWindow);
   // MacOS X manages a single pointer per application. Make sure that hiding
   // a toplevel window will not leave us with some random pointer shape, or
   // worst case, an invisible pointer
   if (ip && !parent()) pWindow->cursor(FL_CURSOR_DEFAULT);
   if ( hide_common() ) return;
   q_release_context(this);
-  if ( ip->xid == fl_window )
+  if ( ip->xid == (fl_uintptr_t)fl_window )
     fl_window = 0;
   if (ip->region) Fl_Graphics_Driver::default_driver().XDestroyRegion(ip->region);
-  destroy(ip->xid);
+  destroy((FLWindow*)ip->xid);
   delete subRect();
   delete ip;
 }
@@ -235,14 +224,18 @@ void Fl_Cocoa_Window_Driver::hide() {
 
 int Fl_Cocoa_Window_Driver::scroll(int src_x, int src_y, int src_w, int src_h, int dest_x, int dest_y, void (*draw_area)(void*, int,int,int,int), void* data)
 {
+  if ( (src_x < 0) || (src_y < 0) )
+    return 1;
+  if ( (src_x+src_w > pWindow->w()) || (src_y+src_h > pWindow->h()) )
+    return 1;
   CGImageRef img = CGImage_from_window_rect(src_x, src_y, src_w, src_h);
-  if (img) {
-    // the current surface is generally the display, but is an Fl_Image_Surface when scrolling an Fl_Overlay_Window
-    Fl_Quartz_Graphics_Driver *qgd = (Fl_Quartz_Graphics_Driver*)Fl_Surface_Device::surface()->driver();
-    float s = qgd->scale();
-    qgd->draw_CGImage(img, dest_x, dest_y, lround(s*src_w), lround(s*src_h), 0, 0, src_w, src_h);
-    CFRelease(img);
-  }
+  if (!img)
+    return 1;
+  // the current surface is generally the display, but is an Fl_Image_Surface when scrolling an Fl_Overlay_Window
+  Fl_Quartz_Graphics_Driver *qgd = (Fl_Quartz_Graphics_Driver*)Fl_Surface_Device::surface()->driver();
+  float s = qgd->scale();
+  qgd->draw_CGImage(img, dest_x, dest_y, (int)lround(s*src_w), (int)lround(s*src_h), 0, 0, src_w, src_h);
+  CFRelease(img);
   return 0;
 }
 
@@ -330,11 +323,12 @@ void Fl_Cocoa_Window_Driver::capture_titlebar_and_borders(Fl_RGB_Image*& top, Fl
   CGContextRelease(auxgc);
 }
 
-void Fl_Cocoa_Window_Driver::screen_num(int n) {
-  screen_num_ = n;
+
+FLWindow *fl_mac_xid(const Fl_Window *win) {
+  return (FLWindow*)Fl_Window_Driver::xid(win);
 }
 
-int Fl_Cocoa_Window_Driver::screen_num() {
-  if (pWindow->parent()) return pWindow->top_window()->screen_num();
-  else return screen_num_;
+
+Fl_Window *fl_mac_find(FLWindow *xid) {
+  return Fl_Window_Driver::find((fl_uintptr_t)xid);
 }

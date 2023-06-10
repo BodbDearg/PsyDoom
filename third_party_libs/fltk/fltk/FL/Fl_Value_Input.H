@@ -1,7 +1,7 @@
 //
 // Value input header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -44,12 +44,13 @@
   is therefore impossible to select text by dragging across it,
   although clicking can still move the insertion cursor.</P>
 
-  <P>If step() is non-zero and integral, then the range
+  If step() is non-zero and integral, then the range
   of numbers are limited to integers instead of floating point
   values.
 
-  <P ALIGN="CENTER">\image html Fl_Value_Input.png
+  \image html Fl_Value_Input.png
   \image latex  Fl_Value_Input.png "Fl_Value_Input" width=4cm
+
   \see Fl_Widget::shortcut_label(int)
 */
 class FL_EXPORT Fl_Value_Input : public Fl_Valuator {
@@ -60,13 +61,13 @@ public:
 private:
   char soft_;
   static void input_cb(Fl_Widget*,void*);
-  virtual void value_damage(); // cause damage() due to value() changing
+  void value_damage() FL_OVERRIDE; // cause damage() due to value() changing
 public:
-  int handle(int);
+  int handle(int) FL_OVERRIDE;
 protected:
-  void draw();
+  void draw() FL_OVERRIDE;
 public:
-  void resize(int,int,int,int);
+  void resize(int,int,int,int) FL_OVERRIDE;
   Fl_Value_Input(int x,int y,int w,int h,const char *l=0);
   ~Fl_Value_Input();
 

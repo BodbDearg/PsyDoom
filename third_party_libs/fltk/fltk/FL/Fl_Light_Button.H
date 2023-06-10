@@ -1,7 +1,7 @@
 //
 // Lighted button header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -30,14 +30,14 @@
 
   Buttons generate callbacks when they are clicked by the user.  You
   control exactly when and how by changing the values for type() and when().
-  <P ALIGN=CENTER>\image html Fl_Light_Button.png</P>
+  \image html  Fl_Light_Button.png
   \image latex Fl_Light_Button.png "Fl_Light_Button" width=4cm
 */
 class FL_EXPORT Fl_Light_Button : public Fl_Button {
 protected:
-    virtual void draw();
+    void draw() FL_OVERRIDE;
 public:
-    virtual int handle(int);
+    int handle(int) FL_OVERRIDE;
     Fl_Light_Button(int x,int y,int w,int h,const char *l = 0);
 };
 

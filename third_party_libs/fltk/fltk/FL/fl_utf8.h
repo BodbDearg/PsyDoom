@@ -56,6 +56,9 @@ FL_EXPORT int fl_utf8len(char c);
 /* OD: returns the byte length of the first UTF-8 char sequence (returns +1 if not valid) */
 FL_EXPORT int fl_utf8len1(char c);
 
+/* OD: returns the byte length of a UTF-8 text */
+FL_EXPORT int fl_utf8strlen(const char *text, int len);
+
 /* OD: returns the number of Unicode chars in the UTF-8 string */
 FL_EXPORT int fl_utf_nb_char(const unsigned char *buf, int len);
 
@@ -178,6 +181,9 @@ FL_EXPORT int fl_execvp(const char *file, char *const *argv);
 FL_EXPORT int fl_open(const char *fname, int oflags, ...);
 
 FL_EXPORT int fl_open_ext(const char *fname, int binary, int oflags, ...);
+
+/* Portable wrapper around unix-style close() function */
+FL_EXPORT int fl_close_fd(int fd);
 
 /* OD: Portable UTF-8 aware unlink wrapper */
 FL_EXPORT int fl_unlink(const char *fname);

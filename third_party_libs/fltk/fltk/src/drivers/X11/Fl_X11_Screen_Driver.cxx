@@ -17,11 +17,8 @@
 
 #include <config.h>
 #include "Fl_X11_Screen_Driver.H"
-#include "../Xlib/Fl_Font.H"
 #include "Fl_X11_Window_Driver.H"
-#include "Fl_X11_System_Driver.H"
 #include "../Posix/Fl_Posix_System_Driver.H"
-#include "../Xlib/Fl_Xlib_Graphics_Driver.H"
 #include <FL/Fl.H>
 #include <FL/platform.H>
 #include <FL/fl_ask.H>
@@ -32,6 +29,7 @@
 #include <sys/time.h>
 
 #include "../../Fl_Timeout.h"
+#include "../../flstring.h"
 
 #if HAVE_XINERAMA
 #  include <X11/extensions/Xinerama.h>
@@ -50,7 +48,7 @@
 
 extern Atom fl_NET_WORKAREA;
 
-// these are set by Fl::args() and override any system colors: from Fl_get_system_colors.cxx
+// these are set by Fl::args() and FL_OVERRIDE any system colors: from Fl_get_system_colors.cxx
 extern const char *fl_fg;
 extern const char *fl_bg;
 extern const char *fl_bg2;
@@ -71,10 +69,69 @@ char Fl_X11_Screen_Driver::fl_is_over_the_spot = 0;
 
 Window Fl_X11_Screen_Driver::xim_win = 0;
 
+Fl_X11_Screen_Driver::Fl_X11_Screen_Driver() : Fl_Unix_Screen_Driver() {
+  // X11 screen driver does not use a key table
+  key_table = NULL;
+  key_table_size = 0;
+}
 
 void Fl_X11_Screen_Driver::display(const char *d)
 {
   if (d) setenv("DISPLAY", d, 1);
+}
+
+
+int Fl_X11_Screen_Driver::XParseGeometry(const char* string, int* x, int* y,
+                                         unsigned int* width, unsigned int* height) {
+  return ::XParseGeometry(string, x, y, width, height);
+}
+
+
+void Fl_X11_Screen_Driver::own_colormap() {
+  fl_open_display();
+#if USE_COLORMAP
+  switch (fl_visual->c_class) {
+  case GrayScale :
+  case PseudoColor :
+  case DirectColor :
+    break;
+  default:
+    return; // don't do anything for non-colormapped visuals
+  }
+  int i;
+  XColor colors[16];
+  // Get the first 16 colors from the default colormap...
+  for (i = 0; i < 16; i ++) colors[i].pixel = i;
+  XQueryColors(fl_display, fl_colormap, colors, 16);
+  // Create a new colormap...
+  fl_colormap = XCreateColormap(fl_display,
+                                RootWindow(fl_display,fl_screen),
+                                fl_visual->visual, AllocNone);
+  // Copy those first 16 colors to our own colormap:
+  for (i = 0; i < 16; i ++)
+    XAllocColor(fl_display, fl_colormap, colors + i);
+#endif // USE_COLORMAP
+}
+
+
+const char *Fl_X11_Screen_Driver::shortcut_add_key_name(unsigned key, char *p, char *buf, const char **eom)
+{
+  const char* q;
+  if (key == FL_Enter || key == '\r') q = "Enter";  // don't use Xlib's "Return":
+  else if (key > 32 && key < 0x100) q = 0;
+  else q = XKeysymToString(key);
+  if (!q) {
+    p += fl_utf8encode(fl_toupper(key), p);
+    *p = 0;
+    return buf;
+  }
+  if (p > buf) {
+    strcpy(p,q);
+    return buf;
+  } else {
+    if (eom) *eom = q;
+    return q;
+  }
 }
 
 
@@ -338,6 +395,7 @@ void Fl_X11_Screen_Driver::screen_dpi(float &h, float &v, int n)
 }
 
 
+// Implements fl_beep(). See documentation in src/fl_ask.cxx.
 void Fl_X11_Screen_Driver::beep(int type)
 {
   int vol;
@@ -417,6 +475,15 @@ void Fl_X11_Screen_Driver::grab(Fl_Window* win)
 // Wrapper around XParseColor...
 int Fl_X11_Screen_Driver::parse_color(const char* p, uchar& r, uchar& g, uchar& b)
 {
+  // before w open the display, we try interpreting this ourselves
+  // "None" will ultimately always return 0
+  if (   (fl_ascii_strcasecmp(p, "none") == 0)
+      || (fl_ascii_strcasecmp(p, "#transparent") == 0) )
+    return 0;
+  // if it's #rgb, we can do that ourselves
+  if (Fl_Screen_Driver::parse_color(p, r, g, b))
+    return 1;
+  // it's neither "None" nor hex, so finally open the diplay and ask X11
   XColor x;
   if (!fl_display) open_display();
   if (XParseColor(fl_display, fl_colormap, p, &x)) {
@@ -986,7 +1053,7 @@ void Fl_X11_Screen_Driver::offscreen_size(Fl_Offscreen off, int &width, int &hei
   int px, py;
   unsigned w, h, b, d;
   Window root;
-  XGetGeometry(fl_display, off, &root, &px, &py, &w, &h, &b, &d);
+  XGetGeometry(fl_display, (Pixmap)off, &root, &px, &py, &w, &h, &b, &d);
   width = (int)w;
   height = (int)h;
 }

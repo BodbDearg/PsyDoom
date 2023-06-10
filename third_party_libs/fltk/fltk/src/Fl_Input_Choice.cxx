@@ -5,7 +5,7 @@
 //           | input area   || \/ |
 //           |______________||____|
 //
-// Copyright 1998-2017 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 // Copyright 2004 by Greg Ercolano.
 //
 // This library is free software. Distribution and use rights are outlined in
@@ -137,8 +137,9 @@ Fl_Input_Choice::InputMenuButton::InputMenuButton(int x,int y,int w,int h,const 
 void Fl_Input_Choice::InputMenuButton::draw() {
   draw_box();
   fl_color(active_r() ? labelcolor() : fl_inactive(labelcolor()));
-  int xc = x()+w()/2, yc=y()+h()/2;
-  fl_polygon(xc-5,yc-3,xc+5,yc-3,xc,yc+3);
+  Fl_Rect ab(this);
+  ab.inset(1);
+  fl_draw_arrow(ab, FL_ARROW_CHOICE, FL_ORIENT_NONE, fl_color());
   if (Fl::focus() == this) draw_focus();
 }
 
@@ -204,7 +205,7 @@ void Fl_Input_Choice::menu_cb(Fl_Widget*, void *data) {
   {
     o->Fl_Widget::clear_changed();
     if (o->when() & FL_WHEN_NOT_CHANGED)
-      o->do_callback();
+      o->do_callback(FL_REASON_RESELECTED);
   }
   else
   {
@@ -212,7 +213,7 @@ void Fl_Input_Choice::menu_cb(Fl_Widget*, void *data) {
     o->inp_->set_changed();
     o->Fl_Widget::set_changed();
     if (o->when() & (FL_WHEN_CHANGED|FL_WHEN_RELEASE))
-      o->do_callback();
+      o->do_callback(FL_REASON_CHANGED);
   }
 
   if (wp.deleted()) return;
@@ -232,11 +233,11 @@ void Fl_Input_Choice::inp_cb(Fl_Widget*, void *data) {
   if (o->inp_->changed()) {
     o->Fl_Widget::set_changed();
     if (o->when() & (FL_WHEN_CHANGED|FL_WHEN_RELEASE))
-      o->do_callback();
+      o->do_callback(FL_REASON_CHANGED);
   } else {
     o->Fl_Widget::clear_changed();
     if (o->when() & FL_WHEN_NOT_CHANGED)
-      o->do_callback();
+      o->do_callback(FL_REASON_RESELECTED);
   }
 
   if (wp.deleted()) return;

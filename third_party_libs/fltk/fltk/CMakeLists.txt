@@ -102,7 +102,17 @@ endif (debug_build)
 unset (debug_build)
 
 #######################################################################
-# build the FLTK libraries
+# Build a dummy ("empty") Cairo library for backwards compatibility.
+# This should be removed some time after 1.4.0 was released, maybe
+# in FLTK 1.4.1, 1.4.2, 1.5.0, or whatever the next minor release is.
+#######################################################################
+
+if (FLTK_HAVE_CAIRO)
+  add_subdirectory (cairo)
+endif ()
+
+#######################################################################
+# build the standard FLTK libraries
 #######################################################################
 
 add_subdirectory(src)
@@ -111,7 +121,17 @@ add_subdirectory(src)
 # build fluid
 #######################################################################
 
-add_subdirectory(fluid)
+if (FLTK_BUILD_FLUID)
+  add_subdirectory (fluid)
+endif (FLTK_BUILD_FLUID)
+
+#######################################################################
+# build fltk-options
+#######################################################################
+
+if (FLTK_BUILD_FLTK_OPTIONS)
+  add_subdirectory (fltk-options)
+endif (FLTK_BUILD_FLTK_OPTIONS)
 
 #######################################################################
 # variables shared by export and install
@@ -119,11 +139,13 @@ add_subdirectory(fluid)
 # install.cmake creates these files for an installed FLTK
 # these two would only differ in paths, so common variables are set here
 #######################################################################
+
 include (CMake/variables.cmake)
 
 #######################################################################
 # final config and export
 #######################################################################
+
 include (CMake/export.cmake)
 
 configure_file (
@@ -147,6 +169,7 @@ endif (FLTK_BUILD_EXAMPLES)
 #######################################################################
 # installation
 #######################################################################
+
 include (CMake/install.cmake)
 
 #######################################################################
@@ -210,6 +233,18 @@ else ()
   message (STATUS "Shared libraries will not be built (set OPTION_BUILD_SHARED_LIBS=ON to build)")
 endif ()
 
+if (FLTK_BUILD_FLUID)
+  message (STATUS "FLUID            will be built in ${CMAKE_CURRENT_BINARY_DIR}/bin/fluid")
+else ()
+  message (STATUS "FLUID            will not be built (set FLTK_BUILD_FLUID=ON to build)")
+endif ()
+
+if (FLTK_BUILD_FLTK_OPTIONS)
+  message (STATUS "fltk-options     will be built in ${CMAKE_CURRENT_BINARY_DIR}/bin/fltk-options")
+else ()
+  message (STATUS "fltk-options     will not be built (set FLTK_BUILD_FLTK_OPTIONS=ON to build)")
+endif ()
+
 if (FLTK_BUILD_TEST)
   message (STATUS "Test programs    will be built in ${CMAKE_CURRENT_BINARY_DIR}/bin/test")
 endif ()
@@ -221,50 +256,56 @@ else ()
 endif ()
 
 if (FLTK_USE_BUILTIN_JPEG)
-  message (STATUS "Image Libraries: JPEG = Builtin")
+  message (STATUS "Image Libraries:         JPEG = Builtin")
 else ()
-  message (STATUS "Image Libraries: JPEG = System")
+  message (STATUS "Image Libraries:         JPEG = System")
 endif ()
 
 if (FLTK_USE_BUILTIN_PNG)
-  message (STATUS "                 PNG  = Builtin")
+  message (STATUS "                         PNG  = Builtin")
 else ()
-  message (STATUS "                 PNG  = System")
+  message (STATUS "                         PNG  = System")
 endif ()
 
 if (FLTK_USE_BUILTIN_ZLIB)
-  message (STATUS "                 ZLIB = Builtin")
+  message (STATUS "                         ZLIB = Builtin")
 else ()
-  message (STATUS "                 ZLIB = System")
+  message (STATUS "                         ZLIB = System")
 endif ()
 
-if (UNIX)
+if (UNIX AND NOT (APPLE AND NOT OPTION_APPLE_X11))
 
   if (OPTION_USE_WAYLAND)
-    message (STATUS "Use Wayland:     Yes")
+    message (STATUS "Use Wayland:             Yes (when available at run-time)")
   else ()
-    message (STATUS "Use Wayland:     No")
+    message (STATUS "Use Wayland:             No (therefore, X11 is used)")
+  endif ()
+
+  if (FLTK_USE_CAIRO)
+    message (STATUS "All drawing uses Cairo:  Yes")
+  else ()
+    message (STATUS "All drawing uses Cairo:  No")
   endif ()
 
   if (USE_PANGO)
-    message (STATUS "Use Pango:       Yes")
+    message (STATUS "Use Pango:               Yes")
   else (USE_PANGO)
-    message (STATUS "Use Pango:       No")
+    message (STATUS "Use Pango:               No")
     if (USE_XFT)
-      message (STATUS "Use Xft:         Yes")
+      message (STATUS "Use Xft:                 Yes")
     else ()
-      message (STATUS "Use Xft:         No")
+      message (STATUS "Use Xft:                 No")
     endif (USE_XFT)
   endif (USE_PANGO)
 
-endif (UNIX)
+endif (UNIX AND NOT (APPLE AND NOT OPTION_APPLE_X11))
 
 if (FLTK_HAVE_CAIROEXT)
-  message (STATUS "Cairo support:   Yes (extended)")
+  message (STATUS "Fl_Cairo_Window support: Yes (extended)")
 elseif (FLTK_HAVE_CAIRO)
-  message (STATUS "Cairo support:   Yes (standard)")
+  message (STATUS "Fl_Cairo_Window support: Yes (standard)")
 else ()
-  message (STATUS "Cairo support:   No")
+  message (STATUS "Fl_Cairo_Window support: No")
 endif ()
 
 message ("")

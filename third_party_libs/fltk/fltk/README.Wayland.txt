@@ -1,68 +1,87 @@
-README.Wayland.txt - Wayland platform support for FLTK
+README.Wayland.txt - Wayland Platform Support for FLTK
 ------------------------------------------------------
 
 
-CONTENTS
+Contents
 ========
 
- 1   INTRODUCTION
+ 1   Introduction
 
- 2   WAYLAND SUPPORT FOR FLTK
+ 2   Wayland Support for FLTK
    2.1    Configuration
-   2.2    Known limitations
+   2.2    Known Limitations
 
- 3   PLATFORM SPECIFIC NOTES
-   3.1    Debian and Derivatives (like Ubuntu)
+ 3   Platform Specific Notes
+   3.1    Debian and Derivatives (like Ubuntu, Mint, RaspberryPiOS)
    3.2    Fedora
    3.3    FreeBSD
 
 
-1 INTRODUCTION
+1 Introduction
 ==============
 
 Version 1.4 of the FLTK library introduces support of the public FLTK API on
 the Wayland platform. It requires a Wayland-equipped OS, namely Linux or FreeBSD.
 Pre-existing platform-independent source code for FLTK 1.3.x should build and
 run unchanged with FLTK 1.4 and the Wayland platform.
-The code has been tested on Debian, Ubuntu and Fedora with 3 distinct Wayland
-compositors: mutter (Gnome's compositor), weston, and KDE.
-The code has also been tested under FreeBSD and the sway wayland compositor.
+The code has been tested on Debian, Ubuntu, RaspberryPiOS and Fedora with
+3 distinct Wayland compositors: mutter (Gnome's compositor), weston, and KDE.
+The code has also been tested under FreeBSD and the Sway Wayland compositor.
 CJK text-input methods, as well as dead and compose keys are supported.
 
 
-2 WAYLAND SUPPORT FOR FLTK
+2 Wayland Support for FLTK
 ==========================
 
-It is possible to have your FLTK application do all its windowing and drawing
-through the Wayland protocol on Linux or FreeBSD systems.
-All graphics is done via Cairo or EGL. All text-drawing is done via Pango.
+On Linux and FreeBSD systems, the FLTK library is by default configured so FLTK apps
+do all their windowing through the Wayland protocol, all their graphics with
+Cairo or EGL, and all text-drawing with Pango. If no Wayland compositor is
+available at run-time, FLTK apps fall back to using X11 for windowing.
+Cairo and Pango remain used for graphics and text, respectively.
+
+Environment variable FLTK_BACKEND can be used to control whether Wayland or
+X11 is used at run time as follows:
+- if FLTK_BACKEND is not defined, Wayland is used when possible, otherwise
+  X11 is used;
+- if $FLTK_BACKEND equals "wayland", the library stops with error if no
+  Wayland compositor is available;
+- if $FLTK_BACKEND equals "x11", the library uses X11 even if a Wayland
+  compositor is available;
+- if $FLTK_BACKEND has another value, the library stops with error.
+
+Alternatively, it is possible to force a program linked to a Wayland-enabled
+FLTK library to use X11 in all situations by putting this declaration somewhere
+in the source code :
+  FL_EXPORT bool fl_disable_wayland = true;
+FLTK source code and also X11-specific source code conceived for FLTK 1.3
+should run with a Wayland-enabled, FLTK 1.4 library with that single change only.
+
+On pure Wayland systems without the X11 headers and libraries, FLTK can be built
+with its Wayland backend only (see below).
 
  2.1 Configuration
----------------
+------------------
 
-* Configure-based build can be performed as follows:
-Once after "git clone", create the configure file :
-   autoconf -f
+On Linux and FreeBSD systems equipped with the adequate software packages
+(see section 3 below), the default building procedure produces a Wayland/X11
+hybrid library. On systems lacking all or part of Wayland-required packages,
+the default building procedure produces a X11-based library.
 
-Prepare build with :
-   ./configure --enable-wayland [--enable-shared]
+Use -DOPTION_USE_WAYLAND=OFF with CMake or "configure --disable-wayland" to build
+FLTK for the X11 library when the default would build for Wayland.
 
-Build with :
-   make
+CMake OPTION_WAYLAND_ONLY or "--disable-x11" configure argument can
+be used to produce a Wayland-only library which can be useful, e.g., when
+cross-compiling for systems that lack X11 headers and libraries.
 
-* CMake-based build can be performed as follows:
-cmake -S <path-to-source> -B <path-to-build> -DCMAKE_BUILD_TYPE=Release -DOPTION_USE_WAYLAND=1
-
-cd <path-to-build>; make
-
-The FLTK wayland platform uses a library called libdecor which handles window decorations
+The FLTK Wayland platform uses a library called libdecor which handles window decorations
 (i.e., titlebars, shade). Libdecor is bundled in the FLTK source code and FLTK uses by default
-this form of libdecor. Optionally, OPTION_USE_SYSTEM_LIBDECOR can be turned on to have FLTK
+this form of libdecor. CMake OPTION_USE_SYSTEM_LIBDECOR can be turned on to have FLTK
 use the system's version of libdecor which is available on recent Linux distributions (e.g.,
-Debian bookworm or more recent in packages libdecor-0-0 and libdecor-0-plugin-1-cairo).
+Debian Bookworm or more recent in packages libdecor-0-0 and libdecor-0-plugin-1-cairo).
 
- 2.2 Known limitations
--------------------------------
+ 2.2 Known Limitations
+----------------------
 
 * A deliberate design trait of Wayland makes application windows ignorant of their exact
 placement on screen. It's possible, though, to position a popup window relatively to
@@ -73,98 +92,78 @@ Fl_Window::position() has no effect on other top-level windows.
 way to programmatically unset minimization of a window. Consequently, Fl_Window::show() of
 a minimized window has no effect.
 
-* It's currently not possible for an app to be notified of changes to the content of
-the system clipboard, that is, Fl::add_clipboard_notify() has no effect. The FLTK API to
-read from and write to the system clipboard is fully functional, though.
+* Although the FLTK API to read from and write to the system clipboard is fully functional,
+it's currently not possible for an app to be notified of changes to the content of
+the system clipboard, that is, Fl::add_clipboard_notify() has no effect.
 
-* With GTK-style window titlebars, narrow windows are silently forced to be wide enough
+* Copying data to the clipboard is best done when the app has focus. Any copy operation
+performed when the app did not get the focus yet does not change the clipboard. A copy
+operation performed when the app has lost the focus is successful only if the type of
+the copied data, that is, text or image, is the same as the last data type copied when
+the app had the focus.
+
+* Narrow windows with a titlebar are silently forced to be wide enough
 for the titlebar to display window buttons and a few letters of the title.
-
-* The library should support multi-display configurations in principle, but has not been
-tested in that situation.
 
 * Text input methods have been tested without any understanding of the writing systems,
 so feedback on this subject would be helpful.
 
-* While platform-independent source code prepared for FLTK 1.3 is expected to be compatible
-with FLTK 1.4 and the Wayland platform, X11-specific code will not compile.  In particular,
-the common FLTK 1.3 construct :
-  #ifdef __APPLE__
-     *** macOS-specific code ***
-  #elif defined(_WIN32)
-     *** Windows-specific code ***
-  #else
-     *** X11-specific code ***
-  #endif
-will choke at compile time because it exposes X11-specific code to the non-X11, Wayland
-environment. This should be written instead :
-  #include <FL/fl_config.h>
-
-  #ifdef __APPLE__
-     *** macOS-specific code ***
-  #elif defined(_WIN32)
-     *** Windows-specific code ***
-  #elif defined(FLTK_USE_X11)
-     *** X11-specific code ***
-  #endif
-Moreover, the new FLTK_USE_WAYLAND preprocessor variable is available to bracket
-Wayland-specific source code.
+* Using OpenGL inside Wayland windows doesn't seem to work on RaspberryPi hardware,
+although it works inside X11 windows on the same hardware.
 
 
-3 PLATFORM SPECIFIC NOTES
+3 Platform Specific Notes
 =========================
 
 The following are notes about building FLTK for the Wayland platform
-on the various supported Linux distributions.
+on the various supported Linux distributions/OS.
 
-    3.1 Debian and Derivatives (like Ubuntu)
-    ----------------------------------------
+3.1 Debian and Derivatives (like Ubuntu, Mint, RaspberryPiOS)
+-------------------------------------------------------------
+
 Under Debian, the Wayland platform requires version 11 (a.k.a. Bullseye) or more recent.
-Under Ubuntu, the Wayland platform is known to work with version 20.04 (focal fossa) or more recent.
+Under Ubuntu, the Wayland platform requires version 20.04 (focal fossa) or more recent.
 
-These packages are necessary to build the FLTK library, in addition to those present
-in a basic Debian/Ubuntu distribution :
-- g++
-- gdb
+These packages are necessary to build the FLTK library, in addition to those listed
+in section 2.1 of file README.Unix.txt :
 - make
-- git
-- autoconf
-- libglu1-mesa-dev
 - libpango1.0-dev
 - libwayland-dev
 - wayland-protocols
-- libdbus-1-dev
 - libxkbcommon-dev
-- libgtk-3-dev   <== with this, windows get a GTK-style titlebar
+- libxinerama-dev
+- libdbus-1-dev  <== recommended to query current cursor theme
 - libglew-dev    <== necessary to use OpenGL version 3 or above
 - cmake          <== if you plan to build with CMake
 - cmake-qt-gui   <== if you plan to use the GUI of CMake
 
-This package is necessary to run FLTK apps under the Gnome-Wayland desktop:
-- gnome
+These packages allow to run FLTK apps under the Gnome-Wayland desktop:
+- gnome-core
+- libgtk-3-dev   <== highly recommended, gives windows a Gnome-style titlebar
 
 These packages allow to run FLTK apps under the KDE/Plasma-Wayland desktop:
 - kde-plasma-desktop
 - plasma-workspace-wayland
 
+Package installation command: sudo apt-get install <package-name ...>
 
-  3.2 Fedora
-  ----------
 
-The Wayland platform is known to work with Fedora version 35.
+3.2 Fedora
+----------
 
-These packages are necessary to build the FLTK library, besides those present
-in a Fedora 35 Workstation distribution :
-- gcc-c++
+The Wayland platform is known to work with Fedora version 35 or more recent.
+
+These packages are necessary to build the FLTK library, in addition to
+package groups listed in section 2.2 of file README.Unix.txt :
 - autoconf
 - wayland-devel
 - wayland-protocols-devel
 - cairo-devel
 - libxkbcommon-devel
 - pango-devel
-- dbus-devel
 - mesa-libGLU-devel
-- gtk3-devel   <== with this, windows get a GTK-style titlebar
+- dbus-devel   <== recommended to query current cursor theme
+- gtk3-devel   <== highly recommended, gives windows a GTK-style titlebar
 - glew-devel   <== necessary to use OpenGL version 3 or above
 - cmake        <== if you plan to build with CMake
 - cmake-gui    <== if you plan to use the GUI of CMake
@@ -172,26 +171,12 @@ in a Fedora 35 Workstation distribution :
 Package installation command: sudo yum install <package-name ...>
 
 
-  3.3 FreeBSD
-  -----------
+3.3 FreeBSD
+-----------
 
-The Wayland platform is known to work with FreeBSD version 13.1 and the sway compositor.
+The Wayland platform is known to work with FreeBSD version 13.1 and the Sway compositor.
 
-These packages are necessary to build the FLTK library and the sway compositor:
-pkg install git autoconf pkgconf xorg urwfonts gnome glew seatd sway \
-                dmenu-wayland dmenu evdev-proto
+These packages are necessary to build the FLTK library and use the Sway compositor:
+git autoconf pkgconf xorg urwfonts gnome glew seatd sway dmenu-wayland dmenu evdev-proto
 
-The FLTK library can be built as follows using either configure or CMake :
-
-1) Using configure
-
-cd <path-to-FLTK-source-tree>
-autoconf -f
-./configure --enable-localzlib --enable-wayland
-make
-
-2) Using CMake
-
-cmake -S <path-to-source> -B <path-to-build> -DOPTION_USE_WAYLAND=1
-
-cd <path-to-build>; make
+Package installation command: sudo pkg install <package-name ...>

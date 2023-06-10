@@ -1,7 +1,7 @@
 //
 // FLTK native file chooser widget wrapper for GTK's GtkFileChooserDialog
 //
-// Copyright 1998-2022 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 // Copyright 2012 IMM
 //
 // This library is free software. Distribution and use rights are outlined in
@@ -18,6 +18,7 @@
 #include <config.h>
 #include <FL/Fl_Native_File_Chooser.H>
 #if USE_KDIALOG
+#  include "Fl_Native_File_Chooser_Zenity.H"
 #  include "Fl_Native_File_Chooser_Kdialog.H"
 #endif
 
@@ -28,7 +29,8 @@
 #include <FL/fl_draw.H>
 #include <FL/fl_string_functions.h>
 #include <dlfcn.h>   // for dlopen et al
-#include "drivers/X11/Fl_X11_System_Driver.H"
+#include "drivers/Posix/Fl_Posix_System_Driver.H"
+#include "drivers/Unix/Fl_Unix_Screen_Driver.H"
 #include "Fl_Window_Driver.H"
 #include "Fl_Screen_Driver.H"
 
@@ -103,7 +105,7 @@ typedef void  (*GClosureNotify)(gpointer data, GClosure *closure);
 /* --------------------- End of Type definitions from GLIB and GTK --------------------- */
 
 
-class FL_EXPORT Fl_GTK_Native_File_Chooser_Driver : public Fl_Native_File_Chooser_FLTK_Driver {
+class Fl_GTK_Native_File_Chooser_Driver : public Fl_Native_File_Chooser_FLTK_Driver {
   friend class Fl_Native_File_Chooser;
 private:
   static int have_looked_for_GTK_libs;
@@ -128,16 +130,16 @@ private:
 
   int fl_gtk_chooser_wrapper(); // method that wraps the GTK widget
   Fl_GTK_Native_File_Chooser_Driver(int val);
-  virtual ~Fl_GTK_Native_File_Chooser_Driver();
+  ~Fl_GTK_Native_File_Chooser_Driver() FL_OVERRIDE;
   static int did_find_GTK_libs;
   static void probe_for_GTK_libs(void);
-  virtual void type(int);
-  virtual int count() const;
-  virtual const char *filename() const;
-  virtual const char *filename(int i) const;
-  virtual void title(const char *);
-  virtual const char* title() const;
-  virtual int show();
+  void type(int) FL_OVERRIDE;
+  int count() const FL_OVERRIDE;
+  const char *filename() const FL_OVERRIDE;
+  const char *filename(int i) const FL_OVERRIDE;
+  void title(const char *) FL_OVERRIDE;
+  const char* title() const FL_OVERRIDE;
+  int show() FL_OVERRIDE;
   void changed_output_type(const char *filter);
 
   static int custom_gtk_filter_function(const GtkFileFilterInfo*, Fl_GTK_Native_File_Chooser_Driver::pair*);
@@ -774,7 +776,7 @@ int Fl_GTK_Native_File_Chooser_Driver::fl_gtk_chooser_wrapper()
   Fl_Event_Dispatch old_dispatch = Fl::event_dispatch();
   // prevent FLTK from processing any event
   Fl::event_dispatch(fnfc_dispatch);
-  void *control = ((Fl_Unix_System_Driver*)Fl::system_driver())->control_maximize_button(NULL);
+  void *control = ((Fl_Unix_Screen_Driver*)Fl::screen_driver())->control_maximize_button(NULL);
   gint response_id = GTK_RESPONSE_NONE;
   fl_g_signal_connect_data(gtkw_ptr, "response", G_CALLBACK(run_response_handler), &response_id, NULL, (GConnectFlags) 0);
   while (response_id == GTK_RESPONSE_NONE) { // loop that shows the GTK dialog window
@@ -838,7 +840,7 @@ int Fl_GTK_Native_File_Chooser_Driver::fl_gtk_chooser_wrapper()
   while (fl_gtk_events_pending ()) fl_gtk_main_iteration ();
 
   Fl::event_dispatch(old_dispatch);
-  if (control) ((Fl_Unix_System_Driver*)Fl::system_driver())->control_maximize_button(control);
+  if (control) ((Fl_Unix_Screen_Driver*)Fl::screen_driver())->control_maximize_button(control);
 
   return result;
 } // fl_gtk_chooser_wrapper
@@ -922,14 +924,32 @@ void Fl_GTK_Native_File_Chooser_Driver::probe_for_GTK_libs(void) {
 #endif // HAVE_DLSYM && HAVE_DLFCN_H
 
 Fl_Native_File_Chooser::Fl_Native_File_Chooser(int val) {
-  // Use kdialog if available at run-time and if using the KDE desktop,
-  // else, use GTK dialog if available at run-time
+  // Use zenity if available at run-time even if using the KDE desktop,
+  // because its portal integration means the KDE chooser will be used.
+  // Else use kdialog if available at run-time and if using the KDE
+  // desktop, else, use GTK dialog if available at run-time
   // otherwise, use FLTK file chooser.
   platform_fnfc = NULL;
+  fl_open_display();
   if (Fl::option(Fl::OPTION_FNFC_USES_GTK)) {
 #if USE_KDIALOG
+    if (Fl::option(Fl::OPTION_FNFC_USES_ZENITY)&& val != BROWSE_MULTI_DIRECTORY) {
+      if (!Fl_Zenity_Native_File_Chooser_Driver::have_looked_for_zenity) {
+        // First Time here, try to find zenity
+        FILE *pipe = popen("zenity --version 2> /dev/null", "r");
+        if (pipe) {
+          char *p, line[100] = "";
+          p = fgets(line, sizeof(line), pipe);
+          if (p && strlen(line) > 0) Fl_Zenity_Native_File_Chooser_Driver::did_find_zenity = true;
+          pclose(pipe);
+        }
+        Fl_Zenity_Native_File_Chooser_Driver::have_looked_for_zenity = true;
+      }
+      // if we found zenity, we will use the Fl_Zenity_Native_File_Chooser_Driver
+      if (Fl_Zenity_Native_File_Chooser_Driver::did_find_zenity) platform_fnfc = new Fl_Zenity_Native_File_Chooser_Driver(val);
+    }
     const char *desktop = getenv("XDG_CURRENT_DESKTOP");
-    if (desktop && strcmp(desktop, "KDE") == 0 && val != BROWSE_MULTI_DIRECTORY) {
+    if (!platform_fnfc && desktop && strcmp(desktop, "KDE") == 0 && val != BROWSE_MULTI_DIRECTORY) {
       if (!Fl_Kdialog_Native_File_Chooser_Driver::have_looked_for_kdialog) {
         // First Time here, try to find kdialog
         FILE *pipe = popen("kdialog -v 2> /dev/null", "r");

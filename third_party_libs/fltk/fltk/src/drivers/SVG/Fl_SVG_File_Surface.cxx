@@ -71,54 +71,54 @@ public:
   ~Fl_SVG_Graphics_Driver();
   FILE* file() {return out_;}
 protected:
-  void rect(int x, int y, int w, int h);
-  void rectf(int x, int y, int w, int h);
-  void compute_dasharray(float s, char *dashes=0);
-  void line_style(int style, int width, char *dashes=0);
-  void line(int x1, int y1, int x2, int y2);
-  void line(int x1, int y1, int x2, int y2, int x3, int y3);
+  void rect(int x, int y, int w, int h) FL_OVERRIDE;
+  void rectf(int x, int y, int w, int h) FL_OVERRIDE;
+  virtual void compute_dasharray(float s, char *dashes=0);
+  void line_style(int style, int width, char *dashes=0) FL_OVERRIDE;
+  void line(int x1, int y1, int x2, int y2) FL_OVERRIDE;
+  void line(int x1, int y1, int x2, int y2, int x3, int y3) FL_OVERRIDE;
   void font_(int f, int s);
-  void font(int f, int s);
-  Fl_Font font();
-  void draw(const char *str, int n, int x, int y);
-  void draw(const char*, int, float, float) ;
-  void draw(int, const char*, int, int, int) ;
-  void rtl_draw(const char *str, int n, int x, int y);
-  void color(uchar r, uchar g, uchar b);
-  void color(Fl_Color c);
-  Fl_Color color();
-  double width(const char*, int);
-  double width(unsigned int c);
-  void text_extents(const char*, int n, int& dx, int& dy, int& w, int& h);
-  int height() ;
-  int descent() ;
-  void draw_rgb(Fl_RGB_Image *rgb, int XP, int YP, int WP, int HP, int cx, int cy);
+  void font(int f, int s) FL_OVERRIDE;
+  Fl_Font font() FL_OVERRIDE;
+  void draw(const char *str, int n, int x, int y) FL_OVERRIDE;
+  void draw(const char*, int, float, float) FL_OVERRIDE;
+  void draw(int, const char*, int, int, int) FL_OVERRIDE;
+  void rtl_draw(const char *str, int n, int x, int y) FL_OVERRIDE;
+  void color(uchar r, uchar g, uchar b) FL_OVERRIDE;
+  void color(Fl_Color c) FL_OVERRIDE;
+  Fl_Color color() FL_OVERRIDE;
+  double width(const char*, int) FL_OVERRIDE;
+  double width(unsigned int c) FL_OVERRIDE;
+  void text_extents(const char*, int n, int& dx, int& dy, int& w, int& h) FL_OVERRIDE;
+  int height() FL_OVERRIDE;
+  int descent() FL_OVERRIDE;
+  void draw_rgb(Fl_RGB_Image *rgb, int XP, int YP, int WP, int HP, int cx, int cy) FL_OVERRIDE;
   void define_rgb_png(Fl_RGB_Image *rgb, const char *name, int x, int y);
   void define_rgb_jpeg(Fl_RGB_Image *rgb, const char *name, int x, int y);
-  void draw_pixmap(Fl_Pixmap *pxm,int XP, int YP, int WP, int HP, int cx, int cy);
-  void draw_bitmap(Fl_Bitmap *bm,int XP, int YP, int WP, int HP, int cx, int cy);
-  void draw_image(const uchar* buf, int x, int y, int w, int h, int d, int l);
-  void draw_image(Fl_Draw_Image_Cb cb, void* data, int x, int y, int w, int h, int d);
-  void draw_image_mono(const uchar* buf, int x, int y, int w, int h, int d, int l);
-  void draw_image_mono(Fl_Draw_Image_Cb cb, void* data, int x, int y, int w, int h, int d);
-  void push_clip(int x, int y, int w, int h);
-  void push_no_clip();
-  void pop_clip();
-  int clip_box(int x, int y, int w, int h, int& X, int& Y, int& W, int& H);
-  int not_clipped(int x, int y, int w, int h);
-  void polygon(int x0, int y0, int x1, int y1, int x2, int y2);
-  void polygon(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3);
-  void loop(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3);
-  void loop(int x0, int y0, int x1, int y1, int x2, int y2);
-  void point(int x, int y);
-  void end_points();
-  void end_line();
-  void end_polygon();
-  void end_complex_polygon();
-  void circle(double x, double y,double r);
-  void arc(int x,int y,int w,int h,double a1,double a2);
-  void arc(double x, double y, double r, double start, double end);
-  void pie(int x,int y,int w,int h,double a1,double a2);
+  void draw_pixmap(Fl_Pixmap *pxm,int XP, int YP, int WP, int HP, int cx, int cy) FL_OVERRIDE;
+  void draw_bitmap(Fl_Bitmap *bm,int XP, int YP, int WP, int HP, int cx, int cy) FL_OVERRIDE;
+  void draw_image(const uchar* buf, int x, int y, int w, int h, int d, int l) FL_OVERRIDE;
+  void draw_image(Fl_Draw_Image_Cb cb, void* data, int x, int y, int w, int h, int d) FL_OVERRIDE;
+  void draw_image_mono(const uchar* buf, int x, int y, int w, int h, int d, int l) FL_OVERRIDE;
+  void draw_image_mono(Fl_Draw_Image_Cb cb, void* data, int x, int y, int w, int h, int d) FL_OVERRIDE;
+  void push_clip(int x, int y, int w, int h) FL_OVERRIDE;
+  void push_no_clip() FL_OVERRIDE;
+  void pop_clip() FL_OVERRIDE;
+  int clip_box(int x, int y, int w, int h, int& X, int& Y, int& W, int& H) FL_OVERRIDE;
+  int not_clipped(int x, int y, int w, int h) FL_OVERRIDE;
+  void polygon(int x0, int y0, int x1, int y1, int x2, int y2) FL_OVERRIDE;
+  void polygon(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3) FL_OVERRIDE;
+  void loop(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3) FL_OVERRIDE;
+  void loop(int x0, int y0, int x1, int y1, int x2, int y2) FL_OVERRIDE;
+  void point(int x, int y) FL_OVERRIDE;
+  void end_points() FL_OVERRIDE;
+  void end_line() FL_OVERRIDE;
+  void end_polygon() FL_OVERRIDE;
+  void end_complex_polygon() FL_OVERRIDE;
+  void circle(double x, double y,double r) FL_OVERRIDE;
+  void arc(int x,int y,int w,int h,double a1,double a2) FL_OVERRIDE;
+  void arc(double x, double y, double r, double start, double end) FL_OVERRIDE;
+  void pie(int x,int y,int w,int h,double a1,double a2) FL_OVERRIDE;
   void arc_pie(char AorP, int x, int y, int w, int h, double a1, double a2);
 };
 
@@ -206,9 +206,11 @@ void Fl_SVG_Graphics_Driver::compute_dasharray(float s, char *dashes) {
   if (user_dash_array_ && user_dash_array_ != dashes) {free(user_dash_array_); user_dash_array_ = NULL;}
   if (dashes && *dashes) {
     if (dasharray_) free(dasharray_);
-    dasharray_ = (char*)calloc(10*strlen(dashes) + 1, 1);
+    int array_len = int(10*strlen(dashes) + 1);
+    dasharray_ = (char*)calloc(array_len, 1);
     for (char *p = dashes; *p; p++) {
-      sprintf(dasharray_+strlen(dasharray_), "%.3f,", (*p)/s);
+      int c = snprintf(dasharray_+strlen(dasharray_), array_len, "%.3f,", (*p)/s);
+      array_len -= c;
     }
     dasharray_[strlen(dasharray_) - 1] = 0;
     if (user_dash_array_ != dashes) user_dash_array_ = fl_strdup(dashes);
@@ -228,10 +230,10 @@ void Fl_SVG_Graphics_Driver::compute_dasharray(float s, char *dashes) {
     float big = (is_flat ? 3*width_/s : width_*2.5f/s);
     if (dasharray_) free(dasharray_);
     dasharray_ = (char*)malloc(61);
-    if (dash_part == FL_DOT) sprintf(dasharray_, "%.3f,%.3f", dot, gap);
-    else if (dash_part == FL_DASH) sprintf(dasharray_, "%.3f,%.3f", big, gap);
-    else if (dash_part == FL_DASHDOT) sprintf(dasharray_, "%.3f,%.3f,%.3f,%.3f", big, gap, dot, gap);
-    else sprintf(dasharray_, "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f", big, gap, dot, gap, dot, gap);
+    if (dash_part == FL_DOT) snprintf(dasharray_, 61, "%.3f,%.3f", dot, gap);
+    else if (dash_part == FL_DASH) snprintf(dasharray_, 61, "%.3f,%.3f", big, gap);
+    else if (dash_part == FL_DASHDOT) snprintf(dasharray_, 61, "%.3f,%.3f,%.3f,%.3f", big, gap, dot, gap);
+    else snprintf(dasharray_, 61, "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f", big, gap, dot, gap, dot, gap);
   }
 }
 
@@ -604,7 +606,7 @@ void Fl_SVG_Graphics_Driver::draw_rgb(Fl_RGB_Image *rgb, int XP, int YP, int WP,
   char name[24];
   bool need_clip = (cx || cy || WP != rgb->w() || HP != rgb->h());
   void *p = (void*)*Fl_Graphics_Driver::id(rgb);
-  if (p) sprintf(name, "FLrgb%p", p); else name[0] = 0;
+  if (p) snprintf(name, 24, "FLrgb%p", p); else name[0] = 0;
   if (!p || !last_rgb_name_ || strcmp(name, last_rgb_name_) != 0) {
     if (*name==0 && need_clip) push_clip(XP, YP, WP, HP);
 #if defined(HAVE_LIBJPEG)
@@ -627,7 +629,7 @@ void Fl_SVG_Graphics_Driver::draw_pixmap(Fl_Pixmap *pxm, int XP, int YP, int WP,
   char name[24];
   bool need_clip = (cx || cy || WP != pxm->w() || HP != pxm->h());
   void *p = (void*)*Fl_Graphics_Driver::id(pxm);
-  if (p) sprintf(name, "FLpx%p", p); else name[0] = 0;
+  if (p) snprintf(name, 24, "FLpx%p", p); else name[0] = 0;
   if (!p || !last_rgb_name_ || strcmp(name, last_rgb_name_) != 0) {
     Fl_RGB_Image *rgb = new Fl_RGB_Image(pxm);
     if (*name==0 && need_clip) push_clip(XP, YP, WP, HP);
@@ -648,7 +650,7 @@ void Fl_SVG_Graphics_Driver::draw_bitmap(Fl_Bitmap *bm, int XP, int YP, int WP, 
   char name[45];
   bool need_clip = (cx || cy || WP != bm->w() || HP != bm->h());
   void *p = (void*)*Fl_Graphics_Driver::id(bm);
-  if (p) sprintf(name, "FLbm%p%X", p, fl_color()); else name[0] = 0;
+  if (p) snprintf(name, 45, "FLbm%p%X", p, fl_color()); else name[0] = 0;
   if (!p || !last_rgb_name_ || strcmp(name, last_rgb_name_) != 0) {
     uchar R, G, B;
     Fl::get_color(fl_color(), R, G, B);
@@ -740,7 +742,7 @@ void Fl_SVG_Graphics_Driver::push_clip(int x, int y, int w, int h) {
   Clip * c=new Clip();
   clip_box(x,y,w,h,c->x,c->y,c->w,c->h);
   c->prev=clip_;
-  sprintf(c->Id, "FLclip%d", clip_count_++);
+  snprintf(c->Id, sizeof(c->Id), "FLclip%d", clip_count_++);
   clip_=c;
   fprintf(out_, "<clipPath id=\"%s\"><rect x=\"%d\" y=\"%d\" width=\"%d\" height=\"%d\"/></clipPath><g clip-path=\"url(#%s)\">\n",
           c->Id, clip_->x , clip_->y , clip_->w, clip_->h, c->Id);

@@ -1,7 +1,7 @@
 //
 // Header file for Fl_Text_Buffer class.
 //
-// Copyright 2001-2021 by Bill Spitzak and others.
+// Copyright 2001-2023 by Bill Spitzak and others.
 // Original code Copyright Mark Edel.  Permission to distribute under
 // the LGPL for the FLTK library granted by Mark Edel.
 //
@@ -23,6 +23,7 @@
 #define FL_TEXT_BUFFER_H
 
 #include <stdarg.h>     /* va_list */
+#include "fl_attr.h"    /* Doxygen can't find <FL/fl_attr.h> */
 
 #undef ASSERT_UTF8
 
@@ -60,6 +61,8 @@
 
 #include "Fl_Export.H"
 
+class Fl_Text_Undo_Action_List;
+class Fl_Text_Undo_Action;
 
 /**
   \class Fl_Text_Selection
@@ -163,7 +166,9 @@ public:
   int includes(int pos) const;
 
   // Returns true if selected() and the positions of this selection.
-  int position(int *startpos, int *endpos) const;
+  int selected(int *startpos, int *endpos) const;
+  FL_DEPRECATED("in 1.4.0 - use selected(startpos, endpos) instead",
+  int position(int *startpos, int *endpos) const) { return selected(startpos, endpos); }
 
 protected:
 
@@ -278,15 +283,17 @@ public:
   /**
    Inserts null-terminated string \p text at position \p pos.
    \param pos insertion position as byte offset (must be UTF-8 character aligned)
-   \param text UTF-8 encoded and nul terminated text
+   \param text UTF-8 encoded text
+   \param insertedLength number of bytes to insert, or -1 to indicate \p text is null-terminated
    */
-  void insert(int pos, const char* text);
+  void insert(int pos, const char* text, int insertedLength = -1);
 
   /**
    Appends the text string to the end of the buffer.
-   \param t UTF-8 encoded and nul terminated text
+   \param t UTF-8 encoded text
+   \param addedLength number of bytes to append, or -1 to indicate \p t is null-terminated
    */
-  void append(const char* t) { insert(length(), t); }
+  void append(const char* t, int addedLength = -1) { insert(length(), t, addedLength); }
 
   void vprintf(const char *fmt, va_list ap);
   void printf(const char* fmt, ...);
@@ -303,9 +310,10 @@ public:
    null-terminated string \p text in their place in the buffer.
    \param start byte offset to first character to be removed and new insert position
    \param end byte offset to character after last character to be removed
-   \param text UTF-8 encoded and nul terminated text
+   \param text UTF-8 encoded text
+   \param insertedLength number of bytes to insert, or -1 to indicate \p text is null-terminated
    */
-  void replace(int start, int end, const char *text);
+  void replace(int start, int end, const char *text, int insertedLength = -1);
 
   /**
    Copies text from another Fl_Text_Buffer to this one.
@@ -323,7 +331,28 @@ public:
   int undo(int *cp=0);
 
   /**
-   Lets the undo system know if we can undo changes
+   Check if undo is anabled and if the last action can be undone.
+   \see canUndo()
+   */
+  bool can_undo() const;
+
+  /**
+   Redo previous undo action.
+   */
+  int redo(int *cp=0);
+
+  /**
+   Check if undo is anabled and if the last undo action can be redone.
+   \see canUndo()
+   */
+  bool can_redo() const;
+
+  /**
+   Enable or disable undo actions for this text buffer.
+   Undo actions are enable for text buffer by default. If used as a style buffer
+   in Fl_Text_Display, undo actions are disabled as they are handled by the
+   text buffer.
+   \see can_undo()
    */
   void canUndo(char flag=1);
 
@@ -758,13 +787,14 @@ protected:
   /**
    Internal (non-redisplaying) version of insert().
 
-   Returns the length of text inserted (this is just strlen(\p text), however
+   Returns the length of text inserted (this is just strlen(\p text) if
+   \p insertedLength == -1, however
    this calculation can be expensive and the length will be required by any
    caller who will continue on to call redisplay). \p pos must be contiguous
    with the existing text in the buffer (i.e. not past the end).
    \return the number of bytes inserted
    */
-  int insert_(int pos, const char* text);
+  int insert_(int pos, const char* text, int insertedLength = -1);
 
   /**
    Internal (non-redisplaying) version of remove().
@@ -809,6 +839,11 @@ protected:
    */
   void update_selections(int pos, int nDeleted, int nInserted);
 
+  /**
+   Apply the current undo/redo operation, called from undo() or redo().
+   */
+  int apply_undo(Fl_Text_Undo_Action* action, int* cursorPos);
+
   Fl_Text_Selection mPrimary;     /**< highlighted areas */
   Fl_Text_Selection mSecondary;   /**< highlighted areas */
   Fl_Text_Selection mHighlight;   /**< highlighted areas */
@@ -836,6 +871,9 @@ protected:
   int mPreferredGapSize;          /**< the default allocation for the text gap is 1024
                                        bytes and should only be increased if frequent
                                        and large changes in buffer size are expected */
+  Fl_Text_Undo_Action* mUndo;     /**< local undo event */
+  Fl_Text_Undo_Action_List* mUndoList; /**< List of undo event */
+  Fl_Text_Undo_Action_List* mRedoList; /**< List of redo event */
 };
 
 #endif

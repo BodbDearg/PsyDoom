@@ -119,6 +119,12 @@ OPTION_BUILD_SHARED_LIBS - default OFF
    Normally FLTK is built as static libraries which makes more portable
    binaries.  If you want to use shared libraries, this will build them too.
 
+FLTK_BUILD_FLUID - default ON
+    Builds the Fast Light User-Interface Designer ("FLUID").
+
+FLTK_BUILD_FLTK_OPTIONS - default ON
+    Builds the FLTK options editor ("fltk-options").
+
 FLTK_BUILD_TEST - default ON
    Builds the test and demo programs in the 'test' directory.
 
@@ -126,7 +132,8 @@ FLTK_BUILD_EXAMPLES - default OFF
    Builds the example programs in the 'examples' directory.
 
 OPTION_CAIRO - default OFF
-   Enables libcairo support - see README.Cairo.txt.
+   Enables support of class Fl_Cairo_Window (all platforms, requires the
+   Cairo library) - see README.Cairo.txt.
 
 OPTION_CAIROEXT - default OFF
    Enables extended libcairo support - see README.Cairo.txt.
@@ -148,7 +155,7 @@ OPTION_USE_SYSTEM_ZLIB    - default ON
    any of these options to OFF, then the built in library will be used.
 
 OPTION_USE_SVG - default ON
-   FLTK has a built in SVG library and can create (write) SVG image files.
+   FLTK has a built-in SVG library and can create (write) SVG image files.
    Turning this option off disables SVG (read and write) support.
 
 OPTION_USE_XINERAMA - default ON
@@ -158,14 +165,32 @@ OPTION_USE_XRENDER  - default ON
    These are X11 extended libraries. These libs are used if found on the
    build system unless the respective option is turned off.
 
+OPTION_USE_CAIRO - default OFF
+   Makes all drawing operations use the Cairo library (rather than Xlib)
+   producing antialiased graphics (X11 platform, implies OPTION_USE_PANGO).
+
 OPTION_USE_PANGO - default OFF
    Enables use of the Pango library for drawing text. Pango supports all
-   unicode-defined scripts with limited support of right-to-left scripts.
-   This option makes sense only under X11, and also requires Xft.
+   unicode-defined scripts and gives FLTK limited support of right-to-left
+   scripts. This option makes sense only under X11 or Wayland, and also
+   requires Xft.
 
-OPTION_USE_WAYLAND - default OFF
-   Enables use of the Wayland system for all window operations.
-   This option requires a Wayland-equipped system, i.e., Linux or FreeBSD.
+OPTION_USE_KDIALOG - default ON
+   Under the KDE desktop, allows class Fl_Native_File_Chooser to use the
+   kdialog utility program to construct its file dialog windows, when that
+   utility is available at run time on the system. This option makes sense
+   only under X11 or Wayland.
+
+OPTION_USE_WAYLAND - default ON
+   Enables the use of Wayland for all window operations, of Cairo for all
+   graphics and of Pango for text drawing (Linux+FreeBSD only). Resulting FLTK
+   apps use Wayland when a Wayland compositor is available at run-time,
+   and use X11 for their window operations otherwise, but keep using
+   Cairo and Pango - see README.Wayland.txt.
+
+OPTION_WAYLAND_ONLY - default OFF
+   In conjunction with OPTION_USE_WAYLAND, restricts FLTK to support the
+   Wayland backend only.
 
 OPTION_ABI_VERSION - default EMPTY
    Use a numeric value corresponding to the FLTK ABI version you want to
@@ -182,6 +207,14 @@ OPTION_PRINT_SUPPORT - default ON
    is somewhat smaller. This option makes sense only on the Unix/Linux
    platform or when OPTION_APPLE_X11 is ON.
 
+OPTION_USE_GDIPLUS - default ON
+   Makes FLTK use GDI+ to draw oblique lines and curves resulting in
+   antialiased graphics (Windows platform only).
+
+OPTION_USE_SYSTEM_LIBDECOR - default OFF
+   This option makes FLTK use package libdecor-0 to draw window titlebars
+   under Wayland. It's mainly meant for future use, when that package
+   and its plugins will be part of major Linux distributions.
 
 Documentation options: these options are only available if `doxygen' is
    installed and found by CMake. PDF related options require also `latex'.
@@ -202,7 +235,6 @@ OPTION_INSTALL_PDF_DOCUMENTATION  - default OFF
    If these options are ON then the HTML and/or PDF docs get installed
    when the 'install' target is executed, e.g. with `make install'. You
    need to select above options OPTION_BUILD_*_DOCUMENTATION as well.
-
 
  2.3  Building under Linux with Unix Makefiles
 -----------------------------------------------
@@ -307,6 +339,22 @@ in the GUI (cmake-gui).
           the build directories (i.e. without "installation") you need
           to include both the build tree (first) and then the FLTK source
           tree in the compiler's header search list.
+
+     2.4.2 Visual Studio 2019 / NMake
+    --------------------------------------
+     This uses cmake to generate + build FLTK in Release mode using nmake,
+     using purely the command line (never need to open the Visual Studio IDE)
+     using Multithreaded (/MT) and optimizer level 2 (/O2):
+
+         mkdir build-nmake
+         cd build-nmake
+         cmake -G "NMake Makefiles" -D CMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+         nmake all
+
+     ..which results in a colorful percentage output crawl similar to what
+     we see with unix 'make'.
+                                                -erco@seriss.com
+                                                 fltk.coredev - Mar 12 2022
 
 
  2.5  Building under Windows with MinGW using Makefiles

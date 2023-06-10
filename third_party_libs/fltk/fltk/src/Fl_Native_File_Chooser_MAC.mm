@@ -67,26 +67,26 @@ private:
 public:
   Fl_Quartz_Native_File_Chooser_Driver(int val);
   ~Fl_Quartz_Native_File_Chooser_Driver();
-  virtual void type(int t);
-  virtual int type() const ;
-  virtual void options(int o);
-  virtual int options() const;
-  virtual int count() const;
-  virtual const char *filename() const ;
-  virtual const char *filename(int i) const ;
-  virtual void directory(const char *val) ;
-  virtual const char *directory() const;
-  virtual void title(const char *t);
-  virtual const char* title() const;
-  virtual const char *filter() const ;
-  virtual void filter(const char *f);
-  virtual int filters() const ;
-  virtual void filter_value(int i) ;
-  virtual int filter_value() const ;
-  virtual void preset_file(const char*f) ;
-  virtual const char* preset_file() const;
-  virtual const char *errmsg() const ;
-  virtual int show() ;
+  void type(int t) FL_OVERRIDE;
+  int type() const FL_OVERRIDE;
+  void options(int o) FL_OVERRIDE;
+  int options() const FL_OVERRIDE;
+  int count() const FL_OVERRIDE;
+  const char *filename() const FL_OVERRIDE;
+  const char *filename(int i) const FL_OVERRIDE;
+  void directory(const char *val) FL_OVERRIDE;
+  const char *directory() const FL_OVERRIDE;
+  void title(const char *t) FL_OVERRIDE;
+  const char* title() const FL_OVERRIDE;
+  const char *filter() const FL_OVERRIDE;
+  void filter(const char *f) FL_OVERRIDE;
+  int filters() const FL_OVERRIDE;
+  void filter_value(int i) FL_OVERRIDE;
+  int filter_value() const FL_OVERRIDE;
+  void preset_file(const char*f) FL_OVERRIDE;
+  const char* preset_file() const FL_OVERRIDE;
+  const char *errmsg() const FL_OVERRIDE;
+  int show() FL_OVERRIDE;
 };
 
 Fl_Native_File_Chooser::Fl_Native_File_Chooser(int val) {
@@ -334,7 +334,7 @@ void Fl_Quartz_Native_File_Chooser_Driver::parse_filter(const char *in) {
         //     If user didn't specify a name, make one
         //
         if ( name[0] == '\0' ) {
-          sprintf(name, "%.*s Files", (int)sizeof(name)-10, wildcard);
+          snprintf(name, sizeof(name), "%.*s Files", (int)sizeof(name)-10, wildcard);
         }
         // APPEND NEW FILTER TO LIST
         if ( wildcard[0] ) {
@@ -434,7 +434,8 @@ static char *prepareMacFilter(int count, const char *filter, char **patterns) {
     l += strlen(patterns[i]) + 3;
     }
   const char *p = filter;
-  char *q; q = new char[strlen(p) + l + 1];
+  const int t_size = (int)strlen(p) + l + 1;
+  char *q; q = new char[t_size];
   const char *r, *s;
   char *t;
   t = q;
@@ -445,7 +446,9 @@ static char *prepareMacFilter(int count, const char *filter, char **patterns) {
     if (s && s < r) {
       memcpy(q, p, s - p);
       q += s - p;
-      if (rank < count) { sprintf(q, " (%s)", patterns[rank]); q += strlen(q); }
+      if (rank < count) {
+        snprintf(q, t_size-(q-t), " (%s)", patterns[rank]); q += strlen(q);
+      }
     }
     else {
       memcpy(q, p, r - p);
@@ -548,40 +551,78 @@ static char *prepareMacFilter(int count, const char *filter, char **patterns) {
 }
 @end
 
+
+@interface FLHiddenFilesAction : NSObject
+{
+@public
+  NSSavePanel *panel;
+  NSButton *button;
+}
+- (void)action;
+@end
+@implementation FLHiddenFilesAction
+- (void)action {
+  [panel setShowsHiddenFiles:[button intValue]];
+}
+@end
+
+
 static NSPopUpButton *createPopupAccessory(NSSavePanel *panel, const char *filter, const char *title, int rank)
 {
-  NSPopUpButton *popup;
-  NSRect rectview = NSMakeRect(5, 5, 350, 30 );
+  NSPopUpButton *popup = nil;
+  NSRect rectview = NSMakeRect(5, 5, 350, filter ? 60 : 30);
   NSView *view = [[[NSView alloc] initWithFrame:rectview] autorelease];
   NSRect rectbox = NSMakeRect(0, 3, 140, 20 );
-  NSBox *box = [[[NSBox alloc] initWithFrame:rectbox] autorelease];
-  NSRect rectpop = NSMakeRect(105, 0, 246, 30 );
-  popup = [[[NSPopUpButton alloc ] initWithFrame:rectpop pullsDown:NO] autorelease];
-  [view addSubview:box];
-  [view addSubview:popup];
-  [box setBorderType:NSNoBorder];
-  NSString *nstitle = [[NSString alloc] initWithUTF8String:title];
-  [box setTitle:nstitle];
-  [nstitle release];
-  NSFont *font = [NSFont controlContentFontOfSize:NSRegularControlSize];
-  [box setTitleFont:font];
-  [box sizeToFit];
-  // horizontally move box to fit the locale-dependent width of its title
-  NSRect r=[box frame];
-  NSPoint o = r.origin;
-  o.x = rectpop.origin.x - r.size.width + 15;
-  [box setFrameOrigin:o];
-  CFStringRef tab = CFSTR("\n");
-  CFStringRef tmp_cfs;
-  tmp_cfs = CFStringCreateWithCString(NULL, filter, kCFStringEncodingUTF8);
-  CFArrayRef array = CFStringCreateArrayBySeparatingStrings(NULL, tmp_cfs, tab);
-  CFRelease(tmp_cfs);
-  CFRelease(tab);
-  [popup addItemsWithTitles:(NSArray*)array];
-  NSMenuItem *item = [popup itemWithTitle:@""];
-  if (item) [popup removeItemWithTitle:@""];
-  CFRelease(array);
-  [popup selectItemAtIndex:rank];
+  // the "Show hidden files" button
+  NSRect hidden_files_rect = {{150, 0}, {80, 30}};
+  if (filter) hidden_files_rect.origin.y = 35;
+  NSButton *hidden_files = [[[NSButton alloc] initWithFrame:hidden_files_rect] autorelease];
+  [hidden_files setButtonType:
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
+      NSButtonTypeSwitch
+#else
+      NSSwitchButton
+#endif
+  ];
+  [hidden_files setTitle:[NSString stringWithUTF8String:Fl_File_Chooser::hidden_label]];
+  [hidden_files sizeToFit];
+  [hidden_files setIntValue:0];
+  [view addSubview:hidden_files];
+  static FLHiddenFilesAction *target = [[FLHiddenFilesAction alloc] init]; // never released
+  target->panel = panel;
+  target->button = hidden_files;
+  [hidden_files setAction:@selector(action)];
+  [hidden_files setTarget:target];
+  if (filter) {
+    NSBox *box = [[[NSBox alloc] initWithFrame:rectbox] autorelease];
+    NSRect rectpop = NSMakeRect(105, 0, 246, 30 );
+    popup = [[[NSPopUpButton alloc ] initWithFrame:rectpop pullsDown:NO] autorelease];
+    [view addSubview:box];
+    [view addSubview:popup];
+    [box setBorderType:NSNoBorder];
+    NSString *nstitle = [[NSString alloc] initWithUTF8String:title];
+    [box setTitle:nstitle];
+    [nstitle release];
+    NSFont *font = [NSFont controlContentFontOfSize:NSRegularControlSize];
+    [box setTitleFont:font];
+    [box sizeToFit];
+    // horizontally move box to fit the locale-dependent width of its title
+    NSRect r=[box frame];
+    NSPoint o = r.origin;
+    o.x = rectpop.origin.x - r.size.width + 15;
+    [box setFrameOrigin:o];
+    CFStringRef tab = CFSTR("\n");
+    CFStringRef tmp_cfs;
+    tmp_cfs = CFStringCreateWithCString(NULL, filter, kCFStringEncodingUTF8);
+    CFArrayRef array = CFStringCreateArrayBySeparatingStrings(NULL, tmp_cfs, tab);
+    CFRelease(tmp_cfs);
+    CFRelease(tab);
+    [popup addItemsWithTitles:(NSArray*)array];
+    NSMenuItem *item = [popup itemWithTitle:@""];
+    if (item) [popup removeItemWithTitle:@""];
+    CFRelease(array);
+    [popup selectItemAtIndex:rank];
+  }
   [panel setAccessoryView:view];
   return popup;
 }
@@ -707,7 +748,7 @@ int Fl_Quartz_Native_File_Chooser_Driver::post() {
       FLopenDelegate *openDelegate = [[[FLopenDelegate alloc] init] autorelease];
       [openDelegate setPopup:popup filter_pattern:_filt_patt];
       [_panel setDelegate:openDelegate];
-    }
+    } else createPopupAccessory(_panel, NULL, Fl_File_Chooser::show_label, 0);
   }
   else {
     FLsaveDelegate *saveDelegate = [[[FLsaveDelegate alloc] init] autorelease];
@@ -735,7 +776,7 @@ int Fl_Quartz_Native_File_Chooser_Driver::post() {
       }
       [_panel setCanSelectHiddenExtension:YES];
       [_panel setExtensionHidden:NO];
-    }
+    } else createPopupAccessory(_panel, NULL, Fl_File_Chooser::show_label, 0);
   }
   int retval = runmodal();
   if (_filt_total) {

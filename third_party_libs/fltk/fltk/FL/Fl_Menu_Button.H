@@ -26,7 +26,7 @@
   This is a button that when pushed pops up a menu (or hierarchy of
   menus) defined by an array of
   Fl_Menu_Item objects.
-  <P ALIGN=CENTER>\image html  menu_button.png</P>
+  \image html  menu_button.png
   \image latex  menu_button.png " menu_button" width=5cm
   <P>Normally any mouse button will pop up a menu and it is lined up
   below the button as shown in the picture.  However an Fl_Menu_Button
@@ -55,7 +55,8 @@
 */
 class FL_EXPORT Fl_Menu_Button : public Fl_Menu_ {
 protected:
-  void draw();
+  void draw() FL_OVERRIDE;
+  static Fl_Menu_Button* pressed_menu_button_;
 public:
   /**
    \brief indicate what mouse buttons pop up the menu.
@@ -71,7 +72,7 @@ public:
     POPUP23,  /**< pops up with the mouse 2nd or 3rd buttons. */
     POPUP123 /**< pops up with any mouse button. */
   };
-  int handle(int);
+  int handle(int) FL_OVERRIDE;
   const Fl_Menu_Item* popup();
   Fl_Menu_Button(int,int,int,int,const char * =0);
 };

@@ -1,7 +1,7 @@
 //
 // Group header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2021 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -14,8 +14,9 @@
 //     https://www.fltk.org/bugs.php
 //
 
-/* \file
-   Fl_Group, Fl_End classes . */
+/** \file
+  \brief Fl_Group and Fl_End classes.
+*/
 
 #ifndef Fl_Group_H
 #define Fl_Group_H
@@ -38,6 +39,19 @@ class Fl_Rect;
   this group, and to other groups. The only modifier grabbed is shift
   (for shift-tab), so that ctrl-tab, alt-up, and such are free
   for the app to use as shortcuts.
+
+  To remove a widget from the group and destroy it, in 1.3.x (and up)
+  you can simply use:
+  \code
+  delete some_widget;
+  \endcode
+  ..and this will trigger proper scheduling of the widget's removal
+  from its parent group.
+
+  If used as a child of \p Fl_Tabs, setting \p when(FL_WHEN_CLOSED) will
+  enable the Close button in the corresponding tab. If the user clicks the
+  Close button, the callback of this group will be called with the callback
+  reason \p FL_REASON_CLOSED.
 */
 class FL_EXPORT Fl_Group : public Fl_Widget {
 
@@ -59,17 +73,20 @@ class FL_EXPORT Fl_Group : public Fl_Widget {
   Fl_Group& operator=(const Fl_Group&);
 
 protected:
-  void draw();
+  void draw() FL_OVERRIDE;
   void draw_child(Fl_Widget& widget) const;
   void draw_children();
   void draw_outside_label(const Fl_Widget& widget) const ;
   void update_child(Fl_Widget& widget) const;
   Fl_Rect *bounds();
   int  *sizes(); // FLTK 1.3 compatibility
+  virtual int on_insert(Fl_Widget*, int);
+  virtual int on_move(int, int);
+  virtual void on_remove(int);
 
 public:
 
-  int handle(int);
+  int handle(int) FL_OVERRIDE;
   void begin();
   void end();
   static Fl_Group *current();
@@ -90,7 +107,7 @@ public:
   int find(const Fl_Widget& o) const {return find(&o);}
   Fl_Widget* const* array() const;
 
-  void resize(int,int,int,int);
+  void resize(int,int,int,int) FL_OVERRIDE;
   /**
     Creates a new Fl_Group widget using the given position, size,
     and label string. The default boxtype is FL_NO_BOX.
@@ -143,6 +160,14 @@ public:
     children. Widgets that are horizontally or vertically inside the
     dimensions of the box are scaled to the new size. Widgets outside the
     box are moved.
+
+    \note The resizable of a group \b must be one of
+      - NULL
+      - the group itself
+      - a direct child of the group.
+    \note If you set any other widget that is not a direct child of the group as
+      its resizable then the behavior is undefined. This is \b not checked by
+      Fl_Group for historical reasons.
 
     In these examples the gray area is the resizable:
 
@@ -202,7 +227,8 @@ public:
   unsigned int clip_children() { return (flags() & CLIP_CHILDREN) != 0; }
 
   // Note: Doxygen docs in Fl_Widget.H to avoid redundancy.
-  virtual Fl_Group* as_group() { return this; }
+  Fl_Group* as_group() FL_OVERRIDE { return this; }
+  Fl_Group const* as_group() const FL_OVERRIDE { return this; }
 
   // back compatibility functions:
 

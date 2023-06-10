@@ -24,6 +24,16 @@
 #endif // !FL_PLATFORM_H
 
 #ifdef __OBJC__
+  @class NSOpenGLContext;
+#  ifndef GL_SILENCE_DEPRECATION
+#    define GL_SILENCE_DEPRECATION 1
+#  endif
+#elif defined(__cplusplus)
+  class NSOpenGLContext;
+#endif /* __OBJC__ */
+extern NSOpenGLContext *fl_mac_glcontext(GLContext rc);
+
+#ifdef __OBJC__
 @class FLWindow; // a subclass of the NSWindow Cocoa class
 typedef FLWindow *Window;
 #else
@@ -70,6 +80,21 @@ typedef class FLWindow *Window; // pointer to the FLWindow objective-c class
 #endif
 #ifndef MAC_OS_X_VERSION_10_14
 #define MAC_OS_X_VERSION_10_14 101400
+#endif
+#ifndef MAC_OS_X_VERSION_10_15
+#define MAC_OS_X_VERSION_10_15 101500
+#endif
+#ifndef MAC_OS_X_VERSION_10_16
+#define MAC_OS_X_VERSION_10_16 101600
+#endif
+#ifndef MAC_OS_VERSION_11_0
+#define MAC_OS_VERSION_11_0 110000
+#endif
+#ifndef MAC_OS_VERSION_12_0
+#define MAC_OS_VERSION_12_0 120000
+#endif
+#ifndef MAC_OS_VERSION_13_0
+#define MAC_OS_VERSION_13_0 130000
 #endif
 
 
@@ -125,6 +150,13 @@ extern CGContextRef fl_gc;
  */
 void fl_mac_set_about(Fl_Callback *cb, void *user_data, int shortcut = 0);
 
+/** Returns the macOS-specific graphics context for the current window */
+extern CGContextRef fl_mac_gc();
+/** Returns the macOS-specific window reference corresponding to the given Fl_Window object */
+extern FLWindow *fl_mac_xid(const Fl_Window *win);
+/** Returns the Fl_Window corresponding to the given macOS-specific window reference */
+extern Fl_Window *fl_mac_find(FLWindow *);
+class Fl_Gl_Window;
 
 /** The version number of the running Mac OS X (e.g., 100604 for 10.6.4, 101300 for 10.13).
  FLTK initializes this global variable before main() begins running. If

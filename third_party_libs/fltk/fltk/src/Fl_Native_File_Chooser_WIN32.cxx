@@ -24,7 +24,7 @@
 #include <FL/Enumerations.H>
 
 #include <stdlib.h>             // malloc
-#include <stdio.h>              // sprintf
+#include <stdio.h>              // snprintf
 #include <wchar.h>
 
 #define FNFC_MAX_PATH 32768     // XXX: MAX_PATH under win32 is 260, too small for modern use
@@ -77,26 +77,26 @@ private:
 public:
   Fl_WinAPI_Native_File_Chooser_Driver(int val);
   ~Fl_WinAPI_Native_File_Chooser_Driver();
-  virtual void type(int t);
-  virtual int type() const ;
-  virtual void options(int o);
-  virtual int options() const;
-  virtual int count() const;
-  virtual const char *filename() const ;
-  virtual const char *filename(int i) const ;
-  virtual void directory(const char *val) ;
-  virtual const char *directory() const;
-  virtual void title(const char *t);
-  virtual const char* title() const;
-  virtual const char *filter() const ;
-  virtual void filter(const char *f);
-  virtual int filters() const ;
-  virtual void filter_value(int i) ;
-  virtual int filter_value() const ;
-  virtual void preset_file(const char*f) ;
-  virtual const char* preset_file() const;
-  virtual const char *errmsg() const ;
-  virtual int show() ;
+  void type(int t) FL_OVERRIDE;
+  int type() const FL_OVERRIDE;
+  void options(int o) FL_OVERRIDE;
+  int options() const FL_OVERRIDE;
+  int count() const FL_OVERRIDE;
+  const char *filename() const FL_OVERRIDE;
+  const char *filename(int i) const FL_OVERRIDE;
+  void directory(const char *val) FL_OVERRIDE;
+  const char *directory() const FL_OVERRIDE;
+  void title(const char *t) FL_OVERRIDE;
+  const char* title() const FL_OVERRIDE;
+  const char *filter() const FL_OVERRIDE;
+  void filter(const char *f) FL_OVERRIDE;
+  int filters() const FL_OVERRIDE;
+  void filter_value(int i) FL_OVERRIDE;
+  int filter_value() const FL_OVERRIDE;
+  void preset_file(const char*f) FL_OVERRIDE;
+  const char* preset_file() const FL_OVERRIDE;
+  const char *errmsg() const FL_OVERRIDE;
+  int show() FL_OVERRIDE;
 };
 
 
@@ -375,7 +375,7 @@ static void RestoreCWD(char *thecwd) {
 
 // SHOW FILE BROWSER
 int Fl_WinAPI_Native_File_Chooser_Driver::showfile() {
-  bool unixpath = IsUnixPath(_directory) | IsUnixPath(_preset_file);    // caller uses unix paths?
+  bool unixpath = IsUnixPath(_directory) || IsUnixPath(_preset_file);    // caller uses unix paths?
   ClearOFN();
   clear_pathnames();
   size_t fsize = FNFC_MAX_PATH;
@@ -441,7 +441,7 @@ int Fl_WinAPI_Native_File_Chooser_Driver::showfile() {
     size_t len = strlen(winpath);
     if ( len >= _ofn_ptr->nMaxFile ) {
       char msg[80];
-      sprintf(msg, "preset_file() filename is too long: %ld is >=%ld", (long)len, (long)fsize);
+      snprintf(msg, 80, "preset_file() filename is too long: %ld is >=%ld", (long)len, (long)fsize);
       errmsg(msg);
       return(-1);
     }
@@ -490,7 +490,7 @@ int Fl_WinAPI_Native_File_Chooser_Driver::showfile() {
     if ( exterr == 0 ) return(1);       // user hit cancel
     // Otherwise, an error occurred..
     char msg[80];
-    sprintf(msg, "CommDlgExtendedError() code=%d", exterr);
+    snprintf(msg, 80, "CommDlgExtendedError() code=%d", exterr);
     errmsg(msg);
     return(-1);
   }
@@ -776,12 +776,12 @@ void Fl_WinAPI_Native_File_Chooser_Driver::add_filter(const char *name_in,      
   // No name? Make one..
   char name[1024];
   if ( !name_in || name_in[0] == '\0' ) {
-    sprintf(name, "%.*s Files", int(sizeof(name)-10), winfilter);
+    snprintf(name, sizeof(name), "%.*s Files", int(sizeof(name)-10), winfilter);
   } else {
     if ((strlen(name_in)+strlen(winfilter)+3) < sizeof(name)) {
-      sprintf(name, "%s (%s)", name_in, winfilter);
+      snprintf(name, sizeof(name), "%s (%s)", name_in, winfilter);
     } else {
-      sprintf(name, "%.*s", int(sizeof(name))-1, name_in);
+      snprintf(name, sizeof(name), "%.*s", int(sizeof(name))-1, name_in);
     }
   }
   dnullcat(_parsedfilt, name);

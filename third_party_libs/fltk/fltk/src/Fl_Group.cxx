@@ -389,22 +389,22 @@ void Fl_Group::clear() {
   if (contains(pushed)) pushed = this;  // set it to be the group, if it's a child
   Fl::pushed(this);                     // for fl_fix_focus etc.
 
-  // okay, now it is safe to destroy the children:
+  // Implementation note (AlbrechtS, Nov. 01, 2022):
+  // For some obscure reason the order of all children had been
+  // reversed in FLTK 1.3.x so the first child would be deleted
+  // first but this is no longer done since FLTK 1.4.0.
+  // Reasoning:
+  //   (1) it is supposedly better to remove children in the
+  //       order "last in, first out"
+  //   (2) it would not be compatible with the new subclass
+  //       notification feature Fl_Group::on_remove().
+  // See git commit a918292547cfb154 or earlier for removed code.
+  // End of implementation note.
 
-#define REVERSE_CHILDREN
-#ifdef  REVERSE_CHILDREN
-  // Reverse the order of the children. Doing this and deleting
-  // always the last child is much faster than the other way around.
-  if (children_ > 1) {
-    Fl_Widget *temp;
-    Fl_Widget **a = (Fl_Widget**)array();
-    for (int i=0,j=children_-1; i<children_/2; i++,j--) {
-      temp = a[i];
-      a[i] = a[j];
-      a[j] = temp;
-    }
-  }
-#endif // REVERSE_CHILDREN
+  // Okay, now it is safe to destroy the children. Children are
+  // removed and deleted in the order from last child to first
+  // child which is much faster than the other way around and
+  // should be the "natural order" (last in, first out).
 
   while (children_) {                   // delete all children
     int idx = children_-1;              // last child's index
@@ -412,6 +412,7 @@ void Fl_Group::clear() {
     if (w->parent()==this) {            // should always be true
       if (children_>2) {                // optimized removal
         w->parent_ = 0;                 // reset child's parent
+        on_remove(idx);
         children_--;                    // update counter
       } else {                          // slow removal
         remove(idx);
@@ -447,6 +448,59 @@ Fl_Group::~Fl_Group() {
 }
 
 /**
+ Allow derived groups to act when a widget is added as a child.
+
+ Widgets derived from Fl_Group may store additional data for their children.
+ Overriding this method will allow derived classes to generate these data
+ structures just before the child is added.
+
+ This method usually returns the same index that was given in the parameters.
+ By setting a new index, the position of other widgets in the child pointer
+ array can be preserved (e.g. Fl_Scroll keeps its scroll bars as the last
+ two children).
+
+ By returning -1, Fl_Group::insert will not add the child to
+ array_. This is not recommended, but Fl_Table does something similar to
+ forward children to a hidden group.
+
+ \param candidate the candidate will be added to the child array_ after this
+            method returns.
+ \param index add the child at this position in the array_
+ \return index to position the child as planned
+ \return a new index to force the child to a different position
+ \return -1 to keep the group from adding the candidate
+ */
+int Fl_Group::on_insert(Fl_Widget *candidate, int index) {
+  (void)candidate;
+  return index;
+}
+
+/**
+ Allow derived groups to act when a widget is moved within the group.
+
+ Widgets derived from Fl_Group may store additional data for their children.
+ Overriding this method will allow derived classes to move these data
+ structures just before the child itself is moved.
+
+ This method usually returns the new index that was given in the
+ parameters. By setting a different destination index, the position of other
+ widgets in the child pointer array can be preserved.
+
+ By returning -1, Fl_Group::insert will not move the child.
+
+ \param oldIndex the current index of the child that will be moved
+ \param newIndex the new index of the child
+ \return \p newIndex to position the child as planned
+ \return a different index to force the child to a different position
+ \return -1 to keep the group from moving the child
+ */
+int Fl_Group::on_move(int oldIndex, int newIndex) {
+  (void)oldIndex;
+  return newIndex;
+}
+
+
+/**
   The widget is removed from its current group (if any) and then
   inserted into this group. It is put at index n - or at the end,
   if n >= children(). This can also be used to rearrange
@@ -457,11 +511,27 @@ void Fl_Group::insert(Fl_Widget &o, int index) {
     Fl_Group* g = o.parent();
     int n = g->find(o);
     if (g == this) {
-      if (index > n) index--;
-      if (index == n) return;
+      // avoid expensive remove() and add() if we just move a widget within the group
+      index = on_move(n, index);
+      if (index < 0) return;      // don't move: requested by subclass
+      if (index > children_)
+        index = children_;
+      if (index > n) index--;     // compensate for removal and re-insertion
+      if (index == n) return;     // same position; this includes (children_ == 1)
+      if (index > n)
+        memmove(array_+n, array_+(n+1), (index-n) * sizeof(Fl_Widget*));
+      else
+        memmove(array_+(index+1), array_+index, (n-index) * sizeof(Fl_Widget*));
+      array_[index] = &o;
+      init_sizes();
+      return;
     }
     g->remove(n);
   }
+
+  index = on_insert(&o, index);
+  if (index == -1) return;
+
   o.parent_ = this;
   if (children_ == 0) { // use array pointer to point at single child
     child1_ = &o;
@@ -488,6 +558,19 @@ void Fl_Group::insert(Fl_Widget &o, int index) {
 void Fl_Group::add(Fl_Widget &o) {insert(o, children_);}
 
 /**
+ Allow derived groups to act when a child widget is removed from the group.
+
+ Widgets derived from Fl_Group may store additional data for their children.
+ Overriding this method will allow derived classes to remove these data
+ structures just before the child is removed.
+
+ \param index remove the child at this position in the array_
+ */
+void Fl_Group::on_remove(int index) {
+  (void)index;
+}
+
+/**
   Removes the widget at \p index from the group but does not delete it.
 
   This method does nothing if \p index is out of bounds.
@@ -499,8 +582,11 @@ void Fl_Group::add(Fl_Widget &o) {insert(o, children_);}
 */
 void Fl_Group::remove(int index) {
   if (index < 0 || index >= children_) return;
+  on_remove(index);
+
   Fl_Widget &o = *child(index);
   if (&o == savedfocus_) savedfocus_ = 0;
+  if (&o == resizable_) resizable_ = this;
   if (o.parent_ == this) {      // this should always be true
     o.parent_ = 0;
   }
@@ -561,7 +647,7 @@ void Fl_Group::remove(Fl_Widget &o) {
   Return values \> 0 are reserved for use by FLTK core widgets.
   Return values \< 0 are free to be used by user defined widgets.
 
-  \todo Reimplementation of Fl_Group::delete_widget(int) in more FLTK
+  \todo Reimplementation of Fl_Group::delete_child(int) in more FLTK
     subclasses. This is not yet complete.
 
   \param[in]  index   index of child to be removed
@@ -647,7 +733,7 @@ void Fl_Group::init_sizes() {
 
   \internal Notes to developers:
     - If you change this be sure to fix Fl_Tile which also uses this array!
-    - Do not #include Fl_Rect.H in Fl_Group.H because this would introduce
+    - Do not \#include Fl_Rect.H in Fl_Group.H because this would introduce
       lots of unnecessary dependencies on Fl_Rect.H.
 */
 Fl_Rect* Fl_Group::bounds() {

@@ -25,6 +25,7 @@
 #define Fl_Gl_Window_Driver_H
 
 #include <FL/Fl_Gl_Window.H>
+#include <FL/gl.h> // for GLint
 
 class Fl_Gl_Choice;
 class Fl_Font_Descriptor;
@@ -34,6 +35,7 @@ class Fl_Font_Descriptor;
  */
 class Fl_Gl_Window_Driver {
 protected:
+  GLint current_prog;
   Fl_Gl_Window *pWindow;
 public:
   static GLContext cached_context;
@@ -53,7 +55,7 @@ public:
   void* overlay() {return pWindow->overlay;}
   void draw_overlay() {pWindow->draw_overlay();}
 
-  Fl_Gl_Window_Driver(Fl_Gl_Window *win) : pWindow(win) {}
+  Fl_Gl_Window_Driver(Fl_Gl_Window *win) : pWindow(win) {current_prog=0;}
   virtual ~Fl_Gl_Window_Driver() {}
   static Fl_Gl_Window_Driver *newGlWindowDriver(Fl_Gl_Window *w);
   static Fl_Gl_Window_Driver *global();
@@ -76,7 +78,7 @@ public:
   // The second argument is a glX attribute list, and is used if mode is zero.
   // This is not supported on Win32:
   virtual Fl_Gl_Choice *find(int /*mode*/, const int * /*alistp*/) {return NULL;}
-  virtual GLContext create_gl_context(Fl_Window*, const Fl_Gl_Choice*, int layer = 0) {(void)layer; return 0;}
+  virtual GLContext create_gl_context(Fl_Window*, const Fl_Gl_Choice*) {return 0;}
   virtual void set_gl_context(Fl_Window*, GLContext) {}
   virtual void delete_gl_context(GLContext) {}
   virtual void make_overlay(void* &o);
@@ -101,6 +103,11 @@ public:
   virtual Fl_Font_Descriptor** fontnum_to_fontdescriptor(int fnum);
   virtual Fl_RGB_Image* capture_gl_rectangle(int x, int y, int w, int h);
   static inline Fl_Gl_Window_Driver* driver(const Fl_Gl_Window *win) {return win->pGlWindowDriver;}
+  // true means the platform uses glScissor() to make sure GL subwindows
+  // don't leak outside their parent window
+  virtual bool need_scissor() { return false; }
+  virtual void switch_to_GL1();
+  virtual void switch_back();
 };
 
 #endif /* Fl_Gl_Window_Driver_H */

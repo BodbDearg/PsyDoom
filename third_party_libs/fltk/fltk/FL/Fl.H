@@ -1,7 +1,7 @@
 //
 // Main header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2022 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -14,9 +14,9 @@
 //     https://www.fltk.org/bugs.php
 //
 
-/** \file
-    Fl static class.
- */
+/** \file FL/Fl.H
+  \brief Fl static class.
+*/
 
 #ifndef Fl_H
 #  define Fl_H
@@ -88,7 +88,9 @@ typedef void (Fl_Label_Measure_F)(const Fl_Label *label, int &width, int &height
 /** Signature of some box drawing functions passed as parameters */
 typedef void (Fl_Box_Draw_F)(int x, int y, int w, int h, Fl_Color color);
 
-/** Signature of some timeout callback functions passed as parameters */
+/** Signature of timeout callback functions passed as parameters.
+  Please see Fl::add_timeout() for details.
+*/
 typedef void (*Fl_Timeout_Handler)(void *data);
 
 /** Signature of some wakeup callback functions passed as parameters */
@@ -133,6 +135,7 @@ typedef void (*Fl_Clipboard_Notify_Handler)(int source, void *data);
   state information and global methods for the current application.
 */
 class FL_EXPORT Fl {
+  friend class Fl_System_Driver;
   Fl() {} // no constructor!
 
 private:
@@ -141,6 +144,7 @@ private:
   static int draw_GL_text_with_textures_;
   static int box_shadow_width_;
   static int box_border_radius_max_;
+  static int selection_to_clipboard_;
 
 public:
 
@@ -199,6 +203,7 @@ public: // should be private!
   static void *e_clipboard_data;
   static const char *e_clipboard_type;
   static Fl_Event_Dispatch e_dispatch;
+  static Fl_Callback_Reason callback_reason_;
   static Fl_Widget* belowmouse_;
   static Fl_Widget* pushed_;
   static Fl_Widget* focus_;
@@ -269,6 +274,9 @@ public:
     /// value.
     /// When switched off, no such window gets displayed.
     OPTION_SHOW_SCALING,
+    /// Meaningful for the Wayland/X11 platform only. When switched on (default), the library uses a Zenity-based file dialog.
+    /// When switched off, the GTK file dialog is used instead.
+    OPTION_FNFC_USES_ZENITY,
       // don't change this, leave it always as the last element
       /// For internal use only.
     OPTION_LAST
@@ -301,11 +309,13 @@ public:
   static void (*idle)();
 
 #ifndef FL_DOXYGEN
+private:
   static Fl_Awake_Handler *awake_ring_;
   static void **awake_data_;
   static int awake_ring_size_;
   static int awake_ring_head_;
   static int awake_ring_tail_;
+public:
   static const char* scheme_;
   static Fl_Image* scheme_bg_;
 
@@ -417,12 +427,9 @@ public:
   static int is_scheme(const char *name) {
     return (scheme_ && name && !strcmp(name,scheme_));
   }
-  /**
-    Called by scheme according to scheme name.
-    Loads or reloads the current scheme selection.
-    See void scheme(const char *name)
-  */
-  static int reload_scheme(); // platform dependent
+
+  static int reload_scheme(); // defined in 'src/Fl_get_system_colors.cxx'
+
   static int scrollbar_size();
   static void scrollbar_size(int W);
   static int menu_linespacing();
@@ -447,68 +454,29 @@ public:
    \version 1.4.0
    */
   static void program_should_quit(int should_i) { program_should_quit_ = should_i; }
+  static void hide_all_windows();
 
   static Fl_Widget* readqueue();
-  /**
-  Adds a one-shot timeout callback.  The function will be called by
-  Fl::wait() at <i>t</i> seconds after this function is called.
-  The optional void* argument is passed to the callback.
 
-  You can have multiple timeout callbacks. To remove a timeout
-  callback use Fl::remove_timeout().
+  //
+  // cross-platform timer support
+  //
 
-  If you need more accurate, repeated timeouts, use Fl::repeat_timeout() to
-  reschedule the subsequent timeouts.
+  static void add_timeout(double t, Fl_Timeout_Handler cb, void *data = 0);
+  static void repeat_timeout(double t, Fl_Timeout_Handler cb, void *data = 0);
+  static int  has_timeout(Fl_Timeout_Handler cb, void *data = 0);
+  static void remove_timeout(Fl_Timeout_Handler cb, void *data = 0);
 
-  The following code will print "TICK" each second on
-  stdout with a fair degree of accuracy:
-
-  \code
-#include <stdio.h>
-#include <FL/Fl.H>
-#include <FL/Fl_Window.H>
-void callback(void*) {
-  printf("TICK\n");
-  Fl::repeat_timeout(1.0, callback);    // retrigger timeout
-}
-int main() {
-  Fl_Window win(100,100);
-  win.show();
-  Fl::add_timeout(1.0, callback);       // set up first timeout
-  return Fl::run();
-}
-  \endcode
-  */
-  static void add_timeout(double t, Fl_Timeout_Handler,void* = 0); // platform dependent
-  /**
-  Repeats a timeout callback from the expiration of the
-  previous timeout, allowing for more accurate timing.
-
-  You may only call this method inside a timeout callback of the same timer
-  or at least a closely related timer, otherwise the timing accuracy can't
-  be improved and the behavior is undefined.
-
-  The following code will print "TICK" each second on
-  stdout with a fair degree of accuracy:
-
-  \code
-    void callback(void*) {
-      puts("TICK");
-      Fl::repeat_timeout(1.0, callback);
-    }
-
-    int main() {
-      Fl::add_timeout(1.0, callback);
-      return Fl::run();
-    }
-  \endcode
-  */
-  static void repeat_timeout(double t, Fl_Timeout_Handler, void* = 0); // platform dependent
-  static int  has_timeout(Fl_Timeout_Handler, void* = 0);
-  static void remove_timeout(Fl_Timeout_Handler, void* = 0);
   static void add_check(Fl_Timeout_Handler, void* = 0);
   static int  has_check(Fl_Timeout_Handler, void* = 0);
   static void remove_check(Fl_Timeout_Handler, void* = 0);
+
+  static Fl_Timestamp now();
+  static double seconds_since(Fl_Timestamp& then);
+  static double seconds_between(Fl_Timestamp& back, Fl_Timestamp& further_back);
+  static long ticks_since(Fl_Timestamp& then);
+  static long ticks_between(Fl_Timestamp& back, Fl_Timestamp& further_back);
+
   // private
   static void run_idle();
   static void run_checks();
@@ -889,6 +857,7 @@ int main() {
   static void remove_system_handler(Fl_System_Handler h);
   static void event_dispatch(Fl_Event_Dispatch d);
   static Fl_Event_Dispatch event_dispatch();
+  static Fl_Callback_Reason callback_reason();
   /** @} */
 
   /** \defgroup  fl_clipboard  Selection & Clipboard functions
@@ -910,7 +879,86 @@ int main() {
    To copy graphical data, use the Fl_Copy_Surface class. The \p type argument may allow
    in the future to copy other kinds of data.
   */
-  static void copy(const char* stuff, int len, int destination = 0, const char *type = Fl::clipboard_plain_text); // platform dependent
+
+  /**
+    Copies data to the selection buffer, the clipboard, or both.
+
+    The \p destination can be:
+     - 0: selection buffer (see note below)
+     - 1: clipboard
+     - 2: both
+
+    The selection buffer exists only on the X11 platform and is used for middle-mouse
+    pastes and for drag-and-drop selections. The clipboard is used for traditional
+    copy/cut/paste operations. On all other platforms the selection buffer
+    (\p destination = 0) is mapped to the clipboard, i.e. on platforms other than X11
+    all \p destinations are equivalent and the data is always copied to the clipboard.
+
+    \note Please see Fl::section_to_clipboard() to enable duplication of the
+      selection buffer to the clipboard on X11, i.e. if \p destination = 0
+      (selection buffer) \b and Fl::selection_to_clipboard() is enabled, then
+      the data is copied to both the selection buffer and the clipboard.
+      This makes the X11 behavior similar to other platforms but keeps the
+      selection buffer for X11 specific inter process communication.
+
+    \p type should always be \p Fl::clipboard_plain_text which is the default.
+    Other values are ignored and reserved for future extensions.
+
+    \note This function is, at present, intended only to copy UTF-8 encoded
+      textual data. To copy graphical data, use the Fl_Copy_Surface class.
+      The \p type argument may allow to copy other kinds of data in the future.
+
+    \param[in]  stuff       text data to be copied
+    \param[in]  len         the number of relevant bytes in \p stuff
+    \param[in]  destination 0 = selection, 1 = clipboard, 2 = both (see description)
+    \param[in]  type        usually plain text (see description)
+
+    \internal
+      Documented here because it is platform dependent (calls the platform driver):
+    \code
+      Fl::screen_driver()->copy(stuff, len, clipboard, type);
+    \endcode
+  */
+  static void copy(const char *stuff, int len, int destination = 0,
+                   const char *type = Fl::clipboard_plain_text);
+
+  /**
+    Copies selections on X11 directly to the clipboard if enabled.
+
+    This method can be called on all platforms. Other platforms than X11 are
+    not affected by this feature.
+
+    If this is switched on (\p mode = 1), Fl::copy() copies all data to the
+    clipboard regardless of its \p destination argument. If the destination is 0
+    (selection buffer) data is copied to both the selection buffer and the clipboard.
+
+    Drag and drop is also affected since drag-and-drop data is copied to the selection
+    buffer.
+
+    You can use this to make the experience of data selection and copying more like
+    that on other platforms (Windows, macOS, and even Wayland).
+
+    The default operation mode is the standard X11 behavior (disabled).
+
+    \note This feature is experimental and enabling it may have unexpected side effects.
+      It is your own responsibility if you enable it.
+
+    \since 1.4.0
+
+    \param[in]  mode  1 = enable selection_to_clipboard, 0 = disable selection_to_clipboard
+
+    \see copy(const char *, int, int, const char *)
+  */
+  static void selection_to_clipboard(int mode) {
+    selection_to_clipboard_ = mode ? 1 : 0;
+  }
+
+  /**
+    \brief Returns the current selection_to_clipboard mode.
+
+    \see void selection_to_clipboard(int)
+  */
+  static int selection_to_clipboard() { return selection_to_clipboard_; }
 
   /**
    Pastes the data from the selection buffer (\p source is 0) or the clipboard
@@ -1114,15 +1162,24 @@ int main() {
     that the normal one is first, followed by bold, italic, and bold
     italic.
 
-    The optional argument is a string to describe the set of fonts to
+    The only argument to this function is somehat obsolete since FLTK and most
+    underlying operating systems move to support Unicode. For completeness,
+    following is the original documentation and a few updates:
+
+    On X11, the optional argument is a string to describe the set of fonts to
     add.  Passing NULL will select only fonts that have the
     ISO8859-1 character set (and are thus usable by normal text).  Passing
     "-*" will select all fonts with any encoding as long as they have
     normal X font names with dashes in them.  Passing "*" will list every
     font that exists (on X this may produce some strange output).  Other
-    values may be useful but are system dependent.  With Windows NULL
-    selects fonts with ISO8859-1 encoding and non-NULL selects
-    all fonts.
+    values may be useful but are system dependent.
+
+    With the Xft option on Linux, this parameter is ignored.
+
+    With Windows, `NULL` selects fonts with ANSI_CHARSET encoding and non-NULL
+    selects all fonts.
+
+    On macOS, this parameter is ignored.
 
     The return value is how many faces are in the table after this is done.
   */
@@ -1334,6 +1391,7 @@ int main() {
    */
   static int draw_GL_text_with_textures() { return draw_GL_text_with_textures_; }
 
+  static int system(const char *command);
 
 #ifdef FLTK_HAVE_CAIRO
   /** \defgroup group_cairo Cairo Support Functions and Classes
@@ -1341,42 +1399,96 @@ int main() {
   */
 public:
   // Cairo support API
-  static cairo_t * cairo_make_current(Fl_Window* w);
-   /** when FLTK_HAVE_CAIRO is defined and cairo_autolink_context() is true,
-      any current window dc is linked to a current cairo context.
-      This is not the default, because it may not be necessary
-      to add cairo support to all fltk supported windows.
-      When you wish to associate a cairo context in this mode,
-      you need to call explicitly in your draw() overridden method,
-      Fl::cairo_make_current(Fl_Window*). This will create a cairo context
-      but only for this Window.
-      Still in custom cairo application it is possible to handle
-      completely this process automatically by setting \p alink to true.
-      In this last case, you don't need anymore to call Fl::cairo_make_current().
-      You can use Fl::cairo_cc() to get the current cairo context anytime.
-     \note Only available when configure has the --enable-cairo option
+
+  static cairo_t *cairo_make_current(Fl_Window *w);
+
+  /** When FLTK_HAVE_CAIRO is defined and cairo_autolink_context() is true,
+    any current window dc is linked to a current Cairo context.
+    This is not the default, because it may not be necessary
+    to add Cairo support to all fltk supported windows.
+    When you wish to associate a Cairo context in this mode,
+    you need to call explicitly in your draw() overridden method,
+    Fl::cairo_make_current(Fl_Window*). This will create a Cairo context
+    only for this Window.
+    Still in custom Cairo application it is possible to handle
+    completely this process automatically by setting \p alink to true.
+    In this last case, you don't need anymore to call Fl::cairo_make_current().
+    You can use Fl::cairo_cc() to get the current Cairo context anytime.
+
+    \note Only available when configure has the --enable-cairo option
   */
-  static void cairo_autolink_context(bool alink) {cairo_state_.autolink(alink);}
+  static void cairo_autolink_context(bool alink) {
+    cairo_state_.autolink(alink);
+  }
+
   /**
-    Gets the current autolink mode for cairo support.
-    \retval false if no cairo context autolink is made for each window.
-    \retval true if any fltk window is attached a cairo context when it
+    Gets the current autolink mode for Cairo support.
+    \retval false if no Cairo context autolink is made for each window.
+    \retval true if any fltk window is attached a Cairo context when it
     is current. \see void cairo_autolink_context(bool alink)
     \note Only available when configure has the --enable-cairo option
  */
-  static bool cairo_autolink_context() {return cairo_state_.autolink();}
-  /** Gets the current cairo context linked with a fltk window. */
-  static cairo_t * cairo_cc() { return cairo_state_.cc(); }
-  /** Sets the current cairo context to \p c.
-      Set \p own to true if you want fltk to handle this cc deletion.
-     \note Only available when configure has the --enable-cairo option
-*/
-  static void cairo_cc(cairo_t * c, bool own=false){ cairo_state_.cc(c, own); }
+  static bool cairo_autolink_context() {
+    return cairo_state_.autolink();
+  }
+
+  /** Gets the current Cairo context linked with a fltk window. */
+  static cairo_t *cairo_cc() {
+    return cairo_state_.cc();
+  }
+
+  /** Sets the current Cairo context to \p c.
+    Set \p own to true if you want fltk to handle this cc deletion.
+    \note Only available when configure has the --enable-Cairo option
+  */
+  static void cairo_cc(cairo_t *c, bool own=false) {
+    cairo_state_.cc(c, own);
+  }
+
+  /** Flush Cairo drawings on Cairo context \p c.
+    This is \b required on Windows if you use the Cairo context provided
+    by the "Cairo autolink" option. Call this when all your drawings on
+    the Cairo context are finished. This is maybe not necessary on other
+    platforms than Windows but it does no harm if you call it always.
+
+    You don't need to use this if you use an Fl_Cairo_Window which does
+    this automatically after the draw callback returns.
+
+    Code example for "Cairo autolink" mode:
+
+    In the overridden draw() method of your subclass of Fl_Window or any
+    widget:
+    \code
+      cairo_t *cc = Fl::cairo_cc();   // get the "autolink" Cairo context
+      // ... your Cairo drawings are here ...
+      Fl::cairo_flush(cc);            // flush Cairo drawings to the device
+    \endcode
+
+    If you configure FLTK with \c '--enable-cairo' or CMake option
+    \c 'OPTION_CAIRO' (i.e. without \c '--enable-cairoext' or CMake option
+    \c 'OPTION_CAIROEXT') or if you don't enable the \c 'autolink' Cairo
+    context you may do the equivalent to use Cairo drawings in an
+    overridden draw() method of derived classes by using
+    \code
+      // get the  Cairo context for the \c window
+      cairo_t *cc = Fl::cairo_make_current(window);
+      // ... your Cairo drawings are here ...
+      Fl::cairo_flush(cc); // flush Cairo drawings to the device
+    \endcode
+    \see Fl::cairo_autolink_context(bool)
+    \see Fl::cairo_make_current(Fl_Window*);
+  */
+  static void cairo_flush(cairo_t *c) {
+    // flush Cairo drawings: necessary at least for Windows
+    cairo_surface_t *s = cairo_get_target(Fl::cairo_cc());
+    cairo_surface_flush(s);
+  }
 
 private:
-  static cairo_t * cairo_make_current(void* gc);
-  static cairo_t * cairo_make_current(void* gc, int W, int H);
+  static cairo_t *cairo_make_current(void *gc);
+  static cairo_t *cairo_make_current(void *gc, int W, int H);
   static Fl_Cairo_State cairo_state_;
+
 public:
   /** @} */
 

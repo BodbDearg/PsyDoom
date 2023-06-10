@@ -22,6 +22,7 @@
  */
 
 #include "Fl_Window_Driver.H"
+#include <FL/Fl_Image_Surface.H>
 #include <FL/Fl_Overlay_Window.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl.H>
@@ -41,6 +42,7 @@ Fl_Window_Driver::Fl_Window_Driver(Fl_Window *win)
   : pWindow(win) {
   wait_for_expose_value = 0;
   other_xid = 0;
+  screen_num_ = 0;
 }
 
 
@@ -70,8 +72,6 @@ int Fl_Window_Driver::fullscreen_screen_bottom() {return pWindow->fullscreen_scr
 int Fl_Window_Driver::fullscreen_screen_left() {return pWindow->fullscreen_screen_left;}
 int Fl_Window_Driver::fullscreen_screen_right() {return pWindow->fullscreen_screen_right;}
 void Fl_Window_Driver::current(Fl_Window *c) {pWindow->current_ = c;}
-
-void Fl_Window_Driver::flush_Fl_Window() { pWindow->Fl_Window::flush(); }
 
 
 /**
@@ -105,11 +105,11 @@ void Fl_Window_Driver::take_focus() {
 }
 
 void Fl_Window_Driver::flush_double() {
-  flush_Fl_Window();
+  pWindow->Fl_Window::flush();
 }
 
 void Fl_Window_Driver::flush_overlay() {
-  flush_Fl_Window();
+  pWindow->Fl_Window::flush();
 }
 
 void Fl_Window_Driver::draw_begin() {
@@ -121,7 +121,7 @@ void Fl_Window_Driver::draw_end() {
 }
 
 void Fl_Window_Driver::destroy_double_buffer() {
-  fl_delete_offscreen(other_xid);
+  delete other_xid;
   other_xid = 0;
 }
 
@@ -143,12 +143,12 @@ int Fl_Window_Driver::hide_common() {
   if (!shown()) return 1;
 
   // remove from the list of windows:
-  Fl_X* ip = Fl_X::i(pWindow);
+  Fl_X* ip = Fl_X::flx(pWindow);
   Fl_X** pp = &Fl_X::first;
   for (; *pp != ip; pp = &(*pp)->next) if (!*pp) return 1;
   *pp = ip->next;
 
-  pWindow->i = 0;
+  pWindow->flx_ = 0;
 
   // recursively remove any subwindows:
   for (Fl_X *wi = Fl_X::first; wi;) {
@@ -212,15 +212,17 @@ int Fl_Window_Driver::set_cursor(const Fl_RGB_Image*, int, int) {
 
 void Fl_Window_Driver::wait_for_expose() {
   if (!shown()) return;
-  Fl_X *i = Fl_X::i(pWindow);
+  Fl_X *i = Fl_X::flx(pWindow);
   while (!i || wait_for_expose_value) {
     Fl::wait();
   }
 }
 
 int Fl_Window_Driver::screen_num() {
-  if (pWindow->parent()) return Fl_Window_Driver::driver(pWindow->top_window())->screen_num();
-  return Fl::screen_num(x(), y(), w(), h());
+  if (pWindow->parent()) {
+    screen_num_ = Fl_Window_Driver::driver(pWindow->top_window())->screen_num();
+  }
+  return screen_num_ >= 0 ? screen_num_ : 0;
 }
 
 bool Fl_Window_Driver::is_a_rescale_ = false;
@@ -256,6 +258,32 @@ void Fl_Window_Driver::menu_window_area(int &X, int &Y, int &W, int &H, int nscr
   Fl_Screen_Driver *scr_driver = Fl::screen_driver();
   if (nscreen < 0) nscreen = scr_driver->get_mouse(mx, my);
   scr_driver->screen_work_area(X, Y, W, H, nscreen);
+}
+
+/** Returns  the platform-specific reference of the given window, or NULL if that window isn't shown.
+ \version 1.4.0 */
+fl_uintptr_t Fl_Window_Driver::xid(const Fl_Window *win) {
+  Fl_X *flx = win->flx_;
+  return flx ? flx->xid : 0;
+}
+
+/** Returns a pointer to the Fl_Window corresponding to the platform-specific reference \p xid of a shown window.
+ \version 1.4.0 */
+Fl_Window *Fl_Window_Driver::find(fl_uintptr_t xid) {
+  Fl_X *window;
+  for (Fl_X **pp = &Fl_X::first; (window = *pp); pp = &window->next) {
+    if (window->xid == xid) {
+      if (window != Fl_X::first && !Fl::modal()) {
+        // make this window be first to speed up searches
+        // this is not done if modal is true to avoid messing up modal stack
+        *pp = window->next;
+        window->next = Fl_X::first;
+        Fl_X::first = window;
+      }
+      return window->w;
+    }
+  }
+  return 0;
 }
 
 /**

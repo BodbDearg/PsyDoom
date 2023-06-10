@@ -68,6 +68,8 @@ void Fl::set_color(Fl_Color i, uchar red, uchar green, uchar blue) {
  Sets an entry in the fl_color index table.
 
  You can set it to any 8-bit RGBA color.
+ \note The color transparency is effective under the Wayland, hybrid Wayland/X11 and macOS platforms, whereas it has no effect under the X11 and Windows platforms. It's also effective for widgets added to an Fl_Gl_Window.
+ \version 1.4
  */
 void Fl::set_color(Fl_Color i, uchar red, uchar green, uchar blue, uchar alpha) {
   Fl::set_color((Fl_Color)(i & 255),
@@ -166,36 +168,6 @@ Fl_Color fl_inactive(Fl_Color c) {
   return fl_color_average(c, FL_GRAY, .33f);
 }
 
-/**
- Returns a color that contrasts with the background color.
-
- This will be the foreground color if it contrasts sufficiently with the
- background color. Otherwise, returns \p FL_WHITE or \p FL_BLACK depending
- on which color provides the best contrast.
- \param[in] fg,bg foreground and background colors
- \return contrasting color
- */
-Fl_Color fl_contrast(Fl_Color fg, Fl_Color bg) {
-  unsigned c1, c2;      // RGB colors
-  int l1, l2;           // Luminosities
-
-  // Get the RGB values for each color...
-  if (fg & 0xffffff00) c1 = (unsigned)fg;
-  else c1 = fl_cmap[fg];
-
-  if (bg & 0xffffff00) c2 = (unsigned)bg;
-  else c2 = fl_cmap[bg];
-
-  // Compute the luminosity...
-  l1 = ((c1 >> 24) * 30 + ((c1 >> 16) & 255) * 59 + ((c1 >> 8) & 255) * 11) / 100;
-  l2 = ((c2 >> 24) * 30 + ((c2 >> 16) & 255) * 59 + ((c2 >> 8) & 255) * 11) / 100;
-
-  // Compare and return the contrasting color...
-  if ((l1 - l2) > 99) return fg;
-  else if ((l2 - l1) > 99) return fg;
-  else if (l2 > 127) return FL_BLACK;
-  else return FL_WHITE;
-}
 /**
  \}
  */

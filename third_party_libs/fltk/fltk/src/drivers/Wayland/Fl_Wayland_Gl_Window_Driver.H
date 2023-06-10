@@ -19,7 +19,6 @@
 
 #include <config.h>
 #if HAVE_GL
-#include <FL/platform.H>
 #include "../../Fl_Gl_Window_Driver.H"
 #include <wayland-egl.h>
 #include <EGL/egl.h>
@@ -36,30 +35,31 @@ Consequently, FL_DOUBLE is enforced in all Fl_Gl_Window::mode_ values under Wayl
 class Fl_Wayland_Gl_Window_Driver : public Fl_Gl_Window_Driver {
   friend Fl_Gl_Window_Driver* Fl_Gl_Window_Driver::newGlWindowDriver(Fl_Gl_Window *);
   friend class Fl_Wayland_Gl_Plugin;
-  bool egl_resize_in_progress;
+  bool egl_swap_in_progress;
   Fl_Wayland_Gl_Window_Driver(Fl_Gl_Window *win);
-  virtual float pixels_per_unit();
-  virtual void make_current_before();
-  virtual int mode_(int m, const int *a);
-  virtual void swap_buffers();
-  virtual void resize(int is_a_resize, int w, int h);
-  virtual char swap_type();
-  virtual Fl_Gl_Choice *find(int m, const int *alistp);
-  virtual GLContext create_gl_context(Fl_Window* window, const Fl_Gl_Choice* g, int layer = 0);
-  virtual void set_gl_context(Fl_Window* w, GLContext context);
-  virtual void delete_gl_context(GLContext);
-  virtual void make_overlay_current();
-  virtual void redraw_overlay();
-  virtual void gl_start();
-  virtual void gl_visual(Fl_Gl_Choice *c);
-  virtual Fl_RGB_Image* capture_gl_rectangle(int x, int y, int w, int h);
-  char *alpha_mask_for_string(const char *str, int n, int w, int h, Fl_Fontsize fs);
+  float pixels_per_unit() FL_OVERRIDE;
+  void make_current_before() FL_OVERRIDE;
+  int mode_(int m, const int *a) FL_OVERRIDE;
+  void swap_buffers() FL_OVERRIDE;
+  void resize(int is_a_resize, int w, int h) FL_OVERRIDE;
+  char swap_type() FL_OVERRIDE;
+  Fl_Gl_Choice *find(int m, const int *alistp) FL_OVERRIDE;
+  GLContext create_gl_context(Fl_Window* window, const Fl_Gl_Choice* g) FL_OVERRIDE;
+  void set_gl_context(Fl_Window* w, GLContext context) FL_OVERRIDE;
+  void delete_gl_context(GLContext) FL_OVERRIDE;
+  void make_overlay_current() FL_OVERRIDE;
+  void redraw_overlay() FL_OVERRIDE;
+  void gl_start() FL_OVERRIDE;
+  void gl_visual(Fl_Gl_Choice *c) FL_OVERRIDE;
+  char *alpha_mask_for_string(const char *str, int n, int w, int h, Fl_Fontsize fs) FL_OVERRIDE;
   static EGLDisplay egl_display;
   static EGLint configs_count;
-  static struct wl_event_queue *gl_event_queue;
   void init();
   struct wl_egl_window *egl_window;
   EGLSurface egl_surface;
+public:
+  //virtual bool need_scissor() { return true; } // CONTROL_LEAKING_SUB_GL_WINDOWS
+  //void apply_scissor(); // CONTROL_LEAKING_SUB_GL_WINDOWS
 };
 
 #endif // HAVE_GL

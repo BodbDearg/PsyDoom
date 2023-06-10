@@ -47,6 +47,11 @@ class Fl_Gl_Window_Driver;
   to add a selection of widgets to an OpenGL window. The widgets will draw on top
   of any OpenGL rendering. The number of supported widgets will increase as the
   driver development improves. Program test/cube.cxx illustrates how to do that.
+
+  \note FLTK expects that when an Fl_Gl_Window is a child of a parent Fl_Window,
+  the child window lies entirely inside its parent window. If that's not the case, what
+  happens to the part of the GL subwindow which leaks outside its parent is undefined
+  and susceptible to be platform-specific.
 */
 class FL_EXPORT Fl_Gl_Window : public Fl_Window {
   friend class Fl_Gl_Window_Driver;
@@ -68,17 +73,17 @@ class FL_EXPORT Fl_Gl_Window : public Fl_Window {
   static int gl_plugin_linkage();
 protected:
   void draw_begin();
-  virtual void draw();
+  void draw() FL_OVERRIDE;
   void draw_end();
 
 public:
-  void show();
+  void show() FL_OVERRIDE;
   /** Same as Fl_Window::show(int a, char **b) */
   void show(int a, char **b) {Fl_Window::show(a,b);}
-  void flush();
-  void hide();
-  void resize(int,int,int,int);
-  int handle(int);
+  void flush() FL_OVERRIDE;
+  void hide() FL_OVERRIDE;
+  void resize(int,int,int,int) FL_OVERRIDE;
+  int handle(int) FL_OVERRIDE;
 
   /**
     Is turned off when FLTK creates a new context for this window or
@@ -187,8 +192,9 @@ public:
    and may be followed by adequate attribute values.
    */
   int mode(const int *a) {return mode(0, a);}
-  /** Returns a pointer to the GLContext that this window is using.
-   \see void context(GLContext c, int destroy_flag) */
+  /** Returns a pointer to the window's OpenGL rendering context.
+   \see void context(GLContext c, int destroy_flag)
+  */
   GLContext context() const {return context_;}
   void context(GLContext, int destroy_flag = 0);
   void make_current();
@@ -201,7 +207,8 @@ public:
   void make_overlay_current();
 
   // Note: Doxygen docs in Fl_Widget.H to avoid redundancy.
-  virtual Fl_Gl_Window* as_gl_window() {return this;}
+  Fl_Gl_Window* as_gl_window() FL_OVERRIDE { return this; }
+  Fl_Gl_Window const* as_gl_window() const FL_OVERRIDE { return this; }
 
   float pixels_per_unit();
   /** Gives the window width in OpenGL pixels.

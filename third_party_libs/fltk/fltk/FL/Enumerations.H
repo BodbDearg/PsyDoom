@@ -1,7 +1,7 @@
 //
 // Enumerations for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2020 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -43,7 +43,7 @@
 
     The following constants are defined:
  */
-/*@{*/
+/**@{*/
 
 /**
    The major release version of this FLTK library.
@@ -172,7 +172,7 @@
 
 #endif
 
-/*@}*/  // group: Version Numbers
+/**@}*/  // group: Version Numbers
 
 /**
     Every time a user moves the mouse pointer, clicks a button,
@@ -412,41 +412,67 @@ enum Fl_Event { // events
 };
 
 /** \name When Conditions */
-/*@{*/
+/**@{*/
 /** These constants determine when a callback is performed.
 
-    \see Fl_Widget::when();
-    \todo doxygen comments for values are incomplete and maybe wrong or unclear
+    Fl_When is a bit field. Some values are merely shorcuts for common bit
+    combinations. New flags may be added in the future, so it's important to
+    mask the required bit when reading via \p when().
+
+    \note Some widgets may not fully support \p FL_WHEN_... flags.
+
+    \see Fl_Widget::when(), Fl::callback_reason(), Fl_Callback_Reason, Fl_Widget::do_callback()
  */
 enum Fl_When { // Fl_Widget::when():
-  FL_WHEN_NEVER             = 0, ///< Never call the callback
-  FL_WHEN_CHANGED           = 1, ///< Do the callback only when the widget value changes
-  FL_WHEN_NOT_CHANGED       = 2, ///< Do the callback whenever the user interacts with the widget
-  FL_WHEN_RELEASE           = 4, ///< Do the callback when the button or key is released and the value changes
-  FL_WHEN_RELEASE_ALWAYS    = 6, ///< Do the callback when the button or key is released, even if the value doesn't change
-  FL_WHEN_ENTER_KEY         = 8, ///< Do the callback when the user presses the ENTER key and the value changes
-  FL_WHEN_ENTER_KEY_ALWAYS  =10, ///< Do the callback when the user presses the ENTER key, even if the value doesn't change
-  FL_WHEN_ENTER_KEY_CHANGED =11  ///< = (FL_WHEN_ENTER_KEY | FL_WHEN_CHANGED | FL_WHEN_NOT_CHANGED)
+  FL_WHEN_NEVER             =  0, ///< Never call the callback
+  FL_WHEN_CHANGED           =  1, ///< Do the callback only when the widget value changes
+  FL_WHEN_NOT_CHANGED       =  2, ///< Do the callback whenever the user interacts with the widget
+  FL_WHEN_RELEASE           =  4, ///< Do the callback when the button or key is released and the value changes
+  FL_WHEN_RELEASE_ALWAYS    =  6, ///< Do the callback when the button or key is released, even if the value doesn't change
+  FL_WHEN_ENTER_KEY         =  8, ///< Do the callback when the user presses the ENTER key and the value changes
+  FL_WHEN_ENTER_KEY_ALWAYS  = 10, ///< Do the callback when the user presses the ENTER key, even if the value doesn't change
+  FL_WHEN_ENTER_KEY_CHANGED = 11, ///< Do callbacks whether the value changed or not, and when the ENTER key is pressed
+  FL_WHEN_CLOSED            = 16  ///< Do the callback when a child of Fl_Tabs is closed
 };
+/**@}*/          // group: When Conditions
 
-/*@}*/          // group: When Conditions
 
-/** \name Mouse and Keyboard Events
+/** \name Callback Reasons */
+/**@{*/
+/** These constants describe why a callback is performed.
 
-    This and the following constants define the non-ASCII keys on the
-    keyboard for FL_KEYBOARD and FL_SHORTCUT events.
+    \see Fl::callback_reason(), Fl_Widget::when(), Fl_When
+ */
+enum Fl_Callback_Reason {
+  FL_REASON_UNKNOWN=0,    ///< unknown or unset reason
+  FL_REASON_SELECTED,     ///< an item was selected
+  FL_REASON_DESELECTED,   ///< an item was de-selected
+  FL_REASON_RESELECTED,   ///< an item was re-selected (double-clicked).
+  FL_REASON_OPENED,       ///< an item was opened
+  FL_REASON_CLOSED,       ///< an item was closed
+  FL_REASON_DRAGGED,      ///< an item was dragged into a new place
+  FL_REASON_CANCELLED,    ///< a dialog was cancelled
+  FL_REASON_CHANGED,      ///< the value of the widget was modified
+  FL_REASON_GOT_FOCUS,    ///< a widget received focus
+  FL_REASON_LOST_FOCUS,   ///< a widget lost focus
+  FL_REASON_RELEASED      ///< the mouse button was released
+};
+/**@}*/          // group: Callback Reasons
+
+
+/** \name Names of Non-ASCII keys and mouse buttons
+
+    The following constants define the names of non-ASCII keys on the
+    keyboard and of mouse buttons for FL_KEYBOARD and FL_SHORTCUT events.
 
     \see Fl::event_key() and Fl::get_key(int) (use ASCII letters for all other keys):
-
-    \todo FL_Button and FL_key... constants could be structured better
-          (use an enum or some doxygen grouping ?)
  */
 
-/*@{*/
+/**@{*/
 
 // FIXME: These codes collide with valid Unicode keys
 
-#define FL_Button       0xfee8  ///< A mouse button; use Fl_Button + n for mouse button n.
+#define FL_Button       0xfee8  ///< A mouse button; use <tt>FL_Button + n</tt> for mouse button \c n.
 #define FL_BackSpace    0xff08  ///< The backspace key.
 #define FL_Tab          0xff09  ///< The tab key.
 #define FL_Iso_Key      0xff0c  ///< The additional key of ISO keyboards.
@@ -471,7 +497,7 @@ enum Fl_When { // Fl_Widget::when():
 #define FL_Menu         0xff67  ///< The menu key.
 #define FL_Help         0xff68  ///< The 'help' key on Mac keyboards
 #define FL_Num_Lock     0xff7f  ///< The num lock key.
-#define FL_KP           0xff80  ///< One of the keypad numbers; use FL_KP + 'n' for digit n.
+#define FL_KP           0xff80  ///< One of the keypad numbers; use FL_KP + n' for digit n.
 #define FL_KP_Enter     0xff8d  ///< The enter key on the keypad, same as Fl_KP+'\\r'.
 #define FL_KP_Last      0xffbd  ///< The last keypad key; use to range-check keypad.
 #define FL_F            0xffbd  ///< One of the function keys; use FL_F + n for function key n.
@@ -491,24 +517,24 @@ enum Fl_When { // Fl_Widget::when():
 // of Unicode. Guaranteed not to conflict with a proper Unicode character.
 
 // These primarily map to the XFree86 keysym range
-#define FL_Volume_Down  0xEF11   /* Volume control down        */
-#define FL_Volume_Mute  0xEF12   /* Mute sound from the system */
-#define FL_Volume_Up    0xEF13   /* Volume control up          */
-#define FL_Media_Play   0xEF14   /* Start playing of audio     */
-#define FL_Media_Stop   0xEF15   /* Stop playing audio         */
-#define FL_Media_Prev   0xEF16   /* Previous track             */
-#define FL_Media_Next   0xEF17   /* Next track                 */
-#define FL_Home_Page    0xEF18   /* Display user's home page   */
-#define FL_Mail         0xEF19   /* Invoke user's mail program */
-#define FL_Search       0xEF1B   /* Search                     */
-#define FL_Back         0xEF26   /* Like back on a browser     */
-#define FL_Forward      0xEF27   /* Like forward on a browser  */
-#define FL_Stop         0xEF28   /* Stop current operation     */
-#define FL_Refresh      0xEF29   /* Refresh the page           */
-#define FL_Sleep        0xEF2F   /* Put system to sleep        */
-#define FL_Favorites    0xEF30   /* Show favorite locations    */
+#define FL_Volume_Down  0xEF11   ///< Volume control down
+#define FL_Volume_Mute  0xEF12   ///< Mute sound from the system
+#define FL_Volume_Up    0xEF13   ///< Volume control up
+#define FL_Media_Play   0xEF14   ///< Start playing of audio
+#define FL_Media_Stop   0xEF15   ///< Stop playing audio
+#define FL_Media_Prev   0xEF16   ///< Previous track
+#define FL_Media_Next   0xEF17   ///< Next track
+#define FL_Home_Page    0xEF18   ///< Display user's home page
+#define FL_Mail         0xEF19   ///< Invoke user's mail program
+#define FL_Search       0xEF1B   ///< Search
+#define FL_Back         0xEF26   ///< Like back on a browser
+#define FL_Forward      0xEF27   ///< Like forward on a browser
+#define FL_Stop         0xEF28   ///< Stop current operation
+#define FL_Refresh      0xEF29   ///< Refresh the page
+#define FL_Sleep        0xEF2F   ///< Put system to sleep
+#define FL_Favorites    0xEF30   ///< Show favorite locations
 
-/*@}*/  // group: Mouse and Keyboard Events
+/**@}*/  // group: Non-ASCII key names
 
 /** \name Mouse Buttons
 
@@ -517,13 +543,13 @@ enum Fl_When { // Fl_Widget::when():
     \see Fl::event_button()
 */
 
-/*@{*/
+/**@{*/
 
 #define FL_LEFT_MOUSE   1       ///< The left mouse button
 #define FL_MIDDLE_MOUSE 2       ///< The middle mouse button
 #define FL_RIGHT_MOUSE  3       ///< The right mouse button
 
-/*@}*/          // group: Mouse Buttons
+/**@}*/          // group: Mouse Buttons
 
 
 /** \name       Event States
@@ -531,7 +557,7 @@ enum Fl_When { // Fl_Widget::when():
         The following constants define bits in the Fl::event_state() value.
 */
 
-/*@{*/          // group: Event States
+/**@{*/          // group: Event States
 
 // FIXME: it would be nice to have the modifiers in the upper 8 bit so that
 //        a unicode key (24bit) can be sent as an unsigned with the modifiers.
@@ -555,7 +581,7 @@ enum Fl_When { // Fl_Widget::when():
 #define FL_KEY_MASK 0x0000ffff          ///< All keys are 16 bit for now
                                         //   FIXME: Unicode needs 24 bits!
 
-/*@}*/          // group: Event States
+/**@}*/          // group: Event States
 
 /** \name Box Types
     \brief FLTK standard box types
@@ -577,12 +603,12 @@ enum Fl_When { // Fl_Widget::when():
     \image html  boxtypes.png "FLTK Standard Box Types"
     \image latex boxtypes.png "FLTK Standard Box Types" width=12cm
 
-    \todo       Description of box types is incomplete.
-                See below for the defined enum Fl_Boxtype.
-                \see src/Fl_get_system_colors.cxx
+    \note       Not all box types are depicted in the figure above.
+                See enum  \ref Fl_Boxtype below for the complete list of box types.
+    \see Fl::get_system_colors()
 */
 
-/*@{*/          // group: Box Types
+/**@{*/          // group: Box Types
 
 /**
     \brief FLTK standard box types
@@ -653,8 +679,23 @@ enum Fl_Boxtype { // boxtypes (if you change these you must also change fl_boxty
   _FL_GLEAM_THIN_DOWN_BOX,      ///< gleam version of FL_THIN_DOWN_BOX, use FL_GLEAM_THIN_DOWN_BOX
   _FL_GLEAM_ROUND_UP_BOX,       ///< gleam version of FL_ROUND_UP_BOX, use FL_GLEAM_ROUND_UP_BOX
   _FL_GLEAM_ROUND_DOWN_BOX,     ///< gleam version of FL_ROUND_DOWN_BOX, use FL_GLEAM_ROUND_DOWN_BOX
+  _FL_OXY_UP_BOX,               ///< oxy version of FL_UP_BOX, use FL_OXY_UP_BOX
+  _FL_OXY_DOWN_BOX,             ///< oxy version of FL_DOWN_BOX, use FL_OXY_DOWN_BOX
+  _FL_OXY_UP_FRAME,             ///< oxy version of FL_UP_FRAME, use FL_OXY_UP_FRAME
+  _FL_OXY_DOWN_FRAME,           ///< oxy version of FL_DOWN_FRAME, use FL_OXY_DOWN_FRAME
+  _FL_OXY_THIN_UP_BOX,          ///< oxy version of FL_THIN_UP_BOX, use FL_OXY_THIN_UP_BOX
+  _FL_OXY_THIN_DOWN_BOX,        ///< oxy version of FL_THIN_DOWN_BOX, use FL_OXY_THIN_DOWN_BOX
+  _FL_OXY_THIN_UP_FRAME,        ///< oxy version of FL_THIN_UP_FRAME, use FL_OXY_THIN_UP_FRAME
+  _FL_OXY_THIN_DOWN_FRAME,      ///< oxy version of FL_THIN_DOWN_FRAME, use FL_OXY_THIN_DOWN_FRAME
+  _FL_OXY_ROUND_UP_BOX,         ///< oxy version of FL_ROUND_UP_BOX, use FL_OXY_ROUND_UP_BOX
+  _FL_OXY_ROUND_DOWN_BOX,       ///< oxy version of FL_ROUND_DOWN_BOX, use FL_OXY_ROUND_DOWN_BOX
+  _FL_OXY_BUTTON_UP_BOX,        ///< FL_OXY_BUTTON_UP_BOX (new boxtype ?), use FL_OXY_BUTTON_UP_BOX
+  _FL_OXY_BUTTON_DOWN_BOX,      ///< FL_OXY_BUTTON_DOWN_BOX (new boxtype ?), use FL_OXY_BUTTON_DOWN_BOX
   FL_FREE_BOXTYPE               ///< the first free box type for creation of new box types
 };
+
+#ifndef FL_DOXYGEN
+
 extern FL_EXPORT Fl_Boxtype fl_define_FL_ROUND_UP_BOX();
 #define FL_ROUND_UP_BOX fl_define_FL_ROUND_UP_BOX()
 #define FL_ROUND_DOWN_BOX (Fl_Boxtype)(fl_define_FL_ROUND_UP_BOX()+1)
@@ -709,6 +750,22 @@ extern FL_EXPORT Fl_Boxtype fl_define_FL_GLEAM_UP_BOX();
 #define FL_GLEAM_ROUND_UP_BOX (Fl_Boxtype)(fl_define_FL_GLEAM_UP_BOX()+6)
 #define FL_GLEAM_ROUND_DOWN_BOX (Fl_Boxtype)(fl_define_FL_GLEAM_UP_BOX()+7)
 
+extern FL_EXPORT Fl_Boxtype fl_define_FL_OXY_UP_BOX();
+#define FL_OXY_UP_BOX fl_define_FL_OXY_UP_BOX()
+#define FL_OXY_DOWN_BOX (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+1)
+#define FL_OXY_UP_FRAME (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+2)
+#define FL_OXY_DOWN_FRAME (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+3)
+#define FL_OXY_THIN_UP_BOX (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+4)
+#define FL_OXY_THIN_DOWN_BOX (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+5)
+#define FL_OXY_THIN_UP_FRAME (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+6)
+#define FL_OXY_THIN_DOWN_FRAME (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+7)
+#define FL_OXY_ROUND_UP_BOX (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+8)
+#define FL_OXY_ROUND_DOWN_BOX (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+9)
+#define FL_OXY_BUTTON_UP_BOX (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+10)
+#define FL_OXY_BUTTON_DOWN_BOX (Fl_Boxtype)(fl_define_FL_OXY_UP_BOX()+11)
+
+#endif // ! FL_DOXYGEN
+
 // conversions of box types to other boxtypes:
 /**
   Get the filled version of a frame.
@@ -741,7 +798,7 @@ inline Fl_Boxtype fl_frame(Fl_Boxtype b) {
 #define FL_CIRCLE_BOX FL_ROUND_DOWN_BOX
 #define FL_DIAMOND_BOX FL_DIAMOND_DOWN_BOX
 
-/*@}*/  // group: Box Types
+/**@}*/  // group: Box Types
 
 /**
    The labeltype() method sets the type of the label.
@@ -903,7 +960,7 @@ extern Fl_Labeltype FL_EXPORT fl_define_FL_IMAGE_LABEL();
     behavior, and this behavior may be changed without notice in future
     FLTK versions.
  */
-/*@{*/
+/**@{*/
 /** FLTK type for alignment control. */
 typedef unsigned Fl_Align;
 
@@ -974,13 +1031,13 @@ const Fl_Align FL_ALIGN_POSITION_MASK   = 0x000f;
 
 /** Mask value to test for image alignment flags. */
 const Fl_Align FL_ALIGN_IMAGE_MASK      = 0x0320;
-/*@}*/
+/**@}*/
 
 
 /** \name Font Numbers
     The following constants define the standard FLTK fonts:
  */
-/*@{*/
+/**@{*/
 /** A font number is an index into the internal font table. */
 typedef int Fl_Font;
 
@@ -1006,7 +1063,7 @@ const Fl_Font FL_BOLD                   = 1;    ///< add this to helvetica, cour
 const Fl_Font FL_ITALIC                 = 2;    ///< add this to helvetica, courier, or times
 const Fl_Font FL_BOLD_ITALIC            = 3;    ///< add this to helvetica, courier, or times
 
-/*@}*/
+/**@}*/
 
 /** Size of a font in pixels.
     This is the approximate height of a font in pixels.
@@ -1037,7 +1094,7 @@ extern FL_EXPORT Fl_Fontsize FL_NORMAL_SIZE;    ///< normal font size
     and an index >0 are reserved for special use.
 
  */
-/*@{*/
+/**@{*/
 /** An FLTK color value; see also \ref drawing_colors  */
 typedef unsigned int Fl_Color;
 
@@ -1054,6 +1111,7 @@ const Fl_Color FL_GRAY0   = 32;                 // 'A'
 const Fl_Color FL_DARK3   = 39;                 // 'H'
 const Fl_Color FL_DARK2   = 45;                 // 'N'
 const Fl_Color FL_DARK1   = 47;                 // 'P'
+/** Default background color */
 const Fl_Color FL_BACKGROUND_COLOR  = 49;       // 'R' default background color
 const Fl_Color FL_LIGHT1  = 50;                 // 'S'
 const Fl_Color FL_LIGHT2  = 52;                 // 'U'
@@ -1078,7 +1136,8 @@ const Fl_Color FL_DARK_CYAN     = 140;
 
 const Fl_Color FL_WHITE         = 255;
 
-
+/** Colors numbered between FL_FREE_COLOR and FL_FREE_COLOR + FL_NUM_FREE_COLOR - 1
+are free for the user to be given any value using Fl::set_color(). */
 #define FL_FREE_COLOR     (Fl_Color)16
 #define FL_NUM_FREE_COLOR 16
 #define FL_GRAY_RAMP      (Fl_Color)32
@@ -1091,7 +1150,53 @@ const Fl_Color FL_WHITE         = 255;
 
 FL_EXPORT Fl_Color fl_inactive(Fl_Color c);
 
-FL_EXPORT Fl_Color fl_contrast(Fl_Color fg, Fl_Color bg);
+/**
+  Type of a custom fl_contrast() function.
+
+  Use this signature to define your own custom fl_contrast() function together
+  with fl_contrast_mode(FL_CONTRAST_CUSTOM).
+  Example:
+  \code
+    Fl_Color my_contrast(Fl_Color fg, Fl_Color bg, Fl_Fontsize fs, int context) {
+      // calculate contrast and ...
+      return color;
+    }
+    // call this early in your main() program:
+    fl_contrast_function(my_contrast);
+    fl_contrast_mode(FL_CONTRAST_CUSTOM);
+  \endcode
+
+  \see fl_contrast(Fl_Color, Fl_Color, Fl_Fontsize, int)
+  \see fl_contrast_mode(int)
+*/
+typedef Fl_Color (Fl_Contrast_Function)(Fl_Color, Fl_Color, Fl_Fontsize, int);
+
+FL_EXPORT void fl_contrast_function(Fl_Contrast_Function *f);
+
+/**
+  Define the possible modes to calculate fl_contrast().
+*/
+enum Fl_Contrast_Mode {
+  FL_CONTRAST_NONE = 0,     ///< always return foreground color
+  FL_CONTRAST_LEGACY,       ///< legacy (FLTK 1.3.x) contrast function
+  FL_CONTRAST_CIELAB,       ///< new (FLTK 1.4.0) default function
+  FL_CONTRAST_CUSTOM,       ///< optional custom contrast function
+  FL_CONTRAST_LAST          ///< internal use only (invalid contrast mode)
+};
+
+// The following functions are defined and documented in src/fl_contrast.cxx
+
+FL_EXPORT void fl_contrast_level(int level);
+FL_EXPORT int fl_contrast_level();
+FL_EXPORT void fl_contrast_mode(int mode);
+FL_EXPORT int fl_contrast_mode();
+
+FL_EXPORT Fl_Color fl_contrast(Fl_Color fg, Fl_Color bg, Fl_Fontsize fs = 0, int context = 0);
+
+FL_EXPORT double fl_lightness(Fl_Color color);
+FL_EXPORT double fl_luminance(Fl_Color color);
+
+// Other color functions are defined and documented in src/fl_color.cxx
 
 FL_EXPORT Fl_Color fl_color_average(Fl_Color c1, Fl_Color c2, float weight);
 
@@ -1140,46 +1245,44 @@ inline Fl_Color fl_gray_ramp(int i) {return (Fl_Color)(i+FL_GRAY_RAMP);}
 inline Fl_Color fl_color_cube(int r, int g, int b) {
   return (Fl_Color)((b*FL_NUM_RED + r) * FL_NUM_GREEN + g + FL_COLOR_CUBE);}
 
-/*@}*/          // group: Colors
+/**@}*/          // group: Colors
 
 /** \name Cursors */
-/*@{*/
+/**@{*/
 
 /** The following constants define the mouse cursors that are available in FLTK.
 
     Cursors are provided by the system when available, or bitmaps built into
     FLTK as a fallback.
-
-    \todo enum Fl_Cursor needs maybe an image.
 */
 /* FIXME: We should renumber these, but that will break the ABI */
 enum Fl_Cursor {
-  FL_CURSOR_DEFAULT    =  0, /**< the default cursor, usually an arrow. */
-  FL_CURSOR_ARROW      = 35, /**< an arrow pointer. */
-  FL_CURSOR_CROSS      = 66, /**< crosshair. */
-  FL_CURSOR_WAIT       = 76, /**< busy indicator (for instance hourglass). */
-  FL_CURSOR_INSERT     = 77, /**< I-beam. */
-  FL_CURSOR_HAND       = 31, /**< pointing hand. */
-  FL_CURSOR_HELP       = 47, /**< question mark pointer. */
-  FL_CURSOR_MOVE       = 27, /**< 4-pointed arrow or hand. */
+  FL_CURSOR_DEFAULT    =  0, /**< the default cursor, usually an arrow: ↖*/ // U+2196
+  FL_CURSOR_ARROW      = 35, /**< an arrow pointer: ↖*/ // U+2196
+  FL_CURSOR_CROSS      = 66, /**< crosshair: ＋*/ // U+FF0B
+  FL_CURSOR_WAIT       = 76, /**< busy indicator (for instance hourglass): ⌚,⌛*/ // U+231A, U+231B
+  FL_CURSOR_INSERT     = 77, /**< I-beam: ⌶*/ // U+2336
+  FL_CURSOR_HAND       = 31, /**< pointing hand: ☜*/ // U+261C
+  FL_CURSOR_HELP       = 47, /**< question mark pointer:  ?*/
+  FL_CURSOR_MOVE       = 27, /**< 4-pointed arrow or hand: ✥, ✋*/ // U+2725, U+270B
 
   /* Resize indicators */
-  FL_CURSOR_NS         = 78, /**< up/down resize. */
-  FL_CURSOR_WE         = 79, /**< left/right resize. */
-  FL_CURSOR_NWSE       = 80, /**< diagonal resize. */
-  FL_CURSOR_NESW       = 81, /**< diagonal resize. */
-  FL_CURSOR_N          = 70, /**< upwards resize. */
-  FL_CURSOR_NE         = 69, /**< upwards, right resize. */
-  FL_CURSOR_E          = 49, /**< rightwards resize. */
-  FL_CURSOR_SE         =  8, /**< downwards, right resize. */
-  FL_CURSOR_S          =  9, /**< downwards resize. */
-  FL_CURSOR_SW         =  7, /**< downwards, left resize. */
-  FL_CURSOR_W          = 36, /**< leftwards resize. */
-  FL_CURSOR_NW         = 68, /**< upwards, left resize. */
+  FL_CURSOR_NS         = 78, /**< up/down resize: ⇕ */ // U+21D5
+  FL_CURSOR_WE         = 79, /**< left/right resize: ⇔*/ // U+21D4
+  FL_CURSOR_NWSE       = 80, /**< diagonal resize: ⤡*/ // U+2921
+  FL_CURSOR_NESW       = 81, /**< diagonal resize: ⤢*/ // U+2922
+  FL_CURSOR_N          = 70, /**< upwards resize: ⤒*/ // U+2912
+  FL_CURSOR_NE         = 69, /**< upwards, right resize: ↗*/ // U+2197
+  FL_CURSOR_E          = 49, /**< rightwards resize: ⇥*/ // U+21E5
+  FL_CURSOR_SE         =  8, /**< downwards, right resize: ⇲*/ // U+21F2
+  FL_CURSOR_S          =  9, /**< downwards resize: ⤓*/ // U+2913
+  FL_CURSOR_SW         =  7, /**< downwards, left resize: ↙*/ // U+2199
+  FL_CURSOR_W          = 36, /**< leftwards resize: ⇤*/ // U+21E4
+  FL_CURSOR_NW         = 68, /**< upwards, left resize: ⇱*/ // U+21F1
 
   FL_CURSOR_NONE       =255  /**< invisible. */
 };
-/*@}*/          // group: Cursors
+/**@}*/          // group: Cursors
 
 /** FD "when" conditions */
 enum { // values for "when" passed to Fl::add_fd()
@@ -1221,5 +1324,58 @@ enum Fl_Damage {
 };
 
 // FLTK 1.0.x compatibility definitions (FLTK_1_0_COMPAT) dropped in 1.4.0
+
+/** Arrow types define the type of arrow drawing function.
+
+  FLTK schemes can draw several graphical elements in their particular way.
+  One of these elements is an arrow type that can be in different GUI
+  elements like scrollbars, choice buttons, and FLTK's Fl_Return_Button.
+
+  \note This enum is not yet stable (as of FLTK 1.4.0) and may be changed
+    without notice as necessary.
+
+  \since 1.4.0
+*/
+
+enum Fl_Arrow_Type {
+  FL_ARROW_SINGLE = 0x01, ///< Single arrow, e.g. in Fl_Scrollbar
+  FL_ARROW_DOUBLE = 0x02, ///< Double arrow, e.g. in Fl_Counter
+  FL_ARROW_CHOICE = 0x03, ///< Dropdown box, e.g. in Fl_Choice
+  FL_ARROW_RETURN = 0x04  ///< Return arrow, e.g. in Fl_Return_Button
+};
+
+/** Fl_Orientation describes the orientation of a GUI element.
+
+  FLTK schemes can draw several graphical elements, for instance arrows,
+  pointing at different directions. This enum defines the direction
+  to use for drawing a particular GUI element.
+
+  The definition of this enum was chosen such that the enum value can
+  be multiplied by 45 to get a rotation angle in degrees starting
+  at the horizontal axis (0 = right, 1 = NE, 2 = up, ...) that can be
+  used with fl_rotate(). Note: angle is counter-clockwise in degrees.
+
+  The 'unspecified' value \b FL_ORIENT_NONE shall be used for elements
+  that would usually not be rotated, like the return arrow of the
+  Fl_Return_Button. It can still be used as an angle though since it is
+  the same value as \p FL_ORIENT_RIGHT (0 degrees).
+
+  \note This enum is not yet stable (as of FLTK 1.4.0) and may be changed
+    without notice as necessary.
+
+  \since 1.4.0
+*/
+
+enum Fl_Orientation {
+  FL_ORIENT_NONE  = 0x00, ///< GUI element direction is unspecified
+  FL_ORIENT_RIGHT = 0x00, ///< GUI element pointing right (  0°)
+  FL_ORIENT_NE    = 0x01, ///< GUI element pointing NE    ( 45°)
+  FL_ORIENT_UP    = 0x02, ///< GUI element pointing up    ( 90°)
+  FL_ORIENT_NW    = 0x03, ///< GUI element pointing NW    (135°)
+  FL_ORIENT_LEFT  = 0x04, ///< GUI element pointing left  (180°)
+  FL_ORIENT_SW    = 0x05, ///< GUI element pointing SW    (225°)
+  FL_ORIENT_DOWN  = 0x06, ///< GUI element pointing down  (270°)
+  FL_ORIENT_SE    = 0x07  ///< GUI element pointing SE    (315°)
+};
 
 #endif

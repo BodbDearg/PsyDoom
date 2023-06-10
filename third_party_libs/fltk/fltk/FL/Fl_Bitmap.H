@@ -43,20 +43,24 @@ private:
   int cache_w_, cache_h_; // size of bitmap when cached
 
 public:
-  /** The constructors create a new bitmap from the specified bitmap data */
+  /** The constructors create a new bitmap from the specified bitmap data.
+   \see Fl_Bitmap(const uchar *bits, int bits_length, int W, int H) */
   Fl_Bitmap(const uchar *bits, int W, int H) :
     Fl_Image(W,H,0), array(bits), alloc_array(0), id_(0), cache_w_(0),cache_h_(0) {data((const char **)&array, 1);}
-  /** The constructors create a new bitmap from the specified bitmap data */
+  /** The constructors create a new bitmap from the specified bitmap data.
+   \see Fl_Bitmap(const char *bits, int bits_length, int W, int H) */
   Fl_Bitmap(const char *bits, int W, int H) :
     Fl_Image(W,H,0), array((const uchar *)bits), alloc_array(0), id_(0), cache_w_(0),cache_h_(0) {data((const char **)&array, 1);}
+  Fl_Bitmap(const uchar *bits, int bits_length, int W, int H);
+  Fl_Bitmap(const char *bits, int bits_length, int W, int H);
   virtual ~Fl_Bitmap();
-  virtual Fl_Image *copy(int W, int H) const;
+  Fl_Image *copy(int W, int H) const FL_OVERRIDE;
   Fl_Image *copy() const { return Fl_Image::copy(); }
-  virtual void draw(int X, int Y, int W, int H, int cx=0, int cy=0);
+  void draw(int X, int Y, int W, int H, int cx=0, int cy=0) FL_OVERRIDE;
   void draw(int X, int Y) {draw(X, Y, w(), h(), 0, 0);}
-  virtual void label(Fl_Widget*w);
-  virtual void label(Fl_Menu_Item*m);
-  virtual void uncache();
+  void label(Fl_Widget*w) FL_OVERRIDE;
+  void label(Fl_Menu_Item*m) FL_OVERRIDE;
+  void uncache() FL_OVERRIDE;
 };
 
 #endif

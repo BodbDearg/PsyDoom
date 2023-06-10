@@ -51,12 +51,16 @@
 #  include <FL/fl_draw.H>
 #  include <FL/platform.H>
 #  include <FL/Fl_Image_Surface.H>
+#  include <FL/Fl_Tiled_Image.H>
 #  include "../../Fl_Screen_Driver.H"
 #  include "../../Fl_XColor.H"
 #  include "../../flstring.h"
 #if HAVE_XRENDER
-#include <X11/extensions/Xrender.h>
-#endif
+#  include <X11/extensions/Xrender.h>
+#  if RENDER_MAJOR * 100 + RENDER_MAJOR < 10
+#    define RepeatPad  2
+#  endif
+#endif // HAVE_XRENDER
 
 static XImage xi;       // template used to pass info to X
 static int bytes_per_pixel;
@@ -717,8 +721,8 @@ void Fl_Xlib_Graphics_Driver::cache(Fl_RGB_Image *img) {
   if (depth == 1 || depth == 3) {
     surface = new Fl_Image_Surface(img->data_w(), img->data_h());
   } else if (fl_can_do_alpha_blending()) {
-    Fl_Offscreen pixmap = XCreatePixmap(fl_display, RootWindow(fl_display, fl_screen), img->data_w(), img->data_h(), 32);
-    surface = new Fl_Image_Surface(img->data_w(), img->data_h(), 0, pixmap);
+    Pixmap pixmap = XCreatePixmap(fl_display, RootWindow(fl_display, fl_screen), img->data_w(), img->data_h(), 32);
+    surface = new Fl_Image_Surface(img->data_w(), img->data_h(), 0, (Fl_Offscreen)pixmap);
     depth |= FL_IMAGE_WITH_ALPHA;
   } else {
     *Fl_Graphics_Driver::id(img) = 0;
@@ -780,16 +784,9 @@ void Fl_Xlib_Graphics_Driver::draw_rgb(Fl_RGB_Image *rgb, int XP, int YP, int WP
   if (Wfull == 0 || Hfull == 0) return;
   bool need_clip = (cx || cy || WP < rgb->w() || HP < rgb->h());
   if (need_clip) push_clip(XP, YP, WP, HP);
-  int offset = 0;
-  if (Wfull > rgb->data_w() || Hfull > rgb->data_h()) {
-    // When enlarging while drawing with XRender, 1 pixel around target area seems unpainted,
-    // so we increase a bit the target area and move it 1 pixel to left and top.
-    Wfull = (rgb->w()+2)*scale(), Hfull = (rgb->h()+2)*scale();
-    offset = 1;
-  }
   scale_and_render_pixmap( *Fl_Graphics_Driver::id(rgb), rgb->d(),
                           rgb->data_w() / double(Wfull), rgb->data_h() / double(Hfull),
-                          Xs + this->floor(offset_x_) - offset, Ys + this->floor(offset_y_) - offset,
+                          Xs + this->floor(offset_x_), Ys + this->floor(offset_y_),
                           Wfull, Hfull);
   if (need_clip) pop_clip();
 }
@@ -799,19 +796,29 @@ void Fl_Xlib_Graphics_Driver::draw_rgb(Fl_RGB_Image *rgb, int XP, int YP, int WP
  */
 int Fl_Xlib_Graphics_Driver::scale_and_render_pixmap(Fl_Offscreen pixmap, int depth, double scale_x, double scale_y, int XP, int YP, int WP, int HP) {
   bool has_alpha = (depth == 2 || depth == 4);
+  if (!has_alpha && scale_x == 1 && scale_y == 1) {
+    // Fix for a problem visible under XQuartz with test/device and Fl_Image_Surface:
+    // the drawn image is fully black. The problem does not occur under linux.
+    // Why the problem occurs under XQuartz remains unknown.
+    // The fix is to use XCopyArea() when adequate, rather than using Xrender.
+    XCopyArea(fl_display, pixmap, fl_window, gc_, 0, 0, WP, HP, XP, YP);
+    return 1;
+  }
   XRenderPictureAttributes srcattr;
   memset(&srcattr, 0, sizeof(XRenderPictureAttributes));
   static XRenderPictFormat *fmt24 = XRenderFindStandardFormat(fl_display, PictStandardRGB24);
   static XRenderPictFormat *fmt32 = XRenderFindStandardFormat(fl_display, PictStandardARGB32);
   static XRenderPictFormat *dstfmt = XRenderFindVisualFormat(fl_display, fl_visual->visual);
-  Picture src = XRenderCreatePicture(fl_display, pixmap, has_alpha ?fmt32:fmt24, 0, &srcattr);
-  Picture dst = XRenderCreatePicture(fl_display, fl_window, dstfmt, 0, &srcattr);
+  srcattr.repeat = RepeatPad;
+  Picture src = XRenderCreatePicture(fl_display, (Pixmap)pixmap, has_alpha ?fmt32:fmt24,
+                                     CPRepeat, &srcattr);
+  Picture dst = XRenderCreatePicture(fl_display, fl_window, dstfmt, 0, 0);
   if (!src || !dst) {
     fprintf(stderr, "Failed to create Render pictures (%lu %lu)\n", src, dst);
     return 0;
   }
   Fl_Region r = scale_clip(scale());
-  const Fl_Region clipr = clip_region();
+  const Region clipr = (Region)clip_region();
   if (clipr)
     XRenderSetPictureClipRegion(fl_display, dst, clipr);
   unscale_clip(r);
@@ -828,8 +835,8 @@ int Fl_Xlib_Graphics_Driver::scale_and_render_pixmap(Fl_Offscreen pixmap, int de
       // "When you use a filter you'll probably want to use PictOpOver as the render op,
       // regardless of whether the source picture has an alpha channel or not, since
       // the edges may end up having alpha values after the filter has been applied."
-      // suggests this would be preferable :
-      // has_alpha = true;
+      // suggests this is necessary :
+      has_alpha = true;
     }
   }
   XRenderComposite(fl_display, (has_alpha ? PictOpOver : PictOpSrc), src, None, dst, 0, 0, 0, 0,
@@ -844,7 +851,7 @@ int Fl_Xlib_Graphics_Driver::scale_and_render_pixmap(Fl_Offscreen pixmap, int de
 void Fl_Xlib_Graphics_Driver::uncache(Fl_RGB_Image*, fl_uintptr_t &id_, fl_uintptr_t &mask_)
 {
   if (id_) {
-    XFreePixmap(fl_display, (Fl_Offscreen)id_);
+    XFreePixmap(fl_display, (Pixmap)id_);
     id_ = 0;
   }
 }
@@ -877,8 +884,8 @@ void Fl_Xlib_Graphics_Driver::draw_fixed(Fl_Pixmap *pxm, int X, int Y, int W, in
       // be done in a single Xlib call for a multi-rectangle clip region. Thus, we
       // process each rectangle of the intersection between the clip region and XYWH.
       // See also STR #3206.
-      Region r = XRectangleRegion(X,Y,W,H);
-      XIntersectRegion(r, clip_region(), r);
+      Region r = (Region)XRectangleRegion(X,Y,W,H);
+      XIntersectRegion(r, (Region)clip_region(), r);
       int X1, Y1, W1, H1;
       for (int i = 0; i < r->numRects; i++) {
         X1 = r->rects[i].x1;
@@ -924,5 +931,5 @@ void Fl_Xlib_Graphics_Driver::cache(Fl_Pixmap *pxm) {
 }
 
 void Fl_Xlib_Graphics_Driver::uncache_pixmap(fl_uintptr_t offscreen) {
-  XFreePixmap(fl_display, (Fl_Offscreen)offscreen);
+  XFreePixmap(fl_display, (Pixmap)offscreen);
 }

@@ -24,8 +24,8 @@
 #include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_File_Icon.H>
-#include "Fl_System_Driver.H" // for struct stat
 #include <string.h>
+#include <sys/stat.h>
 
 
 
@@ -271,7 +271,7 @@ void Fl_Native_File_Chooser_FLTK_Driver::parse_filter() {
         if ( wildcard[0] ) {
           // OUT: "name(wild)\tname(wild)"
           char comp[2048];
-          sprintf(comp, "%s%.511s(%.511s)", ((_parsedfilt)?"\t":""),
+          snprintf(comp, 2048, "%s%.511s(%.511s)", ((_parsedfilt)?"\t":""),
                                             name, wildcard);
           _parsedfilt = strapp(_parsedfilt, comp);
           _nfilters++;

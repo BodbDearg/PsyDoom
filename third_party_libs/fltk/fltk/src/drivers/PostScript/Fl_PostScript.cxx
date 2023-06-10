@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include "Fl_PostScript_Graphics_Driver.H"
 #include <FL/Fl_PostScript.H>
+#include <FL/Fl_Image_Surface.H>
 #include <FL/Fl_Native_File_Chooser.H>
 #include "../../Fl_System_Driver.H"
 #include <FL/fl_string_functions.h>
@@ -32,6 +33,9 @@
 #include <FL/math.h> // for M_PI
 #include <pango/pangocairo.h>
 #include <cairo/cairo-ps.h>
+#  if ! PANGO_VERSION_CHECK(1,10,0)
+#    error "Requires Pango 1.10 or higher"
+#  endif
 #endif
 
 const char *Fl_PostScript_File_Device::file_chooser_title = "Select a .ps file";
@@ -146,6 +150,7 @@ Fl_PostScript_Graphics_Driver::Fl_PostScript_Graphics_Driver(void)
   scale_x = scale_y = 1.;
   bg_r = bg_g = bg_b = 255;
   clip_ = NULL;
+  what = NONE;
 }
 
 /** \brief The destructor. */
@@ -211,14 +216,6 @@ int Fl_PostScript_Graphics_Driver::descent() {
 void Fl_PostScript_Graphics_Driver::text_extents(const char *c, int n, int &dx, int &dy, int &w, int &h) {
   Fl_Graphics_Driver::default_driver().text_extents(c, n, dx, dy, w, h);
 }
-
-
-void Fl_PostScript_Graphics_Driver::color(Fl_Color c) {
-  Fl::get_color(c, cr_, cg_, cb_);
-  color(cr_, cg_, cb_);
-}
-
-Fl_Color Fl_PostScript_Graphics_Driver::color() { return Fl_Graphics_Driver::color(); }
 
 void Fl_PostScript_Graphics_Driver::point(int x, int y){
   rectf(x,y,1,1);
@@ -677,7 +674,8 @@ int Fl_PostScript_Graphics_Driver::start_postscript (int pagecount,
     left_margin = 12;
     top_margin = 12;
   }
-  page_format_ = (enum Fl_Paged_Device::Page_Format)(format | layout);
+  // combine the format and layout information
+  page_format_ = ((int)format | (int)layout);
   if (layout & Fl_Paged_Device::LANDSCAPE){
     ph_ = Fl_Paged_Device::page_formats[format].width;
     pw_ = Fl_Paged_Device::page_formats[format].height;
@@ -1059,6 +1057,13 @@ void Fl_PostScript_Graphics_Driver::line_style(int style, int width, char* dashe
   fprintf(output, "] 0 setdash\n");
 }
 
+void Fl_PostScript_Graphics_Driver::color(Fl_Color c) {
+  Fl::get_color(c, cr_, cg_, cb_);
+  color(cr_, cg_, cb_);
+}
+
+Fl_Color Fl_PostScript_Graphics_Driver::color() { return Fl_Graphics_Driver::color(); }
+
 void Fl_PostScript_Graphics_Driver::color(unsigned char r, unsigned char g, unsigned char b) {
   Fl_Graphics_Driver::color( fl_rgb_color(r, g, b) );
   cr_ = r; cg_ = g; cb_ = b;
@@ -1124,8 +1129,8 @@ void Fl_PostScript_Graphics_Driver::transformed_draw_extra(const char* str, int 
   // create an offscreen image of the string
   Fl_Color text_color = Fl_Graphics_Driver::color();
   Fl_Color bg_color = fl_contrast(FL_WHITE, text_color);
-  Fl_Offscreen off = fl_create_offscreen(w_scaled, (int)(h+3*scale) );
-  fl_begin_offscreen(off);
+  Fl_Image_Surface *off = new Fl_Image_Surface(w_scaled, (int)(h+3*scale), 1);
+  Fl_Surface_Device::push_current(off);
   fl_color(bg_color);
   // color offscreen background with a shade contrasting with the text color
   fl_rectf(0, 0, w_scaled, (int)(h+3*scale) );
@@ -1143,9 +1148,9 @@ void Fl_PostScript_Graphics_Driver::transformed_draw_extra(const char* str, int 
   else fl_draw(str, n, 0, (int)(h * 0.8) );
   // read (most of) the offscreen image
   uchar *img = fl_read_image(NULL, 0, 1, w2, h, 0);
-  fl_end_offscreen();
+  Fl_Surface_Device::pop_current();
   font(fontnum, old_size);
-  fl_delete_offscreen(off);
+  delete off;
   // compute the mask of what is not the background
   uchar *img_mask = calc_mask(img, w2, h, bg_color);
   delete[] img;
@@ -1238,11 +1243,11 @@ void Fl_PostScript_Graphics_Driver::rtl_draw(const char* str, int n, int x, int 
 }
 
 void Fl_PostScript_Graphics_Driver::concat(){
-  clocale_printf("[%g %g %g %g %g %g] CT\n", fl_matrix->a , fl_matrix->b , fl_matrix->c , fl_matrix->d , fl_matrix->x , fl_matrix->y);
+  clocale_printf("[%g %g %g %g %g %g] CT\n", m.a , m.b , m.c , m.d , m.x , m.y);
 }
 
 void Fl_PostScript_Graphics_Driver::reconcat(){
-  clocale_printf("[%g %g %g %g %g %g] RCT\n" , fl_matrix->a , fl_matrix->b , fl_matrix->c , fl_matrix->d , fl_matrix->x , fl_matrix->y);
+  clocale_printf("[%g %g %g %g %g %g] RCT\n" , m.a , m.b , m.c , m.d , m.x , m.y);
 }
 
 /////////////////  transformed (double) drawings ////////////////////////////////
@@ -1254,7 +1259,7 @@ void Fl_PostScript_Graphics_Driver::begin_points(){
 
   fprintf(output, "BP\n");
   gap_=1;
-  shape_=POINTS;
+  what=POINTS;
 }
 
 void Fl_PostScript_Graphics_Driver::begin_line(){
@@ -1262,7 +1267,7 @@ void Fl_PostScript_Graphics_Driver::begin_line(){
   concat();
   fprintf(output, "BP\n");
   gap_=1;
-  shape_=LINE;
+  what=LINE;
 }
 
 void Fl_PostScript_Graphics_Driver::begin_loop(){
@@ -1270,7 +1275,7 @@ void Fl_PostScript_Graphics_Driver::begin_loop(){
   concat();
   fprintf(output, "BP\n");
   gap_=1;
-  shape_=LOOP;
+  what=LOOP;
 }
 
 void Fl_PostScript_Graphics_Driver::begin_polygon(){
@@ -1278,11 +1283,11 @@ void Fl_PostScript_Graphics_Driver::begin_polygon(){
   concat();
   fprintf(output, "BP\n");
   gap_=1;
-  shape_=POLYGON;
+  what=POLYGON;
 }
 
 void Fl_PostScript_Graphics_Driver::vertex(double x, double y){
-  if(shape_==POINTS){
+  if(what==POINTS){
     clocale_printf("%g %g MT\n", x , y);
     gap_=1;
     return;
@@ -1295,7 +1300,7 @@ void Fl_PostScript_Graphics_Driver::vertex(double x, double y){
 }
 
 void Fl_PostScript_Graphics_Driver::curve(double x, double y, double x1, double y1, double x2, double y2, double x3, double y3){
-  if(shape_==NONE) return;
+  if(what==NONE) return;
   if(gap_)
     clocale_printf("%g %g MT\n", x , y);
   else
@@ -1307,7 +1312,7 @@ void Fl_PostScript_Graphics_Driver::curve(double x, double y, double x1, double 
 
 
 void Fl_PostScript_Graphics_Driver::circle(double x, double y, double r){
-  if(shape_==NONE){
+  if(what==NONE){
     fprintf(output, "GS\n");
     concat();
     //    fprintf(output, "BP\n");
@@ -1322,7 +1327,7 @@ void Fl_PostScript_Graphics_Driver::circle(double x, double y, double r){
 }
 
 void Fl_PostScript_Graphics_Driver::arc(double x, double y, double r, double start, double a){
-  if(shape_==NONE) return;
+  if(what==NONE) return;
   gap_=0;
   if(start>a)
     clocale_printf("%g %g %g %g %g arc\n", x , y , r , -start, -a);
@@ -1367,7 +1372,7 @@ void Fl_PostScript_Graphics_Driver::end_points(){
   reconcat();
   fprintf(output, "ELP\n"); //??
   fprintf(output, "GR\n");
-  shape_=NONE;
+  what=NONE;
 }
 
 void Fl_PostScript_Graphics_Driver::end_line(){
@@ -1375,14 +1380,14 @@ void Fl_PostScript_Graphics_Driver::end_line(){
   reconcat();
   fprintf(output, "ELP\n");
   fprintf(output, "GR\n");
-  shape_=NONE;
+  what=NONE;
 }
 void Fl_PostScript_Graphics_Driver::end_loop(){
   gap_=1;
   reconcat();
   fprintf(output, "ECP\n");
   fprintf(output, "GR\n");
-  shape_=NONE;
+  what=NONE;
 }
 
 void Fl_PostScript_Graphics_Driver::end_polygon(){
@@ -1391,7 +1396,7 @@ void Fl_PostScript_Graphics_Driver::end_polygon(){
   reconcat();
   fprintf(output, "EFP\n");
   fprintf(output, "GR\n");
-  shape_=NONE;
+  what=NONE;
 }
 
 void Fl_PostScript_Graphics_Driver::transformed_vertex(double x, double y){
@@ -1488,7 +1493,8 @@ int Fl_PostScript_Graphics_Driver::start_postscript(int pagecount,
     left_margin = 12;
     top_margin = 12;
   }
-  page_format_ = (enum Fl_Paged_Device::Page_Format)(format | layout);
+  // combine the format and layout information
+  page_format_ = ((int)format | (int)layout);
   if (layout & Fl_Paged_Device::LANDSCAPE){
     ph_ = Fl_Paged_Device::page_formats[format].width;
     pw_ = Fl_Paged_Device::page_formats[format].height;
@@ -1501,7 +1507,7 @@ int Fl_PostScript_Graphics_Driver::start_postscript(int pagecount,
   if (!cairo_) return 1;
   nPages=0;
   char feature[250];
-  sprintf(feature, "%%%%BeginFeature: *PageSize %s\n<</PageSize[%d %d]>>setpagedevice\n%%%%EndFeature",
+  snprintf(feature, 250, "%%%%BeginFeature: *PageSize %s\n<</PageSize[%d %d]>>setpagedevice\n%%%%EndFeature",
           Fl_Paged_Device::page_formats[format].name, Fl_Paged_Device::page_formats[format].width, Fl_Paged_Device::page_formats[format].height);
   cairo_ps_surface_dsc_comment(cairo_get_target(cairo_), feature);
   return 0;
@@ -1522,7 +1528,12 @@ void Fl_PostScript_Graphics_Driver::transformed_draw(const char* str, int n, dou
   if (!n) return;
   if (!pango_context_) {
     PangoFontMap *def_font_map = pango_cairo_font_map_get_default(); // 1.10
+#if PANGO_VERSION_CHECK(1,22,0)
     pango_context_ = pango_font_map_create_context(def_font_map); // 1.22
+#else
+    pango_context_ = pango_context_new();
+    pango_context_set_font_map(pango_context_, def_font_map);
+#endif
     pango_layout_ = pango_layout_new(pango_context_);
   }
   PangoFontDescription *pfd = Fl_Graphics_Driver::default_driver().pango_font_description();
@@ -1536,7 +1547,7 @@ void Fl_PostScript_Graphics_Driver::transformed_draw(const char* str, int n, dou
     cairo_translate(cairo_, x, y - height() + descent());
     s = (s/pwidth) * PANGO_SCALE;
     cairo_scale(cairo_, s, s);
-    pango_cairo_show_layout(cairo_, pango_layout_);
+    pango_cairo_show_layout(cairo_, pango_layout_); // 1.10
   }
   cairo_restore(cairo_);
   check_status();
@@ -1633,7 +1644,7 @@ int Fl_PostScript_File_Device::begin_page (void)
 #if USE_PANGO
   cairo_ps_surface_dsc_begin_page_setup(cairo_get_target(ps->cr()));
   char feature[200];
-  sprintf(feature, "%%%%PageOrientation: %s", ps->pw_ > ps->ph_ ? "Landscape" : "Portrait");
+  snprintf(feature, 200, "%%%%PageOrientation: %s", ps->pw_ > ps->ph_ ? "Landscape" : "Portrait");
   cairo_ps_surface_dsc_comment(cairo_get_target(ps->cr()), feature);
   if (ps->pw_ > ps->ph_) {
     cairo_translate(ps->cr(), 0, ps->pw_);

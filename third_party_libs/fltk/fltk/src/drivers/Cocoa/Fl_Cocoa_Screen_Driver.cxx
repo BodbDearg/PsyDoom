@@ -1,7 +1,7 @@
 //
 // Definition of Apple Cocoa Screen interface.
 //
-// Copyright 1998-2022 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -35,9 +35,51 @@ extern void (*fl_unlock_function)();
 int Fl_Cocoa_Screen_Driver::next_marked_length = 0;
 
 
+// This key table is used for the Darwin system driver. It is defined here
+// "static" and assigned in the constructor to avoid static initialization
+// race conditions. It is used in fl_shortcut.cxx.
+//
+// This table must be in numeric order by fltk (X) keysym number:
+
+Fl_Screen_Driver::Keyname darwin_key_table[] = {
+  //              v - this column may contain UTF-8 characters
+  {' ',           "Space"},
+  {FL_BackSpace,  "⌫"/*"\xe2\x8c\xab"*/}, // U+232B : erase to the left
+  {FL_Tab,        "⇥"/*"\xe2\x87\xa5"*/}, // U+21E5 rightwards arrow to bar
+  {FL_Enter,      "↩"/*"\xe2\x86\xa9"*/}, // U+21A9 leftwards arrow with hook
+  {FL_Pause,      "Pause"},
+  {FL_Scroll_Lock, "Scroll_Lock"},
+  {FL_Escape,     "⎋"/*"\xe2\x8e\x8b"*/}, // U+238B : broken circle with northwest arrow
+  {FL_Home,       "↖"/*"\xe2\x86\x96"*/}, // U+2196 north west arrow
+  {FL_Left,       "←"/*"\xe2\x86\x90"*/}, // U+2190 leftwards arrow
+  {FL_Up,         "↑"/*"\xe2\x86\x91"*/}, // U+2191 upwards arrow
+  {FL_Right,      "→"/*"\xe2\x86\x92"*/}, // U+2192 rightwards arrow
+  {FL_Down,       "↓"/*"\xe2\x86\x93"*/}, // U+2193 downwards arrow
+  {FL_Page_Up,    "⇞"/*"\xe2\x87\x9e"*/}, // U+21DE upwards arrow with double stroke
+  {FL_Page_Down,  "⇟"/*"\xe2\x87\x9f"*/}, //  U+21DF downwards arrow with double stroke
+  {FL_End,        "↘"/*"\xe2\x86\x98"*/}, // U+2198 south east arrow
+  {FL_Print,      "Print"},
+  {FL_Insert,     "Insert"},
+  {FL_Menu,       "Menu"},
+  {FL_Num_Lock,   "Num_Lock"},
+  {FL_KP_Enter,   "⌤"/*"\xe2\x8c\xa4"*/}, // U+2324 up arrow head between two horizontal bars
+  {FL_Shift_L,    "Shift_L"},
+  {FL_Shift_R,    "Shift_R"},
+  {FL_Control_L,  "Control_L"},
+  {FL_Control_R,  "Control_R"},
+  {FL_Caps_Lock,  "⇪"/*"\xe2\x87\xaa"*/}, // U+21EA upwards white arrow from bar
+  {FL_Meta_L,     "Meta_L"},
+  {FL_Meta_R,     "Meta_R"},
+  {FL_Alt_L,      "Alt_L"},
+  {FL_Alt_R,      "Alt_R"},
+  {FL_Delete,     "⌦"/*"\xe2\x8c\xa6"*/}  // U+2326 : erase to the right
+};
+
+
 static Fl_Text_Editor::Key_Binding extra_bindings[] =  {
   // Define CMD+key accelerators...
   { 'z',          FL_COMMAND,               Fl_Text_Editor::kf_undo       ,0},
+  { 'z',          FL_COMMAND|FL_SHIFT,      Fl_Text_Editor::kf_redo       ,0},
   { 'x',          FL_COMMAND,               Fl_Text_Editor::kf_cut        ,0},
   { 'c',          FL_COMMAND,               Fl_Text_Editor::kf_copy       ,0},
   { 'v',          FL_COMMAND,               Fl_Text_Editor::kf_paste      ,0},
@@ -58,6 +100,9 @@ Fl_Cocoa_Screen_Driver::Fl_Cocoa_Screen_Driver() {
   text_editor_extra_key_bindings =  extra_bindings;
   scale_ = 1.;
   default_icon = nil;
+  // initialize key table
+  key_table = darwin_key_table;
+  key_table_size = sizeof(darwin_key_table)/sizeof(*darwin_key_table);
 }
 
 
@@ -114,11 +159,7 @@ void Fl_Cocoa_Screen_Driver::screen_dpi(float &h, float &v, int n)
 }
 
 
-/**
- Emits a system beep message.
- \param[in] type   The beep type from the \ref Fl_Beep enumeration.
- \note \#include <FL/fl_ask.H>
- */
+// Implements fl_beep(). See documentation in src/fl_ask.cxx.
 void Fl_Cocoa_Screen_Driver::beep(int type) {
   switch (type) {
     case FL_BEEP_DEFAULT :
@@ -140,7 +181,7 @@ void Fl_Cocoa_Screen_Driver::grab(Fl_Window* win)
 {
   if (win) {
     if (!Fl::grab_) {
-      fl_capture = Fl_X::i(Fl::first_window())->xid;
+      fl_capture = (FLWindow*)(Fl_X::flx(Fl::first_window())->xid);
       Fl_Cocoa_Window_Driver::driver(Fl::first_window())->set_key_window();
     }
     Fl::grab_ = win;
@@ -315,8 +356,8 @@ int Fl_Cocoa_Screen_Driver::input_widget_handle_key(int key, unsigned mods, unsi
 
 void Fl_Cocoa_Screen_Driver::offscreen_size(Fl_Offscreen off, int &width, int &height)
 {
-  width = CGBitmapContextGetWidth(off);
-  height = CGBitmapContextGetHeight(off);
+  width = (int)CGBitmapContextGetWidth((CGContextRef)off);
+  height = (int)CGBitmapContextGetHeight((CGContextRef)off);
 }
 
 Fl_RGB_Image *Fl_Cocoa_Screen_Driver::read_win_rectangle(int X, int Y, int w, int h, Fl_Window *window,
@@ -329,11 +370,11 @@ Fl_RGB_Image *Fl_Cocoa_Screen_Driver::read_win_rectangle(int X, int Y, int w, in
     CGContextRef src = (CGContextRef)Fl_Surface_Device::surface()->driver()->gc();  // get bitmap context
     base = (uchar *)CGBitmapContextGetData(src);  // get data
     if(!base) return NULL;
-    int sw = CGBitmapContextGetWidth(src);
-    int sh = CGBitmapContextGetHeight(src);
+    int sw = (int)CGBitmapContextGetWidth(src);
+    int sh = (int)CGBitmapContextGetHeight(src);
     if( (sw - X < w) || (sh - Y < h) )  return NULL;
-    bpr = CGBitmapContextGetBytesPerRow(src);
-    bpp = CGBitmapContextGetBitsPerPixel(src)/8;
+    bpr = (int)CGBitmapContextGetBytesPerRow(src);
+    bpp = (int)CGBitmapContextGetBitsPerPixel(src)/8;
     Fl_Image_Surface *imgs = (Fl_Image_Surface*)Fl_Surface_Device::surface();
     int fltk_w, fltk_h;
     imgs->printable_rect(&fltk_w, &fltk_h);
@@ -360,16 +401,16 @@ Fl_RGB_Image *Fl_Cocoa_Screen_Driver::read_win_rectangle(int X, int Y, int w, in
     if (!cgimg) {
       return NULL;
     }
-    w = CGImageGetWidth(cgimg);
-    h = CGImageGetHeight(cgimg);
+    w = (int)CGImageGetWidth(cgimg);
+    h = (int)CGImageGetHeight(cgimg);
     Fl_Image_Surface *surf = new Fl_Image_Surface(w, h);
     Fl_Surface_Device::push_current(surf);
     ((Fl_Quartz_Graphics_Driver*)fl_graphics_driver)->draw_CGImage(cgimg, 0, 0, w, h, 0, 0, w, h);
     CGContextRef gc = (CGContextRef)fl_graphics_driver->gc();
-    w = CGBitmapContextGetWidth(gc);
-    h = CGBitmapContextGetHeight(gc);
-    bpr = CGBitmapContextGetBytesPerRow(gc);
-    bpp = CGBitmapContextGetBitsPerPixel(gc)/8;
+    w = (int)CGBitmapContextGetWidth(gc);
+    h = (int)CGBitmapContextGetHeight(gc);
+    bpr = (int)CGBitmapContextGetBytesPerRow(gc);
+    bpp = (int)CGBitmapContextGetBitsPerPixel(gc)/8;
     base = (uchar*)CGBitmapContextGetData(gc);
     p = new uchar[bpr * h];
     memcpy(p, base, bpr * h);

@@ -1,7 +1,7 @@
 //
 // Menu button widget for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2019 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -16,25 +16,33 @@
 
 #include <FL/Fl.H>
 #include <FL/Fl_Menu_Button.H>
+#include <FL/Fl_Rect.H>
 #include <FL/fl_draw.H>
 
 
-static Fl_Menu_Button   *pressed_menu_button_ = 0;
+Fl_Menu_Button* Fl_Menu_Button::pressed_menu_button_ = NULL;
 
 
 void Fl_Menu_Button::draw() {
   if (!box() || type()) return;
-  int H = (labelsize()-3)&-2;
-  int X = x()+w()-H-Fl::box_dx(box())-Fl::box_dw(box())-1;
-  int Y = y()+(h()-H)/2;
+
+  // calculate position and size of virtual "arrow box" (choice button)
+
+  int ah = h() - Fl::box_dh(box());
+  int aw = ah > 20 ? 20 : ah; // limit width: don't waste space for button
+  int ax = x() + w() - Fl::box_dx(box()) - aw;
+  int ay = y() + (h() - ah) / 2;
+
+  // the remaining space is used to draw the label
+
   draw_box(pressed_menu_button_ == this ? fl_down(box()) : box(), color());
-  draw_label(x()+Fl::box_dx(box()), y(), X-x()+2, h());
+  draw_label(x() + Fl::box_dx(box()), y(), w() - Fl::box_dw(box()) - aw, h());
   if (Fl::focus() == this) draw_focus();
-  // ** if (box() == FL_FLAT_BOX) return; // for XForms compatibility
-  fl_color(active_r() ? FL_DARK3 : fl_inactive(FL_DARK3));
-  fl_line(X+H/2, Y+H, X, Y, X+H, Y);
-  fl_color(active_r() ? FL_LIGHT3 : fl_inactive(FL_LIGHT3));
-  fl_line(X+H, Y, X+H/2, Y+H);
+
+  // draw the arrow (choice button)
+
+  Fl_Color arrow_color = active_r() ? FL_DARK3 : fl_inactive(FL_DARK3);
+  fl_draw_arrow(Fl_Rect(ax, ay, aw, ah), FL_ARROW_SINGLE, FL_ORIENT_DOWN, arrow_color);
 }
 
 

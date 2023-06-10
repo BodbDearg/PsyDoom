@@ -35,6 +35,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl.H>
 #include "Fl_System_Driver.H"
+#include "Fl_Screen_Driver.H"
 #include <FL/fl_draw.H>
 #include <stdlib.h>
 #include <ctype.h>
@@ -198,7 +199,7 @@ const char* fl_shortcut_label(unsigned int shortcut, const char **eom) {
   if (eom) *eom = p;
 
   // add key name
-  return Fl::system_driver()->shortcut_add_key_name(key, p, buf, eom);
+  return Fl::screen_driver()->shortcut_add_key_name(key, p, buf, eom);
 }
 
 /**
@@ -328,7 +329,7 @@ unsigned int Fl_Widget::label_shortcut(const char *t) {
   \return true, if the entered text matches the '&x' shortcut in \p t
           false (0) otherwise.
 
-  \note Internal use only.
+  \note Useful when a widget's handle(int) method needs dedicated processing of FL_SHORTCUT.
 */
 int Fl_Widget::test_shortcut(const char *t, const bool require_alt) {
   static int extra_test = Fl::system_driver()->need_test_shortcut_extra();
@@ -362,7 +363,7 @@ int Fl_Widget::test_shortcut(const char *t, const bool require_alt) {
   \return true, if the entered text matches the widget's'&x' shortcut,
           false (0) otherwise.
 
-  \note Internal use only.
+ \note Useful when a widget's handle(int) method needs dedicated processing of FL_SHORTCUT.
 */
 
 int Fl_Widget::test_shortcut() {
@@ -376,7 +377,7 @@ int Fl_Widget::test_shortcut() {
  \{
  */
 
-const char *Fl_System_Driver::shortcut_add_key_name(unsigned key, char *p, char *buf, const char **eom)
+const char *Fl_Screen_Driver::shortcut_add_key_name(unsigned key, char *p, char *buf, const char **eom)
 {
   if (key >= FL_F && key <= FL_F_Last) {
     *p++ = 'F';
@@ -390,7 +391,7 @@ const char *Fl_System_Driver::shortcut_add_key_name(unsigned key, char *p, char 
       int c = (a+b)/2;
       if (key_table[c].key == key) {
         if (p > buf) {
-          strcpy(p,key_table[c].name);
+          strcpy(p, key_table[c].name);
           return buf;
         } else {
           const char *sp = key_table[c].name;

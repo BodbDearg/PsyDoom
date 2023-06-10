@@ -1,7 +1,7 @@
 //
 // Positioner header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -29,8 +29,8 @@
   It would be useful if this could be put atop another widget so that the
   crosshairs are on top, but this is not implemented.  The color of the
   crosshairs is selection_color().
-  <P ALIGN=CENTER>\image html  positioner.png </P>
-  \image latex  positioner.png " Fl_Positioner" width=4cm
+  \image html  positioner.png
+  \image latex positioner.png "Fl_Positioner" width=4cm
 */
 class FL_EXPORT Fl_Positioner : public Fl_Widget {
 
@@ -44,11 +44,11 @@ protected:
   // these allow subclasses to put the dial in a smaller area:
   void draw(int, int, int, int);
   int handle(int, int, int, int, int);
-  void draw();
+  void draw() FL_OVERRIDE;
 
 public:
 
-  int handle(int);
+  int handle(int) FL_OVERRIDE;
   /**
     Creates a new Fl_Positioner widget using the given position,
     size, and label string. The default boxtype is FL_NO_BOX.

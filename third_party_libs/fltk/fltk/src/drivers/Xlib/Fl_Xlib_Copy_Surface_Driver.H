@@ -19,18 +19,26 @@
 
 #include <FL/Fl_Copy_Surface.H>
 #include <FL/platform.H>
+#if FLTK_USE_CAIRO
+#  include <cairo/cairo.h>
+#endif // FLTK_USE_CAIRO
+
+class Fl_Image_Surface;
 
 class Fl_Xlib_Copy_Surface_Driver : public Fl_Copy_Surface_Driver {
   friend class Fl_Copy_Surface_Driver;
-  virtual void end_current();
+  void end_current() FL_OVERRIDE;
 protected:
-  Fl_Offscreen xid;
+  Fl_Image_Surface *xid;
   Window oldwindow;
   Fl_Xlib_Copy_Surface_Driver(int w, int h);
   ~Fl_Xlib_Copy_Surface_Driver();
-  void set_current();
-  void translate(int x, int y);
-  void untranslate();
+  void set_current() FL_OVERRIDE;
+  void translate(int x, int y) FL_OVERRIDE;
+  void untranslate() FL_OVERRIDE;
+#if FLTK_USE_CAIRO
+  cairo_t *cairo_;
+#endif
 };
 
 #endif // FL_XLIB_COPY_SURFACE_DRIVER_H

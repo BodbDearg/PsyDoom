@@ -103,14 +103,22 @@ class Fl_Native_File_Chooser_Driver;
 
  <B>Platform Specific Caveats</B>
 
- - Under X windows, and if Fl::OPTION_FNFC_USES_GTK has not been switched off,
- the widget attempts to use standard GTK file chooser dialogs if they are
- available at run-time on the platform, and falls back to use FLTK's Fl_File_Chooser if they are not.
- In the first case, calling fl_register_images() adds  a "Preview" button to the GTK chooser dialog.
- In the latter case, it's best if you call Fl_File_Icon::load_system_icons()
+ - Under X11/Wayland,  what dialog opens is determined as follows:
+ -# If command \p zenity is available at run-time and if \p Fl::option(OPTION_FNFC_USES_ZENITY) is
+ not turned off, the \p zenity -based dialog opens. This is expected to be more appropriate
+ than other dialog forms for sandboxed apps.
+ -# Else if the app runs under the KDE desktop and if command \p kdialog is available at run-time
+ and if the library was not built with <tt>cmake -DOPTION_USE_KDIALOG=Off</tt>, the
+ \p kdialog -based dialog opens.
+ -# Else if the GTK library is available at run-time on the computer and if \p Fl::option(OPTION_FNFC_USES_GTK) is
+ not turned off, the GTK-styled dialog opens. Call fl_register_images() to add  a "Preview" button to this dialog.
+ Use the static public attributes of class Fl_File_Chooser to localize the browser.
+ -# Otherwise, FLTK's own dialog produced by the Fl_File_Chooser class opens.
+ Call fl_register_images() to add  a "Preview" button to it.
+ It's best if you also call Fl_File_Icon::load_system_icons()
  at the start of main(), to enable the nicer looking file browser widgets.
- Use the static public attributes of class Fl_File_Chooser to localize
- the browser.
+ Use the static public attributes of class Fl_File_Chooser to localize the browser.
+
  - Some operating systems support certain OS specific options; see
  Fl_Native_File_Chooser::options() for a list.
 
@@ -243,26 +251,26 @@ protected:
 public:
   Fl_Native_File_Chooser_FLTK_Driver(int val);
   virtual ~Fl_Native_File_Chooser_FLTK_Driver();
-  virtual void type(int t);
-  virtual int type() const ;
-  virtual void options(int o);
-  virtual int options() const;
-  virtual int count() const;
-  virtual const char *filename() const ;
-  virtual const char *filename(int i) const ;
-  virtual void directory(const char *val) ;
-  virtual const char *directory() const;
-  virtual void title(const char *t);
-  virtual const char* title() const;
-  virtual const char *filter() const ;
-  virtual void filter(const char *f);
-  virtual int filters() const ;
-  virtual void filter_value(int i) ;
-  virtual int filter_value() const ;
-  virtual void preset_file(const char*f) ;
-  virtual const char* preset_file() const;
-  virtual const char *errmsg() const ;
-  virtual int show() ;
+  void type(int t) FL_OVERRIDE;
+  int type() const FL_OVERRIDE;
+  void options(int o) FL_OVERRIDE;
+  int options() const FL_OVERRIDE;
+  int count() const FL_OVERRIDE;
+  const char *filename() const FL_OVERRIDE;
+  const char *filename(int i) const FL_OVERRIDE;
+  void directory(const char *val) FL_OVERRIDE;
+  const char *directory() const FL_OVERRIDE;
+  void title(const char *t) FL_OVERRIDE;
+  const char* title() const FL_OVERRIDE;
+  const char *filter() const FL_OVERRIDE;
+  void filter(const char *f) FL_OVERRIDE;
+  int filters() const FL_OVERRIDE;
+  void filter_value(int i) FL_OVERRIDE;
+  int filter_value() const FL_OVERRIDE;
+  void preset_file(const char*f) FL_OVERRIDE;
+  const char* preset_file() const FL_OVERRIDE;
+  const char *errmsg() const FL_OVERRIDE;
+  int show() FL_OVERRIDE;
 };
 
 /**

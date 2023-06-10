@@ -18,7 +18,23 @@
 // include this file if FLTK_USE_X11 is defined.  This is to encourage
 // portability of even the system-specific code...
 
-#ifndef FL_DOXYGEN
+#ifdef FL_DOXYGEN
+
+/** \file
+ Definitions of functions specific to the X11 platform.
+*/
+
+/** Returns the X11 Display in use */
+extern Display *fl_x11_display();
+/** Returns the Window reference for the given Fl_Window, or zero if not \c shown().  */
+extern Window fl_x11_xid(const Fl_Window *win);
+/** Returns the Fl_Window corresponding to the given Window reference.  */
+extern Fl_Window *fl_x11_find(Window xid);
+/** Returns the X11-specific currently active graphics context.  */
+extern GC fl_x11_gc();
+/** Returns the Cairo-specific currently active graphics context (OPTION_USE_CAIRO=On) */
+extern cairo_t* fl_cairo_gc();
+#else // ! FL_DOXYGEN
 
 #ifndef FL_PLATFORM_H
 #  error "Never use <FL/x11.H> directly; include <FL/platform.H> instead."
@@ -36,14 +52,25 @@
 #endif
 #include <X11/Xatom.h>
 
+typedef struct __GLXcontextRec *GLXContext;
+extern GLXContext fl_x11_glcontext(GLContext rc);
+
 // constant info about the X server connection:
 extern FL_EXPORT Display *fl_display;
+extern FL_EXPORT Display *fl_x11_display();
+extern FL_EXPORT Window fl_x11_xid(const Fl_Window *win);
+extern FL_EXPORT Fl_Window *fl_x11_find(Window);
 extern FL_EXPORT int fl_screen;
 extern FL_EXPORT XVisualInfo *fl_visual;
 extern FL_EXPORT Colormap fl_colormap;
 
 // drawing functions:
 extern FL_EXPORT GC fl_gc;
+#if FLTK_USE_CAIRO
+  typedef struct _cairo cairo_t;
+  extern FL_EXPORT cairo_t* fl_cairo_gc();
+#endif
+extern FL_EXPORT GC fl_x11_gc();
 FL_EXPORT ulong fl_xpixel(Fl_Color i);
 FL_EXPORT ulong fl_xpixel(uchar r, uchar g, uchar b);
 
@@ -85,13 +112,6 @@ private:
 extern FL_EXPORT Fl_XFont_On_Demand fl_xfont;
 
 extern FL_EXPORT char fl_override_redirect; // hack into Fl_X::make_xid()
-
-#if USE_PANGO
-struct flCairoRegion {
-  int count;
-  struct _cairo_rectangle *rects;
-}; // a region is the union of a series of rectangles
-#endif
 
 #endif // FL_LIBRARY || FL_INTERNALS
 

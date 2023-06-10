@@ -50,7 +50,7 @@ void Fl_Window::_Fl_Window() {
   } else {
     labeltype(FL_NO_LABEL);
   }
-  i = 0;
+  flx_ = 0;
   xclass_ = 0;
   iconlabel_ = 0;
   resizable(0);
@@ -385,8 +385,10 @@ const void *Fl_Window::icon() const {
   return pWindowDriver->icon();
 }
 
-/** Sets the current icon window target dependent data.
-  \deprecated in 1.3.3
+/** Platform-specific method to set the window icon usable on Windows and X11 only.
+ See \ref osissues_x_icon for its use under X11, and \ref osissues_icon_windows under Windows.
+  \deprecated in 1.3.3 in favor of platform-independent methods Fl_Window::icon(const Fl_RGB_Image *icon)
+ and Fl_Window::icons(const Fl_RGB_Image *icons[], int count).
  */
 void Fl_Window::icon(const void * ic) {
   pWindowDriver->icon(ic);
@@ -480,8 +482,8 @@ void Fl_Window::flush()
 {
   if (!shown()) return;
   make_current();
-  fl_clip_region(i->region);
-  i->region = 0;
+  fl_clip_region(flx_->region);
+  flx_->region = 0;
   draw();
 }
 
@@ -879,6 +881,8 @@ const Fl_Image* Fl_Window::shape() {return pWindowDriver->shape();}
 bool Fl_Window::is_a_rescale() {return Fl_Window_Driver::is_a_rescale_;}
 
 /** Returns a platform-specific identification of a shown window, or 0 if not shown.
+ \note This identification may differ from the platform-specific reference of an
+ Fl_Window object used by functions fl_x11_xid(), fl_mac_xid(), fl_x11_find(), and fl_mac_find().
  \li X11 platform: the window's XID.
  \li macOS platform: The window number of the window’s window device.
  \li other platforms: 0.

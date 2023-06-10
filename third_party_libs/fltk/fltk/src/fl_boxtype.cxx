@@ -1,7 +1,7 @@
 //
 // Box drawing code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2020 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -16,7 +16,7 @@
 
 /**
   \file fl_boxtype.cxx
-  \brief drawing code for common box types.
+  \brief Drawing code for common box types.
 */
 
 // Box drawing code for the common box types and the table of
@@ -318,7 +318,7 @@ static struct {
   {fl_border_box,       1,1,2,2,0}, // _FL_OVAL_SHADOW_BOX
   {fl_border_frame,     1,1,2,2,0}, // _FL_OVAL_FRAME
   {fl_flat_box,         0,0,0,0,0}, // _FL_OVAL_FLAT_BOX
-  {fl_up_box,           4,4,8,8,0}, // _FL_PLASTIC_UP_BOX
+  {fl_up_box,           2,2,4,4,0}, // _FL_PLASTIC_UP_BOX
   {fl_down_box,         2,2,4,4,0}, // _FL_PLASTIC_DOWN_BOX
   {fl_up_frame,         2,2,4,4,0}, // _FL_PLASTIC_UP_FRAME
   {fl_down_frame,       2,2,4,4,0}, // _FL_PLASTIC_DOWN_FRAME
@@ -344,6 +344,18 @@ static struct {
   {fl_down_box,         2,2,4,4,0}, // _FL_GLEAM_THIN_DOWN_BOX
   {fl_up_box,           2,2,4,4,0}, // _FL_GLEAM_ROUND_UP_BOX
   {fl_down_box,         2,2,4,4,0}, // _FL_GLEAM_ROUND_DOWN_BOX
+  {fl_up_box,           2,2,4,4,0}, // _FL_OXY_UP_BOX,
+  {fl_down_box,         2,2,4,4,0}, // _FL_OXY_DOWN_BOX,
+  {fl_up_frame,         2,2,4,4,0}, // _FL_OXY_UP_FRAME,
+  {fl_down_frame,       2,2,4,4,0}, // _FL_OXY_DOWN_FRAME,
+  {fl_thin_up_box,      1,1,2,2,0}, // _FL_OXY_THIN_UP_BOX,
+  {fl_thin_down_box,    1,1,2,2,0}, // _FL_OXY_THIN_DOWN_BOX,
+  {fl_thin_up_frame,    1,1,2,2,0}, // _FL_OXY_THIN_UP_FRAME,
+  {fl_thin_down_frame,  1,1,2,2,0}, // _FL_OXY_THIN_DOWN_FRAME,
+  {fl_up_box,           2,2,4,4,0}, // _FL_OXY_ROUND_UP_BOX,
+  {fl_down_box,         2,2,4,4,0}, // _FL_OXY_ROUND_DOWN_BOX,
+  {fl_up_box,           2,2,4,4,0}, // _FL_OXY_BUTTON_UP_BOX,
+  {fl_down_box,         2,2,4,4,0}, // _FL_OXY_BUTTON_DOWN_BOX,
   {fl_up_box,           3,3,6,6,0}, // FL_FREE_BOX+0
   {fl_down_box,         3,3,6,6,0}, // FL_FREE_BOX+1
   {fl_up_box,           3,3,6,6,0}, // FL_FREE_BOX+2
@@ -415,7 +427,7 @@ Fl_Box_Draw_F *Fl::get_boxtype(Fl_Boxtype t) {
 }
 /** Sets the function to call to draw a specific boxtype. */
 void Fl::set_boxtype(Fl_Boxtype t, Fl_Box_Draw_F* f,
-                      uchar a, uchar b, uchar c, uchar d) {
+                     uchar a, uchar b, uchar c, uchar d) {
   fl_box_table[t].f   = f;
   fl_box_table[t].set = 1;
   fl_box_table[t].dx  = a;

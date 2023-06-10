@@ -33,6 +33,94 @@ extern void fl_draw(const char*, int, float, float);
 
 ////////////////////////////////////////////////////////////////
 
+// see: Fl_Text_Undo_Action
+class Fl_Input_Undo_Action {
+public:
+  Fl_Input_Undo_Action() :
+  undobuffer(NULL),
+  undobufferlength(0),
+  undoat(0),
+  undocut(0),
+  undoinsert(0),
+  undoyankcut(0)
+  { }
+  ~Fl_Input_Undo_Action() {
+    if (undobuffer)
+      ::free(undobuffer);
+  }
+
+  char *undobuffer;
+  int undobufferlength;
+  int undoat;              // points after insertion
+  int undocut;             // number of characters deleted there
+  int undoinsert;          // number of characters inserted
+  int undoyankcut;         // length of valid contents of buffer, even if undocut=0
+
+  /*
+   Resize the undo buffer to match at least the requested size.
+   */
+  void undobuffersize(int n)
+  {
+    if (n > undobufferlength) {
+      undobufferlength = n + 128;
+      undobuffer = (char *)realloc(undobuffer, undobufferlength);
+    }
+  }
+
+  void clear() {
+    undocut = undoinsert = 0;
+  }
+};
+
+// see: Fl_Text_Undo_Action_List
+class Fl_Input_Undo_Action_List {
+  Fl_Input_Undo_Action** list_;
+  int list_size_;
+  int list_capacity_;
+public:
+  Fl_Input_Undo_Action_List() :
+    list_(NULL),
+    list_size_(0),
+    list_capacity_(0)
+  { }
+
+  ~Fl_Input_Undo_Action_List() {
+    clear();
+  }
+
+  int size() const {
+    return list_size_;
+  }
+
+  void push(Fl_Input_Undo_Action* action) {
+    if (list_size_ == list_capacity_) {
+      list_capacity_ += 25;
+      list_ = (Fl_Input_Undo_Action**)realloc(list_, list_capacity_ * sizeof(Fl_Input_Undo_Action*));
+    }
+    list_[list_size_++] = action;
+  }
+
+  Fl_Input_Undo_Action* pop() {
+    if (list_size_ > 0)
+      return list_[--list_size_];
+    else
+      return NULL;
+  }
+
+  void clear() {
+    if (list_) {
+      for (int i=0; i<list_size_; i++) {
+        delete list_[i];
+      }
+      ::free(list_);
+    }
+    list_ = NULL;
+    list_size_ = 0;
+    list_capacity_ = 0;
+  }
+};
+
+
 /** \internal
   Converts a given text segment into the text that will be rendered on screen.
 
@@ -133,10 +221,10 @@ double Fl_Input_::expandpos(
          chr += 7-(chr%8);
       } else n += 2;
     } else {
-      n++;
+      n += fl_utf8len1(*p);
     }
     chr += fl_utf8len((char)p[0]) >= 1;
-    p++;
+    p += fl_utf8len1(*p);
   }
   if (returnn) *returnn = n;
   return fl_width(buf, n);
@@ -147,7 +235,7 @@ double Fl_Input_::expandpos(
 /** \internal
   Marks a range of characters for update.
 
-  This call marks all characters from \p to the end of the
+  This call marks all characters from \p p to the end of the
   text buffer for update. At least these characters
   will be redrawn in the next update cycle.
 
@@ -222,10 +310,10 @@ void Fl_Input_::drawtext(int X, int Y, int W, int H) {
   int selstart, selend;
   if (Fl::focus()!=this && /*Fl::selection_owner()!=this &&*/ Fl::pushed()!=this)
     selstart = selend = 0;
-  else if (position() <= mark()) {
-    selstart = position(); selend = mark();
+  else if (insert_position() <= mark()) {
+    selstart = insert_position(); selend = mark();
   } else {
-    selend = position(); selstart = mark();
+    selend = insert_position(); selstart = mark();
   }
 
   setfont();
@@ -240,8 +328,8 @@ void Fl_Input_::drawtext(int X, int Y, int W, int H) {
   int curx, cury;
   for (p=value(), curx=cury=lines=0; ;) {
     e = expand(p, buf);
-    if (position() >= p-value() && position() <= e-value()) {
-      curx = int(expandpos(p, value()+position(), buf, 0)+.5);
+    if (insert_position() >= p-value() && insert_position() <= e-value()) {
+      curx = int(expandpos(p, value()+insert_position(), buf, 0)+.5);
       if (Fl::focus()==this && !was_up_down) up_down_pos = curx;
       cury = lines*height;
       int newscroll = xscroll_;
@@ -366,11 +454,12 @@ void Fl_Input_::drawtext(int X, int Y, int W, int H) {
     if (Fl::focus() == this && (
                                 (Fl::screen_driver()->has_marked_text() && Fl::compose_state) ||
                                 selstart == selend) &&
-        position() >= p-value() && position() <= e-value()) {
+        insert_position() >= p-value() && insert_position() <= e-value()) {
       fl_color(cursor_color());
       // cursor position may need to be recomputed (see STR #2486)
-      curx = int(expandpos(p, value()+position(), buf, 0)+.5);
+      curx = int(expandpos(p, value()+insert_position(), buf, 0)+.5);
       if (readonly()) {
+        // Draw '^' caret cursor
         fl_line((int)(xpos+curx-2.5f), Y+ypos+height-1,
                 (int)(xpos+curx+0.5f), Y+ypos+height-4,
                 (int)(xpos+curx+3.5f), Y+ypos+height-1);
@@ -589,14 +678,14 @@ void Fl_Input_::handle_mouse(int X, int Y, int /*W*/, int /*H*/, int drag) {
     }
     // if the multiple click does not increase the selection, revert
     // to single-click behavior:
-    if (!drag && (mark() > position() ?
-                  (newmark >= position() && newpos <= mark()) :
-                  (newmark >= mark() && newpos <= position()))) {
+    if (!drag && (mark() > insert_position() ?
+                  (newmark >= insert_position() && newpos <= mark()) :
+                  (newmark >= mark() && newpos <= insert_position()))) {
       Fl::event_clicks(0);
       newmark = newpos = (int) (l-value());
     }
   }
-  position(newpos, newmark);
+  insert_position(newpos, newmark);
 }
 
 /**
@@ -616,7 +705,7 @@ void Fl_Input_::handle_mouse(int X, int Y, int /*W*/, int /*H*/, int drag) {
   \return 0 if no positions changed
   \see position(int), position(), mark(int)
 */
-int Fl_Input_::position(int p, int m) {
+int Fl_Input_::insert_position(int p, int m) {
   int is_same = 0;
   was_up_down = 0;
   if (p<0) p = 0;
@@ -690,7 +779,7 @@ int Fl_Input_::up_down_position(int i, int keepmark) {
     if (f <= up_down_pos) l = t; else r = t-1;
   }
   int j = (int) (l-value());
-  j = position(j, keepmark ? mark_ : j);
+  j = insert_position(j, keepmark ? mark_ : j);
   was_up_down = 1;
   return j;
 }
@@ -709,10 +798,10 @@ int Fl_Input_::up_down_position(int i, int keepmark) {
   \see Fl::copy(const char *, int, int)
 */
 int Fl_Input_::copy(int clipboard) {
-  int b = position();
+  int b = insert_position();
   int e = mark();
   if (b != e) {
-    if (b > e) {b = mark(); e = position();}
+    if (b > e) {b = mark(); e = insert_position();}
     if (input_type() == FL_SECRET_INPUT) e = b;
     Fl::copy(value()+b, e-b, clipboard);
     return 1;
@@ -721,26 +810,6 @@ int Fl_Input_::copy(int clipboard) {
 }
 
 #define MAXFLOATSIZE 40
-
-static char* undobuffer;
-static int undobufferlength;
-static Fl_Input_* undowidget;
-static int undoat;      // points after insertion
-static int undocut;     // number of characters deleted there
-static int undoinsert;  // number of characters inserted
-static int yankcut;     // length of valid contents of buffer, even if undocut=0
-
-static void undobuffersize(int n) {
-  if (n > undobufferlength) {
-    if (undobuffer) {
-      do {undobufferlength *= 2;} while (undobufferlength < n);
-      undobuffer = (char*)realloc(undobuffer, undobufferlength);
-    } else {
-      undobufferlength = n+9;
-      undobuffer = (char*)malloc(undobufferlength);
-    }
-  }
-}
 
 /**
  Append text at the end.
@@ -760,7 +829,7 @@ int Fl_Input_::append(const char* t, int l, char keep_selection)
   int om = mark_, op = position_;
   int ret = replace(end, end, t, l);
   if (keep_selection) {
-    position(op, om);
+    insert_position(op, om);
   }
   return ret;
 }
@@ -859,45 +928,49 @@ int Fl_Input_::replace(int b, int e, const char* text, int ilen) {
   put_in_buffer(size_+ilen);
 
   if (e>b) {
-    if (undowidget == this && b == undoat) {
-      undobuffersize(undocut+(e-b));
-      memcpy(undobuffer+undocut, value_+b, e-b);
-      undocut += e-b;
-    } else if (undowidget == this && e == undoat && !undoinsert) {
-      undobuffersize(undocut+(e-b));
-      memmove(undobuffer+(e-b), undobuffer, undocut);
-      memcpy(undobuffer, value_+b, e-b);
-      undocut += e-b;
-    } else if (undowidget == this && e == undoat && (e-b)<undoinsert) {
-      undoinsert -= e-b;
+    if (b == undo_->undoat) {
+      undo_->undobuffersize(undo_->undocut+(e-b));
+      memcpy(undo_->undobuffer+undo_->undocut, value_+b, e-b);
+      undo_->undocut += e-b;
+    } else if (e == undo_->undoat && !undo_->undoinsert) {
+      undo_->undobuffersize(undo_->undocut+(e-b));
+      memmove(undo_->undobuffer+(e-b), undo_->undobuffer, undo_->undocut);
+      memcpy(undo_->undobuffer, value_+b, e-b);
+      undo_->undocut += e-b;
+    } else if (e == undo_->undoat && (e-b)<undo_->undoinsert) {
+      undo_->undoinsert -= e-b;
     } else {
-      undobuffersize(e-b);
-      memcpy(undobuffer, value_+b, e-b);
-      undocut = e-b;
-      undoinsert = 0;
+      redo_list_->clear();
+      undo_list_->push(undo_);
+      undo_ = new Fl_Input_Undo_Action();
+      undo_->undobuffersize(e-b);
+      memcpy(undo_->undobuffer, value_+b, e-b);
+      undo_->undocut = e-b;
+      undo_->undoinsert = 0;
     }
     memmove(buffer+b, buffer+e, size_-e+1);
     size_ -= e-b;
-    undowidget = this;
-    undoat = b;
-    if (input_type() == FL_SECRET_INPUT) yankcut = 0; else yankcut = undocut;
+    undo_->undoat = b;
+    if (input_type() == FL_SECRET_INPUT) undo_->undoyankcut = 0; else undo_->undoyankcut = undo_->undocut;
   }
 
   if (ilen) {
-    if (undowidget == this && b == undoat)
-      undoinsert += ilen;
-    else {
-      undocut = 0;
-      undoinsert = ilen;
+    if (b == undo_->undoat) {
+      undo_->undoinsert += ilen;
+    } else {
+      redo_list_->clear();
+      undo_list_->push(undo_);
+      undo_ = new Fl_Input_Undo_Action();
+      undo_->undocut = 0;
+      undo_->undoinsert = ilen;
     }
     memmove(buffer+b+ilen, buffer+b, size_-b+1);
     memcpy(buffer+b, text, ilen);
     size_ += ilen;
   }
-  undowidget = this;
   om = mark_;
   op = position_;
-  mark_ = position_ = undoat = b+ilen;
+  mark_ = position_ = undo_->undoat = b+ilen;
 
   // Insertions into the word at the end of the line will cause it to
   // wrap to the next line, so we must indicate that the changes may start
@@ -921,49 +994,51 @@ int Fl_Input_::replace(int b, int e, const char* text, int ilen) {
 
   minimal_update(b);
 
-  mark_ = position_ = undoat;
+  mark_ = position_ = undo_->undoat;
 
   set_changed();
-  if (when()&FL_WHEN_CHANGED) do_callback();
+  if (when()&FL_WHEN_CHANGED) do_callback(FL_REASON_CHANGED);
   return 1;
 }
 
 /**
-  Undoes previous changes to the text buffer.
+ Apply the current undo/redo operation
 
-  This call undoes a number of previous calls to replace().
+ It's up to undo() and redo() to push and pop actions to and from the lists.
 
-  \return non-zero if any change was made.
-*/
-int Fl_Input_::undo() {
+ \return 1 if the current action changed any text.
+ \see undo(), redo() */
+int Fl_Input_::apply_undo() {
   was_up_down = 0;
-  if ( undowidget != this || (!undocut && !undoinsert) ) return 0;
+  if (!undo_->undocut && !undo_->undoinsert) return 0;
 
-  int ilen = undocut;
-  int xlen = undoinsert;
-  int b = undoat-xlen;
+  int ilen = undo_->undocut;
+  int xlen = undo_->undoinsert;
+  int b = undo_->undoat-xlen;
   int b1 = b;
+
+  minimal_update(position_);
 
   put_in_buffer(size_+ilen);
 
   if (ilen) {
     memmove(buffer+b+ilen, buffer+b, size_-b+1);
-    memcpy(buffer+b, undobuffer, ilen);
+    memcpy(buffer+b, undo_->undobuffer, ilen);
     size_ += ilen;
     b += ilen;
   }
 
   if (xlen) {
-    undobuffersize(xlen);
-    memcpy(undobuffer, buffer+b, xlen);
+    undo_->undobuffersize(xlen);
+    memcpy(undo_->undobuffer, buffer+b, xlen);
     memmove(buffer+b, buffer+b+xlen, size_-xlen-b+1);
     size_ -= xlen;
   }
 
-  undocut = xlen;
-  if (xlen) yankcut = xlen;
-  undoinsert = ilen;
-  undoat = b;
+  undo_->undocut = xlen;
+  if (xlen) undo_->undoyankcut = xlen;
+  undo_->undoinsert = ilen;
+  undo_->undoat = b;
   mark_ = b /* -ilen */;
   position_ = b;
 
@@ -971,8 +1046,70 @@ int Fl_Input_::undo() {
     while (b1 > 0 && index(b1)!='\n') b1--;
   minimal_update(b1);
   set_changed();
-  if (when()&FL_WHEN_CHANGED) do_callback();
+
   return 1;
+}
+
+/**
+ Undoes previous changes to the text buffer.
+
+ This call undoes a number of previous calls to replace().
+
+ \return non-zero if any change was made.
+ */
+int Fl_Input_::undo() {
+  if (apply_undo() == 0)
+    return 0;
+
+  redo_list_->push(undo_);
+  undo_ = undo_list_->pop();
+  if (!undo_) undo_ = new Fl_Input_Undo_Action();
+
+  if (when()&FL_WHEN_CHANGED) do_callback(FL_REASON_CHANGED);
+
+  return 1;
+}
+
+/**
+ Check if the last operation can be undone.
+
+ \return true if the widget can unod the last change
+ */
+bool Fl_Input_::can_undo() const {
+  return (undo_->undocut || undo_->undoinsert);
+}
+
+/**
+ Redo previous undo operation.
+
+ This call reapplies previously executed undo operations.
+
+ \return non-zero if any change was made.
+ */
+int Fl_Input_::redo() {
+  Fl_Input_Undo_Action *redo_action = redo_list_->pop();
+  if (!redo_action)
+    return 0;
+
+  if (undo_->undocut || undo_->undoinsert)
+    undo_list_->push(undo_);
+  else
+    delete undo_;
+  undo_ = redo_action;
+
+  int ret = apply_undo();
+  if (ret && (when()&FL_WHEN_CHANGED)) do_callback(FL_REASON_CHANGED);
+
+  return ret;
+}
+
+/**
+ Check if there is a redo action available.
+
+ \return true if the widget can redo the last undo action
+ */
+bool Fl_Input_::can_redo() const {
+  return (redo_list_->size() > 0);
 }
 
 /**
@@ -987,17 +1124,17 @@ int Fl_Input_::undo() {
 */
 int Fl_Input_::copy_cuts() {
   // put the yank buffer into the X clipboard
-  if (!yankcut || input_type()==FL_SECRET_INPUT) return 0;
-  Fl::copy(undobuffer, yankcut, 1);
+  if (!undo_->undoyankcut || input_type()==FL_SECRET_INPUT) return 0;
+  Fl::copy(undo_->undobuffer, undo_->undoyankcut, 1);
   return 1;
 }
 
 /** \internal
   Checks the when() field and does a callback if indicated.
 */
-void Fl_Input_::maybe_do_callback() {
+void Fl_Input_::maybe_do_callback(Fl_Callback_Reason reason) {
   if (changed() || (when()&FL_WHEN_NOT_CHANGED)) {
-    do_callback();
+    do_callback(reason);
   }
 }
 
@@ -1037,7 +1174,7 @@ int Fl_Input_::handletext(int event, int X, int Y, int W, int H) {
   case FL_HIDE:
     fl_reset_spot();
     if (!readonly() && (when() & FL_WHEN_RELEASE))
-      maybe_do_callback();
+      maybe_do_callback(FL_REASON_LOST_FOCUS);
     return 1;
 
   case FL_PUSH:
@@ -1107,7 +1244,7 @@ int Fl_Input_::handletext(int event, int X, int Y, int W, int H) {
         return 1;
       } else return replace(0, size(), t, (int) (e-t));
     }
-    return replace(position(), mark(), t, (int) (e-t));}
+    return replace(insert_position(), mark(), t, (int) (e-t));}
 
   case FL_SHORTCUT:
     if (!(shortcut() ? Fl::test_shortcut(shortcut()) : test_shortcut()))
@@ -1150,6 +1287,9 @@ Fl_Input_::Fl_Input_(int X, int Y, int W, int H, const char* l)
   xscroll_ = yscroll_ = 0;
   maximum_size_ = 32767;
   shortcut_ = 0;
+  undo_list_ = new Fl_Input_Undo_Action_List();
+  redo_list_ = new Fl_Input_Undo_Action_List();
+  undo_ = new Fl_Input_Undo_Action();
   set_flag(SHORTCUT_LABEL);
   set_flag(MAC_USE_ACCENTS_MENU);
   set_flag(NEEDS_KEYBOARD);
@@ -1216,7 +1356,9 @@ void Fl_Input_::put_in_buffer(int len) {
 */
 int Fl_Input_::static_value(const char* str, int len) {
   clear_changed();
-  if (undowidget == this) undowidget = 0;
+  undo_->clear();
+  undo_list_->clear();
+  redo_list_->clear();
   if (str == value_ && len == size_) return 0;
   if (len) { // non-empty new value:
     if (xscroll_ || yscroll_) {
@@ -1240,7 +1382,7 @@ int Fl_Input_::static_value(const char* str, int len) {
     xscroll_ = yscroll_ = 0;
     minimal_update(0);
   }
-  position(readonly() ? 0 : size());
+  insert_position(readonly() ? 0 : size());
   return 1;
 }
 
@@ -1317,7 +1459,9 @@ void Fl_Input_::resize(int X, int Y, int W, int H) {
   from the parent Fl_Group.
 */
 Fl_Input_::~Fl_Input_() {
-  if (undowidget == this) undowidget = 0;
+  delete undo_list_;
+  delete redo_list_;
+  delete undo_;
   if (bufsize) free((void*)buffer);
 }
 

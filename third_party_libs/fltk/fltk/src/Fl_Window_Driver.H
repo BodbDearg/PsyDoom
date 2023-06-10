@@ -2,7 +2,7 @@
 // A base class for platform specific window handling code
 // for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 2010-2022 by Bill Spitzak and others.
+// Copyright 2010-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -37,18 +37,19 @@
 class Fl_X;
 class Fl_Image;
 class Fl_RGB_Image;
+class Fl_Image_Surface;
 
 /**
  \brief A base class for platform specific window handling code.
 
  This class is only for internal use by the FLTK library.
 
- When porting FLTK to a new platform, many mothods in this class provide
+ When porting FLTK to a new platform, many methods in this class provide
  a minimal default implementation. Some methods must be overridden to make
  sure that the Graphics Driver will draw into the bitmap associated with
  this window.
 */
-class FL_EXPORT Fl_Window_Driver
+class Fl_Window_Driver
 {
   friend class Fl_Window;
 private:
@@ -56,15 +57,17 @@ private:
 
 protected:
   Fl_Window *pWindow;
-  void flush_Fl_Window(); // accessor to protected Fl_Window::flush()
+  int screen_num_; // number of screen where window is mapped
 public:
   Fl_Window_Driver(Fl_Window *);
   virtual ~Fl_Window_Driver();
   static Fl_Window_Driver *newWindowDriver(Fl_Window *);
+  static fl_uintptr_t xid(const Fl_Window *win);
+  static Fl_Window *find(fl_uintptr_t xid);
   int wait_for_expose_value;
-  Fl_Offscreen other_xid; // offscreen bitmap (overlay and double-buffered windows)
-  virtual int screen_num();
-  virtual void screen_num(int) {}
+  Fl_Image_Surface *other_xid; // offscreen bitmap (overlay and double-buffered windows)
+  int screen_num();
+  void screen_num(int n) { screen_num_ = n; }
 
 
   // --- frequently used accessors to public window data
@@ -97,6 +100,7 @@ public:
   int aspect();
   unsigned char size_range_set();
   int is_resizable() { return pWindow->is_resizable(); }
+  void is_a_rescale(bool b) { is_a_rescale_ = b;}
   int fullscreen_screen_top();
   int fullscreen_screen_bottom();
   int fullscreen_screen_left();
@@ -108,7 +112,9 @@ public:
   void current(Fl_Window *c);
   char show_iconic() { return Fl_Window::show_iconic_; }
   void show_iconic(char c) { Fl_Window::show_iconic_ = c; }
-  void i(Fl_X *x) { pWindow->i = x; }
+  void flx(Fl_X *x) { pWindow->flx_ = x; }
+  Fl_Cursor cursor_default() { return pWindow->cursor_default; }
+  void destroy_double_buffer();
   /** for an Fl_Overlay_Window, returns the value of its overlay_ member variable */
   Fl_Window *overlay() {
     return pWindow->as_overlay_window() ? pWindow->as_overlay_window()->overlay_ : NULL;
@@ -138,9 +144,8 @@ public:
   virtual void make_current();
   virtual void label(const char *name, const char *mininame);
 
-  virtual Fl_X *makeWindow() { return 0; }
+  virtual void makeWindow() {}
   virtual void wait_for_expose();
-  virtual void destroy_double_buffer();
   virtual void show();
   virtual void resize(int /*X*/, int /*Y*/, int /*W*/, int /*H*/) {}
   virtual void hide() {}
@@ -184,10 +189,21 @@ public:
   static inline Fl_Window_Driver* driver(const Fl_Window *win) {return win->pWindowDriver;}
 
   // --- support for menu windows
-  // the default implementation of next 2 members is most probably enough
+  // The default implementation of next 2 virtual members is enough if the
+  // position of a window in a screen is known. Next static members may be useful
+  // when that's not the case, as with Wayland.
   virtual void reposition_menu_window(int x, int y);
   virtual void menu_window_area(int &X, int &Y, int &W, int &H, int nscreen = -1);
-  static Fl_Window *menu_parent();
+  static Fl_Window *menu_parent(int *display_height = NULL);
+  static Fl_Window *menu_leftorigin(Fl_Window*);
+  static Fl_Window *menu_title(Fl_Window*);
+  static int menu_itemheight(Fl_Window*);
+  static int menu_bartitle(Fl_Window*);
+  static int menu_selected(Fl_Window*);
+  static int *menu_offset_y(Fl_Window*);
+  static bool is_floating_title(Fl_Window *);
+  static void scroll_to_selected_item(Fl_Window *);
+  static bool is_menutitle(Fl_Window *);
 
   virtual fl_uintptr_t os_id() { return 0; }
 };

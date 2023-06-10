@@ -1,7 +1,7 @@
 //
 // Definition of Posix system driver (used by the X11, Wayland and macOS platforms).
 //
-// Copyright 1998-2021 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -177,16 +177,16 @@ int Fl_Posix_System_Driver::run_program(const char *program, char **argv, char *
 static void* quadruple_dlopen(const char *libname)
 {
   char filename2[FL_PATH_MAX];
-  sprintf(filename2, "%s.so", libname);
+  snprintf(filename2, FL_PATH_MAX, "%s.so", libname);
   void *ptr = dlopen(filename2, RTLD_LAZY | RTLD_GLOBAL);
   if (!ptr) {
-    sprintf(filename2, "%s.so.2", libname);
+    snprintf(filename2, FL_PATH_MAX, "%s.so.2", libname);
     ptr = dlopen(filename2, RTLD_LAZY | RTLD_GLOBAL);
     if (!ptr) {
-      sprintf(filename2, "%s.so.1", libname);
+      snprintf(filename2, FL_PATH_MAX, "%s.so.1", libname);
       ptr = dlopen(filename2, RTLD_LAZY | RTLD_GLOBAL);
       if (!ptr) {
-        sprintf(filename2, "%s.so.0", libname);
+        snprintf(filename2, FL_PATH_MAX, "%s.so.0", libname);
         ptr = dlopen(filename2, RTLD_LAZY | RTLD_GLOBAL);
       }
     }
@@ -216,17 +216,25 @@ void *Fl_Posix_System_Driver::dlopen_or_dlsym(const char *lib_name, const char *
 #endif
     if (func_ptr) return func_ptr;
   }
-#ifdef __APPLE_CC__ // allows testing on Darwin + XQuartz + fink
+#ifdef __APPLE_CC__ // allows using on Darwin + XQuartz + (homebrew or fink)
   if (lib_name) {
     char path[FL_PATH_MAX];
-    sprintf(path, "/opt/X11/lib/%s.dylib", lib_name);
+    snprintf(path, FL_PATH_MAX, "/opt/X11/lib/%s.dylib", lib_name);
     lib_address = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
     if (!lib_address) {
-      sprintf(path, "/opt/sw/lib/%s.dylib", lib_name);
+      snprintf(path, FL_PATH_MAX, "/opt/homebrew/lib/%s.dylib", lib_name);
       lib_address = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
       if (!lib_address) {
-        sprintf(path, "/sw/lib/%s.dylib", lib_name);
+        snprintf(path, FL_PATH_MAX, "/opt/sw/lib/%s.dylib", lib_name);
         lib_address = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+        if (!lib_address) {
+          snprintf(path, FL_PATH_MAX, "/sw/lib/%s.dylib", lib_name);
+          lib_address = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+          // the GTK2 shared lib has a new name under homebrew in macOS, try it:
+          if (!lib_address && !strcmp(lib_name, "libgtk-x11-2.0")) {
+            lib_address = dlopen("/opt/homebrew/lib/libgtkmacintegration-gtk2.dylib", RTLD_LAZY | RTLD_GLOBAL);
+          }
+        }
       }
     }
   }
@@ -243,7 +251,7 @@ void *Fl_Posix_System_Driver::dlopen_or_dlsym(const char *lib_name, const char *
 void *Fl_Posix_System_Driver::ptr_gtk = NULL;
 
 bool Fl_Posix_System_Driver::probe_for_GTK(int major, int minor, void **p_ptr_gtk) {
-  typedef void (*init_t)(int*, void*);
+  typedef int (*init_t)(int*, char***);
   init_t init_f = NULL;
   // was GTK previously loaded?
   if (Fl_Posix_System_Driver::ptr_gtk) { // yes, it was.
@@ -283,7 +291,10 @@ bool Fl_Posix_System_Driver::probe_for_GTK(int major, int minor, void **p_ptr_gt
   char *p = setlocale(LC_ALL, NULL);
   if (p) before = fl_strdup(p);
   int ac = 0;
-  init_f(&ac, NULL); // may change the locale
+  if ( !init_f(&ac, NULL) ) { // may change the locale
+    free(before);
+    return false;
+  }
   if (before) {
     setlocale(LC_ALL, before); // restore calling program's current locale
     free(before);
@@ -299,6 +310,9 @@ bool Fl_Posix_System_Driver::probe_for_GTK(int major, int minor, void **p_ptr_gt
 }
 
 #endif // HAVE_DLSYM && HAVE_DLFCN_H
+
+
+int Fl_Posix_System_Driver::close_fd(int fd) { return close(fd); }
 
 
 ////////////////////////////////////////////////////////////////

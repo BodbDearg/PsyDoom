@@ -1,7 +1,7 @@
 //
 // FLTK native file chooser widget : KDE version
 //
-// Copyright 2021-2022 by Bill Spitzak and others.
+// Copyright 2021-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -18,7 +18,7 @@
 #include <FL/Fl_Native_File_Chooser.H>
 #include "Fl_Native_File_Chooser_Kdialog.H"
 #include "Fl_Window_Driver.H"
-#include "drivers/Unix/Fl_Unix_System_Driver.H"
+#include "drivers/Unix/Fl_Unix_Screen_Driver.H"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,31 +67,9 @@ static int fnfc_dispatch(int /*event*/, Fl_Window* /*win*/) {
 }
 
 
-int Fl_Kdialog_Native_File_Chooser_Driver::show() {
+char *Fl_Kdialog_Native_File_Chooser_Driver::build_command() {
   const char *option;
   switch (_btype) {
-    case Fl_Native_File_Chooser::BROWSE_MULTI_DIRECTORY: {
-      // BROWSE_MULTI_DIRECTORY is not supported by kdialog, run GTK chooser instead
-      Fl_Native_File_Chooser fnfc(Fl_Native_File_Chooser::BROWSE_MULTI_DIRECTORY);
-      fnfc.title( title() );
-      fnfc.directory(directory());
-      fnfc.preset_file(preset_file());
-      fnfc.filter(filter());
-      fnfc.options(options());
-      int retval = fnfc.show();
-      for (int i = 0; i < _tpathnames; i++) delete[] _pathnames[i];
-      delete[] _pathnames; _pathnames = NULL;
-      _tpathnames = fnfc.count();
-      if (_tpathnames && retval == 0) {
-        _pathnames = new char*[_tpathnames];
-        for (int i = 0; i < _tpathnames; i++) {
-          _pathnames[i] = new char[strlen(fnfc.filename(i))+1];
-          strcpy(_pathnames[i], fnfc.filename(i));
-        }
-      }
-      return retval;
-    }
-      break;
     case Fl_Native_File_Chooser::BROWSE_DIRECTORY:
       option = "--getexistingdirectory";
       break;
@@ -111,15 +89,49 @@ int Fl_Kdialog_Native_File_Chooser_Driver::show() {
   const char *preset = ".";
   if (_preset_file) preset = _preset_file;
   else if (_directory) preset = _directory;
-  char *command = new char[strlen(option) + strlen(preset) + (_title?strlen(_title)+11:0) +
-                           (_parsedfilt?strlen(_parsedfilt):0) + 50];
+  const int com_size = strlen(option) + strlen(preset) +
+    (_title?strlen(_title)+11:0) + (_parsedfilt?strlen(_parsedfilt):0) + 50;
+  char *command = new char[com_size];
   strcpy(command, "kdialog ");
   if (_title) {
-    sprintf(command+strlen(command), " --title '%s'", _title);
+    snprintf(command+strlen(command), com_size - strlen(command),
+             " --title '%s'", _title);
   }
-  sprintf(command+strlen(command), " %s %s ", option, preset);
-  if (_parsedfilt) sprintf(command+strlen(command), " \"%s\" ", _parsedfilt);
+  snprintf(command+strlen(command), com_size - strlen(command),
+           " %s %s ", option, preset);
+  if (_parsedfilt) {
+    snprintf(command+strlen(command), com_size - strlen(command),
+             " \"%s\" ", _parsedfilt);
+  }
   strcat(command, "2> /dev/null"); // get rid of stderr output
+  return command;
+}
+
+
+int Fl_Kdialog_Native_File_Chooser_Driver::show() {
+  if (_btype == Fl_Native_File_Chooser::BROWSE_MULTI_DIRECTORY) {
+      // BROWSE_MULTI_DIRECTORY is not supported by kdialog, run GTK chooser instead
+      Fl_Native_File_Chooser fnfc(Fl_Native_File_Chooser::BROWSE_MULTI_DIRECTORY);
+      fnfc.title( title() );
+      fnfc.directory(directory());
+      fnfc.preset_file(preset_file());
+      fnfc.filter(filter());
+      fnfc.options(options());
+      int retval = fnfc.show();
+      for (int i = 0; i < _tpathnames; i++) delete[] _pathnames[i];
+      delete[] _pathnames; _pathnames = NULL;
+      _tpathnames = fnfc.count();
+      if (_tpathnames && retval == 0) {
+        _pathnames = new char*[_tpathnames];
+        for (int i = 0; i < _tpathnames; i++) {
+          _pathnames[i] = new char[strlen(fnfc.filename(i))+1];
+          strcpy(_pathnames[i], fnfc.filename(i));
+        }
+      }
+      return retval;
+  }
+
+  char *command = build_command();
 //puts(command);
   FILE *pipe = popen(command, "r");
   fnfc_pipe_struct data;
@@ -130,14 +142,14 @@ int Fl_Kdialog_Native_File_Chooser_Driver::show() {
     Fl_Event_Dispatch old_dispatch = Fl::event_dispatch();
     // prevent FLTK from processing any event
     Fl::event_dispatch(fnfc_dispatch);
-    void *control = ((Fl_Unix_System_Driver*)Fl::system_driver())->control_maximize_button(NULL);
+    void *control = ((Fl_Unix_Screen_Driver*)Fl::screen_driver())->control_maximize_button(NULL);
     // run event loop until pipe finishes
     while (data.fd >= 0) Fl::wait();
     Fl::remove_fd(fileno(pipe));
     pclose(pipe);
     // return to previous event processing by FLTK
     Fl::event_dispatch(old_dispatch);
-    if (control) ((Fl_Unix_System_Driver*)Fl::system_driver())->control_maximize_button(control);
+    if (control) ((Fl_Unix_Screen_Driver*)Fl::screen_driver())->control_maximize_button(control);
     if (data.all_files) {
       // process text received from pipe
       if (data.all_files[strlen(data.all_files)-1] == '\n') data.all_files[strlen(data.all_files)-1] = 0;
@@ -158,7 +170,6 @@ int Fl_Kdialog_Native_File_Chooser_Driver::show() {
     }
   }
   delete[] command;
-  if (_title) { free(_title); _title = NULL; }
   if (!pipe) return -1;
   return (data.all_files == NULL ? 1 : 0);
 }
@@ -194,9 +205,11 @@ char *Fl_Kdialog_Native_File_Chooser_Driver::parse_filter(const char *f) {
   const char *r = strchr(f, '{');
   char *developed = NULL;
   if (r) { // with {}
+    if (r <= p) return NULL;
     char *lead = new char[r-p];
     memcpy(lead, p+1, (r-p)-1); lead[(r-p)-1] = 0;
     const char *r2 = strchr(r, '}');
+    if (!r2 || r2 == r + 1) return NULL;
     char *ends = new char[r2-r];
     memcpy(ends, r+1, (r2-r)-1); ends[(r2-r)-1] = 0;
     char *ptr;
@@ -230,16 +243,19 @@ void Fl_Kdialog_Native_File_Chooser_Driver::filter(const char *f) {
   _parsedfilt = strfree(_parsedfilt);   // clear previous parsed filter (if any)
   _nfilters = 0;
   if (!f) return;
-  _filter = strdup(f);
+  _filter = new char[strlen(f) + 1];
+  strcpy(_filter, f);
   char *f2 = strdup(f);
   char *ptr;
   char *part = strtok_r(f2, "\n", &ptr);
   while (part) {
     char *p = parse_filter(part);
-    _parsedfilt = strapp(_parsedfilt, p);
-    _parsedfilt = strapp(_parsedfilt, "\\n");
-    delete[] p;
-    _nfilters++;
+    if (p) {
+      _parsedfilt = strapp(_parsedfilt, p);
+      _parsedfilt = strapp(_parsedfilt, "\n");
+      delete[] p;
+      _nfilters++;
+    }
     part = strtok_r(NULL, "\n", &ptr);
   }
   free(f2);

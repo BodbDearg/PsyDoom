@@ -1,7 +1,7 @@
 //
 // SVG image code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 2017 by Bill Spitzak and others.
+// Copyright 2017-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -19,10 +19,12 @@
 #if defined(FLTK_USE_SVG) || defined(FL_DOXYGEN)
 
 #include <FL/Fl_SVG_Image.H>
+#include <FL/Fl_Shared_Image.H>
 #include <FL/fl_utf8.h>
 #include <FL/fl_draw.H>
 #include <FL/fl_string_functions.h>
 #include "Fl_Screen_Driver.H"
+#include "Fl_System_Driver.H"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -52,20 +54,76 @@ static double strtoll(const char *str, char **endptr, int base) {
 #include <zlib.h>
 #endif
 
-/** The constructor loads the SVG image from the given .svg/.svgz filename or in-memory data.
- \param filename Name of a .svg or .svgz file, or NULL.
- \param svg_data A pointer to the memory location of the SVG image data.
- This parameter allows to load an SVG image from in-memory data, and is used when \p filename is NULL.
- \note In-memory SVG data is parsed by the object constructor and is not used after construction.
+
+/** Load an SVG image from a file.
+
+ This constructor loads the SVG image from a .svg or .svgz file. The reader
+ recognizes if the data is compressed, and decompresses it if zlib is available
+ (HAVE_LIBZ).
+
+ \param filename the filename for a .svg or .svgz file
  */
-Fl_SVG_Image::Fl_SVG_Image(const char *filename, const char *svg_data) : Fl_RGB_Image(NULL, 0, 0, 4) {
-  init_(filename, svg_data, NULL);
+Fl_SVG_Image::Fl_SVG_Image(const char *filename) :
+  Fl_RGB_Image(NULL, 0, 0, 4)
+{
+  init_(filename, NULL, 0);
+}
+
+
+/** Load an SVG image from memory.
+
+ This constructor loads the SVG image from a block of memory. This version is
+ commonly used for uncompressed text data, but the reader recognizes if the data
+ is compressed, and decompresses it if zlib is available (HAVE_LIBZ).
+
+ \param sharedname if not \c NULL, a shared image will be generated with this name
+ \param svg_data a pointer to the memory location of the SVG image data
+
+ \note In-memory SVG data is parsed by the object constructor and is no longer
+ needed after construction.
+ */
+Fl_SVG_Image::Fl_SVG_Image(const char *sharedname, const char *svg_data) :
+  Fl_RGB_Image(NULL, 0, 0, 4)
+{
+  init_(sharedname, (const unsigned char*)svg_data, 0);
+}
+
+
+/** Load an SVG image from memory.
+
+ This constructor loads the SVG image from a block of memory. This version is
+ commonly used for compressed binary data, but the reader recognizes if the data
+ is uncompressed, and reads it as a text block.
+
+ \param name if not \c NULL, a shared image will be generated with this name
+ \param svg_data a pointer to the memory location of the SVG image data
+ \param length of \p svg_data or \c 0 if the length is unknown. This will
+        protect memory outside of the \p svg_data array from illegal read
+        operations for compressed SVG data
+
+ \note In-memory SVG data is parsed by the object constructor and is no longer
+ needed after construction.
+ */
+Fl_SVG_Image::Fl_SVG_Image(const char *name, const unsigned char *svg_data, size_t length) :
+  Fl_RGB_Image(NULL, 0, 0, 4)
+{
+  init_(name, svg_data, length);
 }
 
 
 // private constructor
-Fl_SVG_Image::Fl_SVG_Image(const Fl_SVG_Image *source) : Fl_RGB_Image(NULL, 0, 0, 4) {
-  init_(NULL, NULL, source);
+Fl_SVG_Image::Fl_SVG_Image(const Fl_SVG_Image *source) :
+  Fl_RGB_Image(NULL, 0, 0, 4)
+{
+  counted_svg_image_ = source->counted_svg_image_;
+  counted_svg_image_->ref_count++;
+  to_desaturate_ = false;
+  average_weight_ = 1;
+  proportional = true;
+  w(source->w());
+  h(source->h());
+  rasterized_ = false;
+  raster_w_ = raster_h_ = 0;
 }
 
 
@@ -86,100 +144,181 @@ float Fl_SVG_Image::svg_scaling_(int W, int H) {
 
 #if defined(HAVE_LIBZ)
 
-static char *svg_inflate(const char *fname) {
-  FILE *in = fl_fopen(fname, "r");
-  if (!in) return NULL;
-  unsigned char header[2];
-  if (fread(header, 2, 1, in) < 1) {
-    fclose(in);
-    return NULL;
-  }
-  int direct = (header[0] != 0x1f || header[1] != 0x8b);
-  fseek(in, 0, SEEK_END);
-  long size = ftell(in);
-  fclose(in);
-  int fd = fl_open_ext(fname, 1, 0);
-  if (fd < 0) return NULL;
-  gzFile gzf =  gzdopen(fd, "r");
-  if (!gzf) return NULL;
-  int l;
-  long out_size = direct ? size + 1 : 3*size + 1;
-  char *out = (char*)malloc(out_size);
-  char *p = out;
-  do {
-    if ((!direct) && p + size > out + out_size) {
-      out_size += size;
-      char *tmp = (char*)realloc(out, out_size + 1);
-      p = tmp + (p - out);
-      out = tmp;
-    }
-    l = gzread(gzf, p, size);
-    if (l > 0) {
-      p += l; *p = 0;
-    }
-  } while ((!direct) && l >0);
-  gzclose(gzf);
-  if (!direct) out = (char*)realloc(out, (p-out)+1);
-  return out;
-}
-#endif
+// Decompress gzip data in memory
+#define CHUNK_SIZE (2048)
+static int svg_inflate(uchar *src, size_t src_length, uchar *&dst, size_t &dst_length) {
+  // allocate space for decompressed data in chunks
+  typedef struct Chunk {
+    Chunk() { next = NULL; }
+    struct Chunk *next;
+    uchar data[CHUNK_SIZE];
+  } Chunk;
+  Chunk *first = NULL;
+  Chunk *chunk = NULL, *next_chunk;
 
-void Fl_SVG_Image::init_(const char *filename, const char *in_filedata, const Fl_SVG_Image *copy_source) {
-  if (copy_source) {
-    filename = in_filedata = NULL;
-    counted_svg_image_ = copy_source->counted_svg_image_;
-    counted_svg_image_->ref_count++;
-  } else {
-    counted_svg_image_ = new counted_NSVGimage;
-    counted_svg_image_->svg_image = NULL;
-    counted_svg_image_->ref_count = 1;
+  z_stream stream = { };
+  int err = Z_OK;
+
+  dst = 0;
+  dst_length = 0;
+
+  stream.next_in = (z_const Bytef *)src;
+  stream.avail_in = 0;
+  stream.zalloc = (alloc_func)0;
+  stream.zfree = (free_func)0;
+  stream.opaque = (voidpf)0;
+
+  // initialize zlib for inflating compressed data
+  err = inflateInit2(&stream, 31);
+  if (err != Z_OK) return err;
+  gz_header header = { };
+  err = inflateGetHeader(&stream, &header);
+  if (err != Z_OK) return err;
+
+  stream.avail_out = 0;
+  stream.avail_in = (uInt)(src_length ? src_length : -1);
+
+  // inflate into as many chunks as needed
+  do {
+    if (stream.avail_out == 0) {
+      next_chunk = new Chunk;
+      if (!first) first = next_chunk; else chunk->next = next_chunk;
+      chunk = next_chunk;
+      stream.avail_out = CHUNK_SIZE;
+      stream.next_out = chunk->data;
+    }
+    err = inflate(&stream, Z_NO_FLUSH);
+  } while (err == Z_OK);
+
+  inflateEnd(&stream);
+
+  // copy chunk data into a new continuous data block
+  if (err == Z_STREAM_END) {
+    size_t nn = dst_length = stream.total_out;
+    dst = (uchar*)malloc(dst_length+1); // leave room for a trailing NUL
+    uchar *d = dst;
+    chunk = first;
+    while (chunk && nn>0) {
+      size_t n = nn > CHUNK_SIZE ? CHUNK_SIZE : nn;
+      memcpy(d, chunk->data, n);
+      d += n;
+      nn -= n;
+      chunk = chunk->next;
+    }
   }
-  char *filedata = NULL;
+
+  // delete all the chunks that we allocated
+  chunk = first;
+  while (chunk) {
+    next_chunk = chunk->next;
+    delete chunk;
+    chunk = next_chunk;
+  }
+
+  return (err == Z_STREAM_END)
+          ? Z_OK
+          : (err == Z_NEED_DICT)
+            ? Z_DATA_ERROR
+            : ((err == Z_BUF_ERROR) && stream.avail_out)
+              ? Z_DATA_ERROR
+              : err;
+}
+
+
+#endif // defined(HAVE_LIBZ)
+
+
+void Fl_SVG_Image::init_(const char *name, const unsigned char *in_data, size_t length) {
+  counted_svg_image_ = new counted_NSVGimage;
+  counted_svg_image_->svg_image = NULL;
+  counted_svg_image_->ref_count = 1;
   to_desaturate_ = false;
   average_weight_ = 1;
   proportional = true;
-  if (filename) {
-#if defined(HAVE_LIBZ)
-    filedata = svg_inflate(filename);
-#else
-    FILE *fp = fl_fopen(filename, "rb");
-    if (fp) {
-      fseek(fp, 0, SEEK_END);
-      long size = ftell(fp);
-      fseek(fp, 0, SEEK_SET);
-      filedata = (char*)malloc(size+1);
-      if (filedata) {
-        if (fread(filedata, 1, size, fp) == size) {
-          filedata[size] = '\0';
-        } else {
-          free(filedata);
-          filedata = NULL;
-        }
-      }
-      fclose(fp);
-    }
-#endif // HAVE_LIBZ
-    if (!filedata) ld(ERR_FILE_ACCESS);
-  } else {
-    // XXX: Make internal copy -- nsvgParse() modifies filedata during parsing (!)
-    filedata = in_filedata ? fl_strdup(in_filedata) : NULL;
-  }
-  if (filedata) {
-    counted_svg_image_->svg_image = nsvgParse(filedata, "px", 96);
-    free(filedata);     // made with svg_inflate|malloc|strdup
-    if (counted_svg_image_->svg_image->width == 0 || counted_svg_image_->svg_image->height == 0) {
-      d(-1);
-      ld(ERR_FORMAT);
-    } else {
-      w(int(counted_svg_image_->svg_image->width + 0.5));
-      h(int(counted_svg_image_->svg_image->height + 0.5));
-    }
-  } else if (copy_source) {
-    w(copy_source->w());
-    h(copy_source->h());
-  }
+
+  // yes, this is a const cast to avoid duplicating user supplied data
+  uchar *data = const_cast<uchar*>(in_data); // 🤨 careful with this, don't overwrite user supplied data in nsvgParse()
+
+  // this is to make it clear what we are doing
+  const char *sharedname = data ? name : NULL;
+  const char *filename = data ? NULL : name;
+
+  // prepare with error data, so we can just return if an error occurs
+  d(-1);
+  ld(ERR_FORMAT);
   rasterized_ = false;
   raster_w_ = raster_h_ = 0;
+
+  // if we are reading from a file, just read the entire file into a memory block
+  if (!data) {
+    FILE *f = fl_fopen(filename, "rb");
+    if (f) {
+      fseek(f, 0, SEEK_END);
+      length = ftell(f);
+      fseek(f, 0, SEEK_SET);
+      data = (uchar*)malloc(length+1);
+      if (data) {
+        if (fread((void*)data, 1, length, f) == length) {
+          data[length] = 0;
+        } else {
+          free((void*)data);
+          data = NULL;
+        }
+      }
+      fclose(f);
+    }
+    if (!data) return;
+  }
+
+  // now if our data is compressed, we use zlib to infalte it
+  if (length==0 || length>10) {
+    if (data[0] == 0x1f && data[1] == 0x8b) {
+#if defined(HAVE_LIBZ)
+      // this is gzip compressed data, so we decompress it and preplace the data array
+      uchar *uncompressed_data = NULL;
+      size_t uncompressed_data_length = 0;
+      int err = svg_inflate(data, length, uncompressed_data, uncompressed_data_length);
+      if (err == Z_OK) {
+        // replace compressed data with uncompressed data
+        if (in_data == NULL) free(data);
+        length = (size_t)uncompressed_data_length;
+        data = (uchar*)uncompressed_data;
+        data[length] = 0;
+      } else {
+        if (in_data != data) free(data);
+        return;
+      }
+#else
+      if (in_data != data) free(data);
+      return;
+#endif // HAVE_LIBZ
+    }
+  }
+
+  // now our SVG data should be in text format in `data`, terminated by a NUL
+  // nsvgParse is destructive, so if in_data was set, we must duplicate the data first!
+  if (in_data == data) {
+    if (length) {
+      data = (uchar*)malloc(length+1);
+      memcpy(data, in_data, length);
+      data[length] = 0;
+    } else {
+      data = (uchar*)fl_strdup((char*)in_data);
+    }
+  }
+  counted_svg_image_->svg_image = nsvgParse((char*)data, "px", 96);
+  if (in_data != data) free(data);
+  if (counted_svg_image_->svg_image->width != 0 && counted_svg_image_->svg_image->height != 0) {
+    w(int(counted_svg_image_->svg_image->width + 0.5));
+    h(int(counted_svg_image_->svg_image->height + 0.5));
+    d(4);
+    ld(0);
+  }
+
+  if (sharedname && w() && h()) {
+    Fl_Shared_Image *si = new Fl_Shared_Image(sharedname, this);
+    si->add();
+  }
 }
 
 

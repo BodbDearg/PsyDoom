@@ -35,6 +35,7 @@
 
 #define FL_SORT_ASCENDING       0       /**< sort browser items in ascending alphabetic order. */
 #define FL_SORT_DESCENDING      1       /**< sort in descending order */
+#define FL_SORT_CASEINSENSITIVE 0x2     /**< sort case insensitively */
 
 /**
   This is the base class for browsers.  To be useful it must be
@@ -52,6 +53,12 @@
   useful if actually figuring out the size of an object requires
   accessing image data or doing stat() on a file or doing some
   other slow operation.
+
+  Callbacks are called when the value changes with \p FL_REASON_CHANGED.
+  If \p FL_WHEN_RELEASE is set, callbacks are called when the mouse button is
+  released with \p FL_REASON_CHANGED or \p FL_REASON_RESELECTED if the selection
+  did not change. If \p FL_WHEN_ENTER_KEY is set, callbacks are also called when
+  key presses or double clicks change the selection.
 
 Keyboard navigation of browser items
 ------------------------------------
@@ -198,7 +205,7 @@ protected:
   int leftedge() const; // x position after scrollbar & border
   void *find_item(int ypos); // item under mouse
 
-  void draw();
+  void draw() FL_OVERRIDE;
   Fl_Browser_(int X,int Y,int W,int H,const char *L=0);
 
 public:
@@ -224,8 +231,8 @@ public:
    */
   Fl_Scrollbar hscrollbar;
 
-  int handle(int event);
-  void resize(int X,int Y,int W,int H);
+  int handle(int event) FL_OVERRIDE;
+  void resize(int X,int Y,int W,int H) FL_OVERRIDE;
 
   int select(void *item,int val=1,int docallbacks=0);
   int select_only(void *item,int docallbacks=0);
@@ -237,8 +244,15 @@ public:
     the list are scrolled off the top edge of the screen.
     \see position(), hposition()
   */
-  int position() const { return position_; }
-  void position(int pos); // scroll to here
+  int vposition() const { return position_; }
+  FL_DEPRECATED("in 1.4.0 - use vposition() instead",
+  int position() const) { return vposition(); }
+
+  void vposition(int pos); // scroll to here
+  FL_DEPRECATED("in 1.4.0 - use vposition(pos) instead",
+  void position(int pos)) { return vposition(pos); }
+  void position(int x, int y) { Fl_Group::position(x, y); }
+
   /**
     Gets the horizontal scroll position of the list as a pixel position \p pos.
     The position returned is how many pixels of the list are scrolled off the left edge

@@ -317,6 +317,10 @@ struct FL_EXPORT Fl_Menu_Item {
         before FLTK 1.4.0.
   */
   int value() const {return (flags & FL_MENU_VALUE) ? 1 : 0;}
+
+  /** Sets the current value of the check or radio item. */
+  void value(int v) { v ? set() : clear(); }
+
   /**
     Turns the check or radio item "on" for the menu item. Note that this
     does not turn off any adjacent radio items like setonly() does.
@@ -326,7 +330,7 @@ struct FL_EXPORT Fl_Menu_Item {
   /** Turns the check or radio item "off" for the menu item. */
   void clear() {flags &= ~FL_MENU_VALUE;}
 
-  void setonly();
+  void setonly(Fl_Menu_Item const* first = NULL);
 
   /** Gets the visibility of an item. */
   int visible() const {return !(flags&FL_MENU_INVISIBLE);}
@@ -390,14 +394,14 @@ struct FL_EXPORT Fl_Menu_Item {
     The callback is called with the stored user_data() as its second argument.
     You must first check that callback() is non-zero before calling this.
   */
-  void do_callback(Fl_Widget* o) const {callback_(o, user_data_);}
+  void do_callback(Fl_Widget* o) const {Fl::callback_reason_=FL_REASON_SELECTED; callback_(o, user_data_);}
 
   /**
     Calls the Fl_Menu_Item item's callback, and provides the Fl_Widget argument.
     This call overrides the callback's second argument with the given value \p arg.
     You must first check that callback() is non-zero before calling this.
   */
-  void do_callback(Fl_Widget* o,void* arg) const {callback_(o, arg);}
+  void do_callback(Fl_Widget* o,void* arg) const {Fl::callback_reason_=FL_REASON_SELECTED; callback_(o, arg);}
 
   /**
     Calls the Fl_Menu_Item item's callback, and provides the Fl_Widget argument.
@@ -406,7 +410,7 @@ struct FL_EXPORT Fl_Menu_Item {
     the callback.
     You must first check that callback() is non-zero before calling this.
   */
-  void do_callback(Fl_Widget* o,long arg) const {callback_(o, (void*)(fl_intptr_t)arg);}
+  void do_callback(Fl_Widget* o,long arg) const {Fl::callback_reason_=FL_REASON_SELECTED; callback_(o, (void*)(fl_intptr_t)arg);}
 
   /** Back compatibility only.
     \deprecated

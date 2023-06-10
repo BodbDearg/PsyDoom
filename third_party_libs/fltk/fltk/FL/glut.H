@@ -1,7 +1,7 @@
 //
 // GLUT emulation header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2015 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -26,8 +26,8 @@
 
 // Commented out lines indicate parts of GLUT that are not emulated.
 
-#ifndef Fl_glut_H
-#  define Fl_glut_H
+#ifndef _FL_glut_H_
+#  define _FL_glut_H_
 
 #  include "gl.h"
 
@@ -43,9 +43,9 @@ class FL_EXPORT Fl_Glut_Window : public Fl_Gl_Window {
   void _init();
   int mouse_down;
 protected:
-  void draw();
-  void draw_overlay();
-  int handle(int);
+  void draw() FL_OVERRIDE;
+  void draw_overlay() FL_OVERRIDE;
+  int handle(int) FL_OVERRIDE;
 public: // so the inline functions work
   int number;
   int menu[3];
@@ -315,12 +315,12 @@ enum {
   GLUT_INIT_WINDOW_HEIGHT,
   GLUT_INIT_DISPLAY_MODE,
   GLUT_WINDOW_BUFFER_SIZE,
-  GLUT_VERSION
+  GLUT_VERSION,
 //GLUT_WINDOW_NUM_CHILDREN,
 //GLUT_WINDOW_CURSOR,
 //GLUT_SCREEN_WIDTH_MM,
 //GLUT_SCREEN_HEIGHT_MM,
-//GLUT_ELAPSED_TIME,
+  GLUT_ELAPSED_TIME
 };
 
 #  define GLUT_WINDOW_STENCIL_SIZE      GL_STENCIL_BITS
@@ -472,4 +472,4 @@ FL_EXPORT void glutSolidTetrahedron();
 FL_EXPORT void glutWireIcosahedron();
 FL_EXPORT void glutSolidIcosahedron();
 
-#endif // !Fl_glut_H
+#endif // !_FL_glut_H_

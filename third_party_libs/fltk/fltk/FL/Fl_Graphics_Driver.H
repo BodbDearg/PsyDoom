@@ -76,9 +76,6 @@ typedef struct _PangoFontDescription PangoFontDescription;
  */
 class FL_EXPORT Fl_Graphics_Driver {
   friend class Fl_Surface_Device;
-  friend class Fl_Display_Device;
-  friend class Fl_Screen_Driver;
-  friend class Fl_Window_Driver;
   friend class Fl_Pixmap;
   friend class Fl_Bitmap;
   friend class Fl_RGB_Image;
@@ -90,7 +87,6 @@ class FL_EXPORT Fl_Graphics_Driver {
   friend void fl_copy_offscreen(int x, int y, int w, int h, Fl_Offscreen pixmap, int srcx, int srcy);
   friend int fl_convert_pixmap(const char*const* cdata, uchar* out, Fl_Color bg);
   friend FL_EXPORT void gl_start();
-  friend FL_EXPORT void gl_finish();
   /* ============== Implementation note about image drawing =========================
    A graphics driver can implement up to 6 virtual member functions to draw images:
    virtual void draw_pixmap(Fl_Pixmap *pxm,int XP, int YP, int WP, int HP, int cx, int cy)
@@ -166,7 +162,7 @@ protected:
   matrix m; ///< current transformation matrix
   int n; ///< For internal use by FLTK
   int gap_; ///< For internal use by FLTK
-  int what; ///< For internal use by FLTK
+  enum SHAPE {NONE=0, LINE, LOOP, POLYGON, POINTS, COMPLEX_POLYGON} what;
   int rstackptr; ///< For internal use by FLTK
   static const int region_stack_max = FL_REGION_STACK_SIZE - 1; ///< For internal use by FLTK
   Fl_Region rstack[FL_REGION_STACK_SIZE]; ///< For internal use by FLTK
@@ -174,12 +170,6 @@ protected:
   int p_size;
   typedef struct { float x; float y; } XPOINT;
   XPOINT *xpoint;
-#ifndef FL_DOXYGEN
-  enum {LINE, LOOP, POLYGON, POINT_};
-  inline int vertex_no() { return n; }
-  inline int vertex_kind() {return what;}
-#endif
-  matrix *fl_matrix; /**< Points to the current coordinate transformation matrix */
   virtual void global_gc();
   virtual void cache(Fl_Pixmap *img);
   virtual void cache(Fl_Bitmap *img);
@@ -241,18 +231,35 @@ protected:
 public:
   virtual ~Fl_Graphics_Driver();
   static Fl_Graphics_Driver &default_driver();
+  // support of "complex shapes"
+  void push_matrix();
+  void pop_matrix();
+  void load_identity();
+  void load_matrix(double a, double b, double c, double d, double x, double y);
+  void mult_matrix(double a, double b, double c, double d, double x, double y);
+  void rotate(double d);
+  void translate(double x,double y);
+  double transform_x(double x, double y);
+  double transform_y(double x, double y);
+  double transform_dx(double x, double y);
+  double transform_dy(double x, double y);
+  /** Return the current Fl_Font_Descriptor */
+  inline Fl_Font_Descriptor *font_descriptor() { return font_descriptor_;}
+  /** Set the current Fl_Font_Descriptor */
+  inline void font_descriptor(Fl_Font_Descriptor *d) { font_descriptor_ = d;}
   /** Current scale factor between FLTK and drawing units: drawing = FLTK * scale() */
   float scale() { return scale_; }
   /** Sets the current value of the scaling factor */
   virtual void scale(float f);
   /** Return whether the graphics driver can do alpha blending */
   virtual char can_do_alpha_blending();
-  // --- implementation is in src/fl_rect.cxx which includes src/drivers/xxx/Fl_xxx_Graphics_Driver_rect.cxx
-  /** see fl_point() */
   virtual void point(int x, int y);
   virtual void rect(int x, int y, int w, int h);
   virtual void focus_rect(int x, int y, int w, int h);
   virtual void rectf(int x, int y, int w, int h);
+  virtual void _rbox(int fill, int x, int y, int w, int h, int r);
+  virtual void rounded_rect(int x, int y, int w, int h, int r);
+  virtual void rounded_rectf(int x, int y, int w, int h, int r);
   // the default implementation is most likely enough
   virtual void colored_rectf(int x, int y, int w, int h, uchar r, uchar g, uchar b);
   virtual void line(int x, int y, int x1, int y1);
@@ -288,21 +295,11 @@ public:
   virtual Fl_Region clip_region();              // has default implementation
   virtual void clip_region(Fl_Region r);        // has default implementation
   virtual void restore_clip();
-  // --- implementation is in src/fl_vertex.cxx which includes src/drivers/xxx/Fl_xxx_Graphics_Driver_vertex.cxx
-  virtual void push_matrix();
-  virtual void pop_matrix();
-  virtual void mult_matrix(double a, double b, double c, double d, double x, double y);
-  virtual void rotate(double d);
-  virtual void translate(double x,double y);
   virtual void begin_points();
   virtual void begin_line();
   virtual void begin_loop();
   virtual void begin_polygon();
   virtual void begin_complex_polygon();
-  virtual double transform_x(double x, double y);
-  virtual double transform_y(double x, double y);
-  virtual double transform_dx(double x, double y);
-  virtual double transform_dy(double x, double y);
   virtual void transformed_vertex(double xf, double yf);
   virtual void transformed_vertex0(float x, float y);
   virtual void vertex(double x, double y);
@@ -312,18 +309,15 @@ public:
   virtual void fixloop();
   virtual void end_polygon();
   virtual void end_complex_polygon();
+  // default implementation is most probably enough
+  virtual bool can_fill_non_convex_polygon() { return true; }
   virtual void gap();
   virtual void circle(double x, double y, double r);
-  // --- implementation is in src/fl_arc.cxx which includes src/drivers/xxx/Fl_xxx_Graphics_Driver_arc.cxx if needed
   virtual void arc(double x, double y, double r, double start, double end);
-  // --- implementation is in src/fl_arci.cxx which includes src/drivers/xxx/Fl_xxx_Graphics_Driver_arci.cxx
   virtual void arc(int x, int y, int w, int h, double a1, double a2);
   virtual void pie(int x, int y, int w, int h, double a1, double a2);
-  // --- implementation is in src/fl_curve.cxx which includes src/drivers/xxx/Fl_xxx_Graphics_Driver_curve.cxx if needed
   virtual void curve(double X0, double Y0, double X1, double Y1, double X2, double Y2, double X3, double Y3);
-  // --- implementation is in src/fl_line_style.cxx which includes src/cfg_gfx/xxx_line_style.cxx
   virtual void line_style(int style, int width=0, char* dashes=0);
-  // --- implementation is in src/fl_color.cxx which includes src/cfg_gfx/xxx_color.cxx
   virtual void color(Fl_Color c);
   virtual void set_color(Fl_Color i, unsigned int c);
   virtual void free_color(Fl_Color i, int overlay);
@@ -342,9 +336,6 @@ public:
   virtual void text_extents(const char*, int n, int& dx, int& dy, int& w, int& h);
   virtual int height();
   virtual int descent();
-  /** Return the current Fl_Font_Descriptor */
-  inline Fl_Font_Descriptor *font_descriptor() { return font_descriptor_;}
-  virtual void font_descriptor(Fl_Font_Descriptor *d);
   virtual void gc(void*);
   virtual void *gc(void);
   virtual uchar **mask_bitmap();
@@ -389,7 +380,7 @@ public:
   Fl_Font_Descriptor *next;
   Fl_Fontsize size; /**< font size */
   Fl_Font_Descriptor(const char* fontname, Fl_Fontsize size);
-  FL_EXPORT ~Fl_Font_Descriptor() {}
+  virtual FL_EXPORT ~Fl_Font_Descriptor() {}
   short ascent, descent;
   unsigned int listbase;// base of display list, 0 = none
 };
@@ -428,76 +419,76 @@ protected:
   int line_width_;
   virtual Fl_Region scale_clip(float f);
   void unscale_clip(Fl_Region r);
-  virtual void point(int x, int y);
+  void point(int x, int y) FL_OVERRIDE;
   virtual void point_unscaled(float x, float y);
-  virtual void rect(int x, int y, int w, int h);
-  virtual void rectf(int x, int y, int w, int h);
+  void rect(int x, int y, int w, int h) FL_OVERRIDE;
+  void rectf(int x, int y, int w, int h) FL_OVERRIDE;
   virtual void rectf_unscaled(int x, int y, int w, int h);
-  virtual void line(int x, int y, int x1, int y1);
+  void line(int x, int y, int x1, int y1) FL_OVERRIDE;
   virtual void line_unscaled(int x, int y, int x1, int y1);
-  virtual void line(int x, int y, int x1, int y1, int x2, int y2);
+  void line(int x, int y, int x1, int y1, int x2, int y2) FL_OVERRIDE;
   virtual void line_unscaled(int x, int y, int x1, int y1, int x2, int y2);
-  virtual void xyline(int x, int y, int x1);
+  void xyline(int x, int y, int x1) FL_OVERRIDE;
   virtual void xyline_unscaled(int x, int y, int x1);
-  virtual void xyline(int x, int y, int x1, int y2) {Fl_Graphics_Driver::xyline(x, y, x1, y2);}
-  virtual void xyline(int x, int y, int x1, int y2, int x3) {Fl_Graphics_Driver::xyline(x, y, x1, y2, x3);}
-  virtual void yxline(int x, int y, int y1);
+  void xyline(int x, int y, int x1, int y2) FL_OVERRIDE {Fl_Graphics_Driver::xyline(x, y, x1, y2);}
+  void xyline(int x, int y, int x1, int y2, int x3) FL_OVERRIDE {Fl_Graphics_Driver::xyline(x, y, x1, y2, x3);}
+  void yxline(int x, int y, int y1) FL_OVERRIDE;
   virtual void yxline_unscaled(int x, int y, int y1);
-  virtual void yxline(int x, int y, int y1, int x2) {Fl_Graphics_Driver::yxline(x, y, y1, x2);}
-  virtual void yxline(int x, int y, int y1, int x2, int y3) {Fl_Graphics_Driver::yxline(x, y, y1, x2, y3);}
-  virtual void loop(int x0, int y0, int x1, int y1, int x2, int y2);
+  void yxline(int x, int y, int y1, int x2) FL_OVERRIDE {Fl_Graphics_Driver::yxline(x, y, y1, x2);}
+  void yxline(int x, int y, int y1, int x2, int y3) FL_OVERRIDE {Fl_Graphics_Driver::yxline(x, y, y1, x2, y3);}
+  void loop(int x0, int y0, int x1, int y1, int x2, int y2) FL_OVERRIDE;
   virtual void loop_unscaled(int x0, int y0, int x1, int y1, int x2, int y2);
-  virtual void loop(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3);
+  void loop(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3) FL_OVERRIDE;
   virtual void loop_unscaled(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3);
-  virtual void polygon(int x0, int y0, int x1, int y1, int x2, int y2);
+  void polygon(int x0, int y0, int x1, int y1, int x2, int y2) FL_OVERRIDE;
   virtual void polygon_unscaled(int x0, int y0, int x1, int y1, int x2, int y2);
-  virtual void polygon(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3);
+  void polygon(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3) FL_OVERRIDE;
   virtual void polygon_unscaled(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3);
-  virtual void circle(double x, double y, double r);
+  void circle(double x, double y, double r) FL_OVERRIDE;
   virtual void ellipse_unscaled(double xt, double yt, double rx, double ry);
-  virtual void font(Fl_Font face, Fl_Fontsize size);
-  virtual Fl_Font font();
+  void font(Fl_Font face, Fl_Fontsize size) FL_OVERRIDE;
+  Fl_Font font() FL_OVERRIDE;
   virtual void font_unscaled(Fl_Font face, Fl_Fontsize size);
-  virtual double width(const char *str, int n);
-  virtual double width(unsigned int c);
+  double width(const char *str, int n) FL_OVERRIDE;
+  double width(unsigned int c) FL_OVERRIDE;
   virtual double width_unscaled(const char *str, int n);
   virtual double width_unscaled(unsigned int c);
-  virtual Fl_Fontsize size();
+  Fl_Fontsize size() FL_OVERRIDE;
   virtual Fl_Fontsize size_unscaled();
-  virtual void text_extents(const char *str, int n, int &dx, int &dy, int &w, int &h);
+  void text_extents(const char *str, int n, int &dx, int &dy, int &w, int &h) FL_OVERRIDE;
   virtual void text_extents_unscaled(const char *str, int n, int &dx, int &dy, int &w, int &h);
-  virtual int height();
-  virtual int descent();
+  int height() FL_OVERRIDE;
+  int descent() FL_OVERRIDE;
   virtual int height_unscaled();
   virtual int descent_unscaled();
-  virtual void draw(const char *str, int n, int x, int y);
+  void draw(const char *str, int n, int x, int y) FL_OVERRIDE;
   virtual void draw_unscaled(const char *str, int n, int x, int y);
-  virtual void draw(int angle, const char *str, int n, int x, int y);
+  void draw(int angle, const char *str, int n, int x, int y) FL_OVERRIDE;
   virtual void draw_unscaled(int angle, const char *str, int n, int x, int y);
-  virtual void draw(const char *str, int nChars, float x, float y);
-  virtual void rtl_draw(const char* str, int n, int x, int y);
+  void draw(const char *str, int nChars, float x, float y) FL_OVERRIDE;
+  void rtl_draw(const char* str, int n, int x, int y) FL_OVERRIDE;
   virtual void rtl_draw_unscaled(const char* str, int n, int x, int y);
-  virtual void arc(double x, double y, double r, double start, double end);
-  virtual void arc(int x, int y, int w, int h, double a1, double a2);
+  void arc(double x, double y, double r, double start, double end) FL_OVERRIDE;
+  void arc(int x, int y, int w, int h, double a1, double a2) FL_OVERRIDE;
   virtual void arc_unscaled(int x, int y, int w, int h, double a1, double a2);
-  virtual void pie(int x, int y, int w, int h, double a1, double a2);
+  void pie(int x, int y, int w, int h, double a1, double a2) FL_OVERRIDE;
   virtual void pie_unscaled(int x, int y, int w, int h, double a1, double a2);
-  virtual void line_style(int style, int width=0, char* dashes=0);
+  void line_style(int style, int width=0, char* dashes=0) FL_OVERRIDE;
   virtual void line_style_unscaled(int style, int width, char* dashes);
   void draw_image_rescale(void *buf, Fl_Draw_Image_Cb cb, int X, int Y, int W, int H, int D, int L, bool mono);
   virtual void draw_image_unscaled(const uchar* buf, int X,int Y,int W,int H, int D=3, int L=0);
   virtual void draw_image_unscaled(Fl_Draw_Image_Cb cb, void* data, int X,int Y,int W,int H, int D=3);
-  void draw_image(const uchar* buf, int X,int Y,int W,int H, int D=3, int L=0);
-  void draw_image(Fl_Draw_Image_Cb cb, void* data, int X,int Y,int W,int H, int D=3);
+  void draw_image(const uchar* buf, int X,int Y,int W,int H, int D=3, int L=0) FL_OVERRIDE;
+  void draw_image(Fl_Draw_Image_Cb cb, void* data, int X,int Y,int W,int H, int D=3) FL_OVERRIDE;
   virtual void draw_image_mono_unscaled(const uchar* buf, int x, int y, int w, int h, int d, int l);
-  void draw_image_mono(const uchar* buf, int X,int Y,int W,int H, int D=1, int L=0);
+  void draw_image_mono(const uchar* buf, int X,int Y,int W,int H, int D=1, int L=0) FL_OVERRIDE;
   virtual void draw_image_mono_unscaled(Fl_Draw_Image_Cb cb, void* data, int X,int Y,int W,int H, int D=1);
-  void draw_image_mono(Fl_Draw_Image_Cb cb, void* data, int X,int Y,int W,int H, int D=1);
+  void draw_image_mono(Fl_Draw_Image_Cb cb, void* data, int X,int Y,int W,int H, int D=1) FL_OVERRIDE;
 
-  void transformed_vertex(double xf, double yf);
-  void vertex(double x, double y);
-  virtual float override_scale();
-  virtual void restore_scale(float);
+  void transformed_vertex(double xf, double yf) FL_OVERRIDE;
+  void vertex(double x, double y) FL_OVERRIDE;
+  float override_scale() FL_OVERRIDE;
+  void restore_scale(float) FL_OVERRIDE;
   virtual void *change_pen_width(int lwidth);
   virtual void reset_pen_width(void *data);
 };

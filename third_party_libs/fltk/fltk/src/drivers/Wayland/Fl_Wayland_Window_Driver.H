@@ -1,7 +1,7 @@
 //
 // Definition of Wayland window driver for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 2010-2022 by Bill Spitzak and others.
+// Copyright 2010-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -41,11 +41,12 @@
  */
 
 typedef struct _cairo_pattern cairo_pattern_t;
+typedef struct _cairo_rectangle_int cairo_rectangle_int_t;
+class Fl_Wayland_Plugin;
 
 
-class FL_EXPORT Fl_Wayland_Window_Driver : public Fl_Window_Driver
+class Fl_Wayland_Window_Driver : public Fl_Window_Driver
 {
-  friend class Fl_X;
   friend class Fl_Wayland_Gl_Window_Driver;
 private:
   struct shape_data_type {
@@ -54,98 +55,102 @@ private:
     Fl_Image* shape_; ///<  shape image
     cairo_pattern_t *mask_pattern_;
   } *shape_data_;
-  static bool in_flush; // useful for progressive window drawing
-  struct wl_cursor *cursor_;
-  void delete_cursor_();
+  cairo_rectangle_int_t *subRect_;      // makes sure subwindow remains inside its parent window
+  static bool in_flush_; // useful for progressive window drawing
+  Fl_Cursor standard_cursor_; // window's standard custom kind
+  void delete_cursor_(struct wld_window *, bool delete_rgb = true);
   struct gl_start_support *gl_start_support_; // for support of gl_start/gl_finish
 public:
-  struct wl_cursor *cursor() { return cursor_; };
+  inline Fl_Cursor standard_cursor() { return standard_cursor_; };
   bool in_handle_configure; // distinguish OS and user window resize
-  struct window_output {
-    Fl_Wayland_Screen_Driver::output* output;
-    struct wl_list link;
-  };
   // --- support for screen-specific scaling factors
   struct type_for_resize_window_between_screens {
     int screen;
     bool busy;
   };
   static type_for_resize_window_between_screens data_for_resize_window_between_screens_;
-  int screen_num_;
-  void screen_num(int n) { screen_num_ = n; }
   void decorated_win_size(int &w, int &h);
   void shape_bitmap_(Fl_Image* b);
-  void shape_alpha_(Fl_Image* img, int offset);
-  void update_scale();
+  void shape_alpha_(Fl_Image* img, int offset) FL_OVERRIDE;
+  int wld_scale();
+  cairo_rectangle_int_t *subRect() { return subRect_; } // getter
+  void subRect(cairo_rectangle_int_t *r); // setter
+  void checkSubwindowFrame();
   enum kind {DECORATED, SUBWINDOW, POPUP, UNFRAMED};
   struct xdg_toplevel *xdg_toplevel();
   Fl_Wayland_Window_Driver(Fl_Window*);
   virtual ~Fl_Wayland_Window_Driver();
   static struct wld_window *wld_window;
-  static void redraw(struct wld_window *window);
+  static Fl_Window *surface_to_window(struct wl_surface *);
 
   static inline Fl_Wayland_Window_Driver* driver(const Fl_Window *w) {return (Fl_Wayland_Window_Driver*)Fl_Window_Driver::driver(w);}
-  virtual int screen_num();
   static void resize_after_screen_change(void *data);
+  static Fl_Wayland_Plugin *gl_plugin();
 
   // --- window data
-  virtual int decorated_w();
-  virtual int decorated_h();
-  virtual const Fl_Image* shape();
+  int decorated_w() FL_OVERRIDE;
+  int decorated_h() FL_OVERRIDE;
+  const Fl_Image* shape() FL_OVERRIDE;
 
   // --- window management
-  virtual Fl_X *makeWindow();
-  virtual void take_focus();
-  virtual void flush();
-  virtual void flush_overlay();
-  virtual void draw_end();
-  virtual void make_current();
-  virtual void show();
-  virtual void resize(int X,int Y,int W,int H);
-  virtual void label(const char *name, const char *mininame);
-  virtual void destroy_double_buffer();
-  virtual void hide();
-  virtual void map();
-  virtual void unmap();
-  virtual void fullscreen_on();
-  virtual void fullscreen_off(int X, int Y, int W, int H);
-  virtual void use_border();
-  virtual void size_range();
-  virtual void iconize();
-  virtual void decoration_sizes(int *top, int *left,  int *right, int *bottom);
-  virtual void show_with_args_begin();
-  virtual void show_with_args_end(int argc, char **argv);
+  void makeWindow() FL_OVERRIDE;
+  void take_focus() FL_OVERRIDE;
+  void flush() FL_OVERRIDE;
+  void flush_overlay() FL_OVERRIDE;
+  void draw_end() FL_OVERRIDE;
+  void make_current() FL_OVERRIDE;
+  void show() FL_OVERRIDE;
+  void resize(int X,int Y,int W,int H) FL_OVERRIDE;
+  void label(const char *name, const char *mininame) FL_OVERRIDE;
+  void hide() FL_OVERRIDE;
+  void map() FL_OVERRIDE;
+  void unmap() FL_OVERRIDE;
+  void fullscreen_on() FL_OVERRIDE;
+  void fullscreen_off(int X, int Y, int W, int H) FL_OVERRIDE;
+  void use_border() FL_OVERRIDE;
+  void size_range() FL_OVERRIDE;
+  void iconize() FL_OVERRIDE;
+  void decoration_sizes(int *top, int *left,  int *right, int *bottom) FL_OVERRIDE;
   // --- window cursor stuff
-  virtual int set_cursor(Fl_Cursor);
-  virtual int set_cursor(const Fl_RGB_Image*, int, int);
+  int set_cursor(Fl_Cursor) FL_OVERRIDE;
+  int set_cursor(const Fl_RGB_Image*, int, int) FL_OVERRIDE;
+  int set_cursor_4args(const Fl_RGB_Image*, int, int, bool);
 
-  virtual void shape(const Fl_Image* img);
-  virtual void capture_titlebar_and_borders(Fl_RGB_Image*& top, Fl_RGB_Image*& left, Fl_RGB_Image*& bottom, Fl_RGB_Image*& right);
-  virtual int scroll(int src_x, int src_y, int src_w, int src_h, int dest_x, int dest_y, void (*draw_area)(void*, int,int,int,int), void* data);
-  virtual void wait_for_expose();
-  virtual void reposition_menu_window(int x, int y);
-  virtual void menu_window_area(int &X, int &Y, int &W, int &H, int nscreen = -1);
+  void shape(const Fl_Image* img) FL_OVERRIDE;
+  void capture_titlebar_and_borders(Fl_RGB_Image*& top, Fl_RGB_Image*& left, Fl_RGB_Image*& bottom, Fl_RGB_Image*& right) FL_OVERRIDE;
+  int scroll(int src_x, int src_y, int src_w, int src_h, int dest_x, int dest_y, void (*draw_area)(void*, int,int,int,int), void* data) FL_OVERRIDE;
+  void wait_for_expose() FL_OVERRIDE;
+  // menu-related stuff
+  void reposition_menu_window(int x, int y) FL_OVERRIDE;
+  void menu_window_area(int &X, int &Y, int &W, int &H, int nscreen = -1) FL_OVERRIDE;
+  static bool new_popup; // to support tall menu buttons
+  bool process_menu_or_tooltip(struct wld_window *);
+  static Fl_Window *previous_floatingtitle; // to support floating menuwindow w/ title
 };
 
 
 struct wld_window {
-  struct wl_list outputs;
+  Fl_Window *fl_win;
+  struct Fl_Wayland_Screen_Driver::output *output; // the display where win is mapped
   struct wl_surface *wl_surface;
   struct fl_wld_buffer *buffer;
   struct xdg_surface *xdg_surface;
-  union {
+  enum Fl_Wayland_Window_Driver::kind kind;
+  union { // for each value of kind
     struct libdecor_frame *frame;
     struct wl_subsurface *subsurface;
     struct xdg_popup *xdg_popup;
     struct xdg_toplevel *xdg_toplevel;
   };
-  Fl_Window *fl_win;
-  enum Fl_Wayland_Window_Driver::kind kind;
+  struct custom_cursor_ {
+    struct wl_cursor *wl_cursor;
+    const Fl_RGB_Image *rgb;
+    int hotx, hoty;
+  } *custom_cursor; // non-null when using custom cursor
   int configured_width;
   int configured_height;
   int floating_width;
   int floating_height;
-  int scale;
   int state;
 };
 

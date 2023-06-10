@@ -100,7 +100,7 @@ static const Fl_Menu_Item mode_menu[] = {
 #ifndef FL_DOXYGEN
 int Flcc_Value_Input::format(char* buf) {
   Fl_Color_Chooser* c = (Fl_Color_Chooser*)parent();
-  if (c->mode() == M_HEX) return sprintf(buf,"0x%02X", int(value()));
+  if (c->mode() == M_HEX) return snprintf(buf, 5,"0x%02X", int(value()));
   else return Fl_Valuator::format(buf);
 }
 #endif // !FL_DOXYGEN
@@ -220,7 +220,7 @@ int Flcc_HueBox::handle(int e) {
     if (fabs(H-ih) < 3*6.0/w()) H = ih;
     if (fabs(S-is) < 3*1.0/h()) S = is;
     if (Fl::event_state(FL_CTRL)) H = ih;
-    if (c->hsv(H, S, c->value())) c->do_callback();
+    if (c->hsv(H, S, c->value())) c->do_callback(FL_REASON_DRAGGED);
     } return 1;
   case FL_FOCUS : /* FALLTHROUGH */
   case FL_UNFOCUS :
@@ -292,7 +292,7 @@ int Flcc_HueBox::handle_key(int key) {
   Xf = (double)X/(double)w1;
   Yf = (double)Y/(double)h1;
   tohs(Xf, Yf, H, S);
-  if (c->hsv(H, S, c->value())) c->do_callback();
+  if (c->hsv(H, S, c->value())) c->do_callback(FL_REASON_CHANGED);
 
   return 1;
 }
@@ -347,7 +347,7 @@ int Flcc_ValueBox::handle(int e) {
     double Yf;
     Yf = 1-(Fl::event_y()-y()-Fl::box_dy(box()))/double(h()-Fl::box_dh(box()));
     if (fabs(Yf-iv)<(3*1.0/h())) Yf = iv;
-    if (c->hsv(c->hue(),c->saturation(),Yf)) c->do_callback();
+    if (c->hsv(c->hue(),c->saturation(),Yf)) c->do_callback(FL_REASON_DRAGGED);
     } return 1;
   case FL_FOCUS : /* FALLTHROUGH */
   case FL_UNFOCUS :
@@ -418,7 +418,7 @@ int Flcc_ValueBox::handle_key(int key) {
 
   double Yf;
   Yf = 1-((double)Y/(double)h1);
-  if (c->hsv(c->hue(),c->saturation(),Yf)) c->do_callback();
+  if (c->hsv(c->hue(),c->saturation(),Yf)) c->do_callback(FL_REASON_CHANGED);
 
   return 1;
 }
@@ -432,7 +432,7 @@ void Fl_Color_Chooser::rgb_cb(Fl_Widget* o, void*) {
   double G = c->gvalue.value();
   double B = c->bvalue.value();
   if (c->mode() == M_HSV) {
-    if (c->hsv(R,G,B)) c->do_callback();
+    if (c->hsv(R,G,B)) c->do_callback(FL_REASON_CHANGED);
     return;
   }
   if (c->mode() != M_RGB) {
@@ -440,7 +440,7 @@ void Fl_Color_Chooser::rgb_cb(Fl_Widget* o, void*) {
     G = G/255;
     B = B/255;
   }
-  if (c->rgb(R,G,B)) c->do_callback();
+  if (c->rgb(R,G,B)) c->do_callback(FL_REASON_CHANGED);
 }
 
 void Fl_Color_Chooser::mode_cb(Fl_Widget* o, void*) {
@@ -455,7 +455,7 @@ void Fl_Color_Chooser::mode_cb(Fl_Widget* o, void*) {
 void Fl_Color_Chooser::mode(int newMode)
 {
   choice.value(newMode);
-  choice.do_callback();
+  choice.do_callback(FL_REASON_RESELECTED);
 }
 
 // Small local helper function:
@@ -465,7 +465,7 @@ void Fl_Color_Chooser::mode(int newMode)
 static int copy_rgb(double r, double g, double b) {
   char buf[8];
   int len;
-  len = sprintf(buf, "%02X%02X%02X", int(r * 255 + .5), int(g * 255 + .5), int(b * 255 + .5));
+  len = snprintf(buf, 8, "%02X%02X%02X", int(r * 255 + .5), int(g * 255 + .5), int(b * 255 + .5));
   Fl::copy(buf, len, 1);
   // printf("copied '%s' to clipboard\n", buf); // Debug
   return 1;
@@ -506,7 +506,7 @@ static int copy_rgb(double r, double g, double b) {
 
 int Fl_Color_Chooser::handle(int e) {
 
-  unsigned int mods = Fl::event_state() & (FL_META | FL_CTRL | FL_ALT);
+  int mods = Fl::event_state() & (FL_META | FL_CTRL | FL_ALT);
   unsigned int shift = Fl::event_state() & FL_SHIFT;
 
   switch (e) {
@@ -580,7 +580,7 @@ Fl_Color_Chooser::Fl_Color_Chooser(int X, int Y, int W, int H, const char* L)
 #include <FL/Fl_Return_Button.H>
 
 class ColorChip : public Fl_Widget {
-  void draw();
+  void draw() FL_OVERRIDE;
 public:
   uchar r,g,b;
   ColorChip(int X, int Y, int W, int H) : Fl_Widget(X,Y,W,H) {

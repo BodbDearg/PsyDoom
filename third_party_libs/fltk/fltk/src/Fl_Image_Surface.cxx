@@ -37,6 +37,7 @@
  */
 Fl_Image_Surface::Fl_Image_Surface(int w, int h, int high_res, Fl_Offscreen off) : Fl_Widget_Surface(NULL) {
   platform_surface = Fl_Image_Surface_Driver::newImageSurfaceDriver(w, h, high_res, off);
+  platform_surface->image_surface_ = this;
   if (platform_surface) driver(platform_surface->driver());
 }
 
@@ -88,6 +89,7 @@ int Fl_Image_Surface_Driver::printable_rect(int *w, int *h) {
   *w = width; *h = height;
   return 0;
 }
+
 /**
  \}
  \endcond
@@ -148,6 +150,7 @@ void Fl_Image_Surface::rescale() {
   Fl_Surface_Device::pop_current();
   delete rgb;
 }
+
 
 // implementation of the fl_XXX_offscreen() functions
 

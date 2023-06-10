@@ -107,6 +107,18 @@ static void fallback_cursor(Fl_Window *w, Fl_Cursor c) {
 }
 
 
+/**
+  Changes the cursor for this window.
+
+  The window must be show()'n for this function to have any effect.
+  This always calls the system. If you are changing the cursor a lot
+  you may want to keep track of how you set it in a static variable
+  and call this only if the new cursor is different.
+
+  The type Fl_Cursor is an enumeration defined in <FL/Enumerations.H>.
+
+  \see cursor(const Fl_RGB_Image*, int, int), default_cursor()
+*/
 void Fl_Window::cursor(Fl_Cursor c) {
   int ret;
 
@@ -126,7 +138,7 @@ void Fl_Window::cursor(Fl_Cursor c) {
   if (c == FL_CURSOR_DEFAULT)
     c = cursor_default;
 
-  if (!i)
+  if (!flx_)
     return;
 
   ret = pWindowDriver->set_cursor(c);
@@ -137,13 +149,17 @@ void Fl_Window::cursor(Fl_Cursor c) {
 }
 
 /**
-  Changes the cursor for this window.  This always calls the system. If
+  Changes the cursor for this window using the provided image as cursor's shape.
+  The window must be show()'n for this function to have any effect.
+  This always calls the system. If
   you are changing the cursor a lot you may want to keep track of how
   you set it in a static variable and call this only if the new cursor
   is different.
 
   The default cursor will be used if the provided image cannot be used
   as a cursor.
+  \param image Sets the cursor size and shape
+  \param hotx,hoty Sets the cursor's active location relatively to top-left of \c image when clicking
 
   \see cursor(Fl_Cursor), default_cursor()
 */
@@ -163,7 +179,7 @@ void Fl_Window::cursor(const Fl_RGB_Image *image, int hotx, int hoty) {
     return;
   }
 
-  if (!i)
+  if (!flx_)
     return;
 
   ret = pWindowDriver->set_cursor(image, hotx, hoty);
@@ -179,7 +195,7 @@ void Fl_Window::cursor(const Fl_RGB_Image *image, int hotx, int hoty) {
 */
 void Fl_Window::cursor(Fl_Cursor c, Fl_Color, Fl_Color) {
   cursor(c);
-};
+}
 
 /**
  For back compatibility only.
@@ -187,4 +203,4 @@ void Fl_Window::cursor(Fl_Cursor c, Fl_Color, Fl_Color) {
 */
 void Fl_Window::default_cursor(Fl_Cursor c, Fl_Color, Fl_Color) {
   default_cursor(c);
-};
+}

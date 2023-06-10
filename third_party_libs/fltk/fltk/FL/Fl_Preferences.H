@@ -1,7 +1,7 @@
 //
 // Preferences implementation for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 2002-2022 by Matthias Melcher.
+// Copyright 2002-2023 by Matthias Melcher.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -22,6 +22,8 @@
 
 #  include <stdio.h>
 #  include "Fl_Export.H"
+
+class Fl_String;
 
 /**
  \brief Fl_Preferences store user settings between application starts.
@@ -135,7 +137,7 @@ public:
     CORE_SYSTEM_L = CORE | SYSTEM_L,   ///< Same as CORE | SYSTEM | C_LOCALE
     CORE_USER_L   = CORE | USER_L,     ///< Same as CORE | USER | C_LOCALE
     CORE_SYSTEM   = CORE | SYSTEM,     ///< Deprecated, same as CORE | SYSTEM. Use CORE_SYSTEM_L instead.
-    CORE_USER     = CORE | USER,       ///< Deprecated, same as CORE | USER. Use CORE_USER_L instead.
+    CORE_USER     = CORE | USER        ///< Deprecated, same as CORE | USER. Use CORE_USER_L instead.
   };
 
   /**
@@ -234,6 +236,7 @@ public:
   char set( const char *entry, double value, int precision );
   char set( const char *entry, const char *value );
   char set( const char *entry, const void *value, int size );
+  char set( const char *entry, const Fl_String &value );
 
   char get( const char *entry, int &value, int defaultValue );
   char get( const char *entry, float &value,  float defaultValue );
@@ -243,6 +246,7 @@ public:
   char get( const char *entry, void *&value,  const void *defaultValue, int defaultSize );
   char get( const char *entry, void *value,   const void *defaultValue, int defaultSize, int maxSize );
   char get( const char *entry, void *value,   const void *defaultValue, int defaultSize, int *size );
+  char get( const char *entry, Fl_String &value, const Fl_String &defaultValue );
 
   int size( const char *entry );
 

@@ -36,18 +36,18 @@ private:
   int top_margin;
   void absolute_printable_rect(int *x, int *y, int *w, int *h);
   Fl_WinAPI_Printer_Driver(void);
-  int begin_job(int pagecount = 0, int *frompage = NULL, int *topage = NULL, char **perr_message = NULL);
-  int begin_page (void);
-  int printable_rect(int *w, int *h);
-  void margins(int *left, int *top, int *right, int *bottom);
-  void origin(int *x, int *y);
-  void origin(int x, int y);
-  void scale (float scale_x, float scale_y = 0.);
-  void rotate(float angle);
-  void translate(int x, int y);
-  void untranslate(void);
-  int end_page (void);
-  void end_job (void);
+  int begin_job(int pagecount = 0, int *frompage = NULL, int *topage = NULL, char **perr_message = NULL) FL_OVERRIDE;
+  int begin_page (void) FL_OVERRIDE;
+  int printable_rect(int *w, int *h) FL_OVERRIDE;
+  void margins(int *left, int *top, int *right, int *bottom) FL_OVERRIDE;
+  void origin(int *x, int *y) FL_OVERRIDE;
+  void origin(int x, int y) FL_OVERRIDE;
+  void scale (float scale_x, float scale_y = 0.) FL_OVERRIDE;
+  void rotate(float angle) FL_OVERRIDE;
+  void translate(int x, int y) FL_OVERRIDE;
+  void untranslate(void) FL_OVERRIDE;
+  int end_page (void) FL_OVERRIDE;
+  void end_job (void) FL_OVERRIDE;
   ~Fl_WinAPI_Printer_Driver(void);
 };
 
@@ -129,7 +129,7 @@ int Fl_WinAPI_Printer_Driver::begin_job (int pagecount, int *frompage, int *topa
             while (srclen > 0 && (lpMsgBuf[srclen-1] == '\n' || lpMsgBuf[srclen-1] == '\r')) srclen--;
             unsigned l = fl_utf8fromwc(NULL, 0, lpMsgBuf, srclen);
             *perr_message = new char[l+51];
-            sprintf(*perr_message, "begin_job() failed with error %lu: ", dw);
+            snprintf(*perr_message, l+51, "begin_job() failed with error %lu: ", dw);
             fl_utf8fromwc(*perr_message + strlen(*perr_message), l+1, lpMsgBuf, srclen);
             LocalFree(lpMsgBuf);
           }

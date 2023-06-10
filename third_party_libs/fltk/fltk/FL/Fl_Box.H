@@ -1,7 +1,7 @@
 //
 // Box header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -14,8 +14,9 @@
 //     https://www.fltk.org/bugs.php
 //
 
-/* \file
-   Fl_Box widget . */
+/** \file FL/Fl_Box.H
+  \brief Fl_Box widget.
+*/
 
 #ifndef Fl_Box_H
 #define Fl_Box_H
@@ -31,23 +32,22 @@
 */
 class FL_EXPORT Fl_Box : public Fl_Widget {
 protected:
-  void draw();
+  void draw() FL_OVERRIDE;
 public:
   /**
-    - The first constructor sets box() to FL_NO_BOX, which
-    means it is invisible. However such widgets are useful as placeholders
-    or Fl_Group::resizable()
-    values.  To change the box to something visible, use box(n).
-    - The second form of the constructor sets the box to the specified box
-    type.
-    <P>The destructor removes the box.
+    - The first constructor sets box() to FL_NO_BOX, which means it is invisible.
+      However such widgets are useful as placeholders or Fl_Group::resizable()
+      values. To change the box to something visible, use box(n).
+    - The second form of the constructor sets the box to the specified box type.
+
+    The destructor removes the box.
   */
   Fl_Box(int X, int Y, int W, int H, const char *l=0);
 
   /**    See Fl_Box::Fl_Box(int x, int y, int w, int h, const char * = 0)   */
   Fl_Box(Fl_Boxtype b, int X, int Y, int W, int H, const char *l);
 
-  virtual int handle(int);
+  int handle(int) FL_OVERRIDE;
 };
 
 #endif

@@ -1,7 +1,7 @@
 //
 // Header file for Fl_Text_Editor class.
 //
-// Copyright 2001-2010 by Bill Spitzak and others.
+// Copyright 2001-2023 by Bill Spitzak and others.
 // Original code Copyright Mark Edel.  Permission to distribute under
 // the LGPL for the FLTK library granted by Mark Edel.
 //
@@ -50,7 +50,7 @@ class FL_EXPORT Fl_Text_Editor : public Fl_Text_Display {
 
     Fl_Text_Editor(int X, int Y, int W, int H, const char* l = 0);
     ~Fl_Text_Editor() { remove_all_key_bindings(); }
-    virtual int handle(int e);
+    int handle(int e) FL_OVERRIDE;
     /**
         Sets the current insert mode; if non-zero, new text
         is inserted before the current cursor position. Otherwise, new
@@ -110,10 +110,11 @@ class FL_EXPORT Fl_Text_Editor : public Fl_Text_Display {
     static int kf_paste(int c, Fl_Text_Editor* e);
     static int kf_select_all(int c, Fl_Text_Editor* e);
     static int kf_undo(int c, Fl_Text_Editor* e);
+    static int kf_redo(int c, Fl_Text_Editor* e);
 
   protected:
     int handle_key();
-    void maybe_do_callback();
+    void maybe_do_callback(Fl_Callback_Reason reason = FL_REASON_CHANGED);
 
 #ifndef FL_DOXYGEN
     int insert_mode_;

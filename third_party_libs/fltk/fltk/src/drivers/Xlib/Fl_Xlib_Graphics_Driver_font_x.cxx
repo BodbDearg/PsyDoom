@@ -1,7 +1,7 @@
 //
 // X11 font utilities for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2018 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -28,6 +28,30 @@
 
 static char* fl_find_fontsize(char* name);
 static const char* fl_font_word(const char* p, int n);
+
+// WARNING: if you add to this table, you must redefine FL_FREE_FONT
+// in Enumerations.H & recompile!!
+static Fl_Xlib_Fontdesc built_in_table[] = {
+{"-*-helvetica-medium-r-normal--*"},
+{"-*-helvetica-bold-r-normal--*"},
+{"-*-helvetica-medium-o-normal--*"},
+{"-*-helvetica-bold-o-normal--*"},
+{"-*-courier-medium-r-normal--*"},
+{"-*-courier-bold-r-normal--*"},
+{"-*-courier-medium-o-normal--*"},
+{"-*-courier-bold-o-normal--*"},
+{"-*-times-medium-r-normal--*"},
+{"-*-times-bold-r-normal--*"},
+{"-*-times-medium-i-normal--*"},
+{"-*-times-bold-i-normal--*"},
+{"-*-symbol-*"},
+{"-*-lucidatypewriter-medium-r-normal-sans-*"},
+{"-*-lucidatypewriter-bold-r-normal-sans-*"},
+{"-*-*zapf dingbats-*"}
+};
+
+FL_EXPORT Fl_Fontdesc* fl_fonts = (Fl_Fontdesc*)built_in_table;
+
 
 // This function fills in the fltk font table with all the fonts that
 // are found on the X server.  It tries to place the fonts into families
@@ -137,7 +161,9 @@ const char* Fl_Xlib_Graphics_Driver::get_font_name(Fl_Font fnum, int* ap) {
       // collect all the attribute words:
       for (int n = 3; n <= 6; n++) {
         // get the next word:
-        if (*e) e++; x = e; e = fl_font_word(x,1);
+        if (*e) e++;
+        x = e;
+        e = fl_font_word(x,1);
         int t = attribute(n,x);
         if (t < 0) {
           if (o < (f->fontname + ENDOFBUFFER - 1)) *o++ = ' ';
@@ -457,7 +483,7 @@ static const char *find_best_font(const char *fname, int size) {
       // whoa!  A scalable font!  Use unless exact match found:
       int l = c-thisname;
       memcpy(namebuffer,thisname,l);
-      l += sprintf(namebuffer+l,"%d",size);
+      l += snprintf(namebuffer+l, 1024-l,"%d",size);
       while (*c == '0') c++;
       strcpy(namebuffer+l,c);
       name = namebuffer;

@@ -38,21 +38,25 @@ const Fl_Graphics_Driver::matrix Fl_Graphics_Driver::m0 = {1, 0, 0, 1, 0, 0};
 /** Used by the Windows platform to print Fl_Pixmap objects. */
 unsigned Fl_Graphics_Driver::need_pixmap_bg_color = 0;
 
+extern unsigned fl_cmap[256]; // defined in fl_color.cxx
+
 /** Constructor */
 Fl_Graphics_Driver::Fl_Graphics_Driver()
 {
   font_ = 0;
   size_ = 0;
+  color_ = FL_BLACK;
   sptr=0; rstackptr=0;
   rstack[0] = NULL;
   fl_clip_state_number=0;
   m = m0;
-  fl_matrix = &m;
   font_descriptor_ = NULL;
   scale_ = 1;
   p_size = 0;
   xpoint = NULL;
-};
+  what = NONE;
+  n = 0;
+}
 
 /** Destructor */
 Fl_Graphics_Driver::~Fl_Graphics_Driver() {
@@ -135,7 +139,7 @@ void Fl_Graphics_Driver::global_gc()
 /** see Fl::set_color(Fl_Color, unsigned) */
 void Fl_Graphics_Driver::set_color(Fl_Color i, unsigned c)
 {
-  // nothing to do, reimplement in driver if needed
+    fl_cmap[i] = c;
 }
 
 
@@ -451,6 +455,50 @@ void Fl_Graphics_Driver::rect(int x, int y, int w, int h) {}
 /** see fl_rectf() */
 void Fl_Graphics_Driver::rectf(int x, int y, int w, int h) {}
 
+void Fl_Graphics_Driver::_rbox(int fill, int x, int y, int w, int h, int r) {
+  static double lut[] = { 0.0, 0.07612, 0.29289, 0.61732, 1.0};
+  if (r == 5) r = 4;  // use only even sizes for small corners (STR #2943)
+  if (r == 7) r = 8;  // note: 8 is better than 6 (really)
+  double xd = x, yd = y, rd = (x+w-1), bd = (y+h-1);
+  double rr = r;
+  if (fill) begin_polygon(); else begin_loop();
+  // top left
+  transformed_vertex(xd+lut[0]*rr, yd+lut[4]*rr);
+  transformed_vertex(xd+lut[1]*rr, yd+lut[3]*rr);
+  transformed_vertex(xd+lut[2]*rr, yd+lut[2]*rr);
+  transformed_vertex(xd+lut[3]*rr, yd+lut[1]*rr);
+  transformed_vertex(xd+lut[4]*rr, yd+lut[0]*rr);
+  // top right
+  transformed_vertex(rd-lut[4]*rr, yd+lut[0]*rr);
+  transformed_vertex(rd-lut[3]*rr, yd+lut[1]*rr);
+  transformed_vertex(rd-lut[2]*rr, yd+lut[2]*rr);
+  transformed_vertex(rd-lut[1]*rr, yd+lut[3]*rr);
+  transformed_vertex(rd-lut[0]*rr, yd+lut[4]*rr);
+  // bottom right
+  transformed_vertex(rd-lut[0]*rr, bd-lut[4]*rr);
+  transformed_vertex(rd-lut[1]*rr, bd-lut[3]*rr);
+  transformed_vertex(rd-lut[2]*rr, bd-lut[2]*rr);
+  transformed_vertex(rd-lut[3]*rr, bd-lut[1]*rr);
+  transformed_vertex(rd-lut[4]*rr, bd-lut[0]*rr);
+  // bottom left
+  transformed_vertex(xd+lut[4]*rr, bd-lut[0]*rr);
+  transformed_vertex(xd+lut[3]*rr, bd-lut[1]*rr);
+  transformed_vertex(xd+lut[2]*rr, bd-lut[2]*rr);
+  transformed_vertex(xd+lut[1]*rr, bd-lut[3]*rr);
+  transformed_vertex(xd+lut[0]*rr, bd-lut[4]*rr);
+  if (fill) fl_end_polygon(); else fl_end_loop();
+}
+
+/** see fl_rounded_rect() */
+void Fl_Graphics_Driver::rounded_rect(int x, int y, int w, int h, int r) {
+  _rbox(0, x, y, w, h, r);
+}
+
+/** see fl_rounded_rectf() */
+void Fl_Graphics_Driver::rounded_rectf(int x, int y, int w, int h, int r) {
+  _rbox(1, x, y, w, h, r);
+}
+
 void Fl_Graphics_Driver::colored_rectf(int x, int y, int w, int h, uchar r, uchar g, uchar b) {
   color(r, g, b);
   rectf(x, y, w, h);
@@ -606,9 +654,6 @@ int Fl_Graphics_Driver::height() { return size(); }
 
 /** Return the current line descent */
 int Fl_Graphics_Driver::descent() { return 0; }
-
-/** Set the current Fl_Font_Descriptor */
-void Fl_Graphics_Driver::font_descriptor(Fl_Font_Descriptor *d) { font_descriptor_ = d;}
 
 /** Sets the value of the driver-specific graphics context. */
 void Fl_Graphics_Driver::gc(void*) {}

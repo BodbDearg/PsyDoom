@@ -360,6 +360,7 @@
 #include <stdlib.h>
 #include "flstring.h"
 #include <errno.h>
+#include <sys/stat.h>
 
 //
 // File chooser label strings and sort function...
@@ -513,7 +514,7 @@ Fl_File_Chooser::favoritesButtonCB()
     if (Fl::system_driver()->home_directory_name()) v = favoritesButton->size() - 5;
     else v = favoritesButton->size() - 4;
 
-    sprintf(menuname, "favorite%02d", v);
+    snprintf(menuname, FL_PATH_MAX, "favorite%02d", v);
 
     prefs_->set(menuname, directory_);
     prefs_->flush();
@@ -556,7 +557,7 @@ Fl_File_Chooser::favoritesCB(Fl_Widget *w)
 
     for (i = 0; i < 100; i ++) {
       // Get favorite directory 0 to 99...
-      sprintf(name, "favorite%02d", i);
+      snprintf(name, sizeof(name), "favorite%02d", i);
 
       prefs_->get(name, pathname, "", sizeof(pathname));
 
@@ -635,7 +636,7 @@ Fl_File_Chooser::favoritesCB(Fl_Widget *w)
     // Copy the new list over...
     for (i = 0; i < favList->size(); i ++) {
       // Set favorite directory 0 to 99...
-      sprintf(name, "favorite%02d", i);
+      snprintf(name, sizeof(name), "favorite%02d", i);
 
       prefs_->set(name, favList->text(i + 1));
     }
@@ -643,7 +644,7 @@ Fl_File_Chooser::favoritesCB(Fl_Widget *w)
     // Clear old entries as necessary...
     for (; i < 100; i ++) {
       // Clear favorite directory 0 to 99...
-      sprintf(name, "favorite%02d", i);
+      snprintf(name, sizeof(name), "favorite%02d", i);
 
       prefs_->get(name, pathname, "", sizeof(pathname));
 
@@ -800,7 +801,7 @@ Fl_File_Chooser::fileNameCB()
   if (dirIsRelative) {
     fl_filename_absolute(pathname, sizeof(pathname), filename);
     value(pathname);
-    fileName->mark(fileName->position()); // no selection after expansion
+    fileName->mark(fileName->insert_position()); // no selection after expansion
   } else if (filename != pathname) {
     // Finally, make sure that we have a writable copy...
     strlcpy(pathname, filename, sizeof(pathname));
@@ -847,7 +848,7 @@ Fl_File_Chooser::fileNameCB()
     int condition = Fl::system_driver()->case_insensitive_filenames() ?
                     strcasecmp(pathname, directory_) : strcmp(pathname, directory_);
     if (condition && (pathname[0] || strcmp("/", directory_))) {
-      int p = fileName->position();
+      int p = fileName->insert_position();
       int m = fileName->mark();
 
       directory(pathname);
@@ -860,7 +861,7 @@ Fl_File_Chooser::fileNameCB()
         strlcpy(pathname, tempname, sizeof(pathname));
       }
 
-      fileName->position(p, m);
+      fileName->insert_position(p, m);
     }
 
     // Other key pressed - do filename completion as possible...
@@ -921,7 +922,7 @@ Fl_File_Chooser::fileNameCB()
       // Highlight it with the cursor at the end of the selection so
       // s/he can press the right arrow to accept the selection
       // (Tab and End also do this for both cases.)
-      fileName->position(
+      fileName->insert_position(
                          (int) (filename - pathname + max_match),
                          (int) (filename - pathname + min_match));
     } else if (max_match == 0) {
@@ -1227,7 +1228,7 @@ Fl_File_Chooser::update_favorites()
   }
 
   for (i = 0; i < 100; i ++) {
-    sprintf(menuname, "favorite%02d", i);
+    snprintf(menuname, sizeof(menuname), "favorite%02d", i);
     prefs_->get(menuname, pathname, "", sizeof(pathname));
     if (!pathname[0]) break;
 
@@ -1526,7 +1527,7 @@ Fl_File_Chooser::value(const char *filename)
   if (slash > pathname) slash[-1] = '/';
 
   fileName->value(pathname);
-  fileName->position(0, (int) strlen(pathname));
+  fileName->insert_position(0, (int) strlen(pathname));
   okButton->activate();
 
   // Then find the file in the file list and select it...

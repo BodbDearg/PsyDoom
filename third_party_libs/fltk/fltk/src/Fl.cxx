@@ -1,7 +1,7 @@
 //
 // Main event handling code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2022 by Bill Spitzak and others.
+// Copyright 1998-2023 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -69,10 +69,12 @@ const char      *Fl::e_clipboard_type = "";
 void            *Fl::e_clipboard_data = NULL;
 
 Fl_Event_Dispatch Fl::e_dispatch = 0;
+Fl_Callback_Reason Fl::callback_reason_ = FL_REASON_UNKNOWN;
 
 unsigned char   Fl::options_[] = { 0, 0 };
 unsigned char   Fl::options_read_ = 0;
 
+int             Fl::selection_to_clipboard_ = 0;
 
 Fl_Window       *fl_xfocus = NULL; // which window X thinks has focus
 Fl_Window       *fl_xmousewin;     // which window X thinks has FL_ENTER
@@ -99,8 +101,10 @@ Fl_Screen_Driver *Fl::screen_driver()
 /** Returns a pointer to the unique Fl_System_Driver object of the platform */
 Fl_System_Driver *Fl::system_driver()
 {
-  static  Fl_System_Driver* system_driver_ = Fl_System_Driver::newSystemDriver();
-  return system_driver_;
+  if (!Fl_Screen_Driver::system_driver) {
+    Fl_Screen_Driver::system_driver = Fl_System_Driver::newSystemDriver();
+  }
+  return Fl_Screen_Driver::system_driver;
 }
 
 //
@@ -229,33 +233,132 @@ int Fl::event_inside(const Fl_Widget *o) /*const*/ {
 }
 
 //
-// cross-platform timer support
+// Cross-platform timer support
 //
+// User (doxygen) documentation is in this file but the implementation
+// of all functions is in class Fl_Timeout in Fl_Timeout.cxx.
 
-void Fl::add_timeout(double time, Fl_Timeout_Handler cb, void *argp) {
-  Fl_Timeout::add_timeout(time, cb, argp);
-}
+/**
+  Adds a one-shot timeout callback.
 
-void Fl::repeat_timeout(double time, Fl_Timeout_Handler cb, void *argp) {
-  Fl_Timeout::repeat_timeout(time, cb, argp);
+  The callback function \p cb will be called by Fl::wait() at \p time seconds
+  after this function is called.
+  The callback function must have the signature \ref Fl_Timeout_Handler.
+  The optional \p data argument is passed to the callback (default: NULL).
+
+  The timer is removed from the timer queue before the callback function is
+  called. It is safe to reschedule the timeout inside the callback function.
+
+  You can have multiple timeout callbacks, even the same timeout callback
+  with different timeout values and/or different \p data values. They are
+  all considered different timer objects.
+
+  To remove a timeout while it is active (pending) use Fl::remove_timeout().
+
+  If you need more accurate, repeated timeouts, use Fl::repeat_timeout() to
+  reschedule the subsequent timeouts. Please see Fl::repeat_timeout() for
+  an example.
+
+  Since version 1.4, a timeout can be started from a child thread under the
+  condition that the call to Fl::add_timeout is wrapped in Fl::lock() and Fl::unlock().
+
+  \param[in]  time    delta time in seconds until the timer expires
+  \param[in]  cb      callback function
+  \param[in]  data    optional user data (default: \p NULL)
+
+  \see Fl_Timeout_Handler
+  \see Fl::repeat_timeout(double time, Fl_Timeout_Handler cb, void *data)
+  \see Fl::remove_timeout(Fl_Timeout_Handler cb, void *data)
+  \see Fl::has_timeout(Fl_Timeout_Handler cb, void *data)
+
+*/
+void Fl::add_timeout(double time, Fl_Timeout_Handler cb, void *data) {
+  Fl_Timeout::add_timeout(time, cb, data);
 }
 
 /**
- Returns true if the timeout exists and has not been called yet.
- */
-int Fl::has_timeout(Fl_Timeout_Handler cb, void *argp) {
-  return Fl_Timeout::has_timeout(cb, argp);
+  Repeats a timeout callback from the expiration of the previous timeout,
+  allowing for more accurate timing.
+
+  You should call this method only inside a timeout callback of the same or
+  a logically related timer from whose expiration time the new timeout shall
+  be scheduled. Otherwise the timing accuracy can't be improved and the
+  exact behavior is undefined.
+
+  If you call this outside a timeout callback the behavior is the same as
+  Fl::add_timeout().
+
+  Example: The following code will print "TICK" each second on stdout with
+  a fair degree of accuracy:
+
+  \code
+    #include <FL/Fl.H>
+    #include <FL/Fl_Window.H>
+    #include <stdio.h>
+
+    void callback(void *) {
+      printf("TICK\n");
+      Fl::repeat_timeout(1.0, callback); // retrigger timeout
+    }
+
+    int main() {
+      Fl_Window win(100, 100);
+      win.show();
+      Fl::add_timeout(1.0, callback); // set up first timeout
+      return Fl::run();
+    }
+  \endcode
+
+  \param[in]  time    delta time in seconds until the timer expires
+  \param[in]  cb      callback function
+  \param[in]  data    optional user data (default: \p NULL)
+*/
+void Fl::repeat_timeout(double time, Fl_Timeout_Handler cb, void *data) {
+  Fl_Timeout::repeat_timeout(time, cb, data);
 }
 
 /**
- Removes a timeout callback. It is harmless to remove a timeout
- callback that no longer exists.
+  Returns true if the timeout exists and has not been called yet.
 
- \note  This version removes all matching timeouts, not just the first one.
-        This may change in the future.
- */
-void Fl::remove_timeout(Fl_Timeout_Handler cb, void *argp) {
-  Fl_Timeout::remove_timeout(cb, argp);
+  Both arguments \p cb and \p data must match with at least one timer
+  in the queue of active timers to return true (1).
+
+  \note It is a known inconsistency that Fl::has_timeout() does not use
+    the \p data argument as a wildcard (match all) if it is zero (NULL)
+    which Fl::remove_timeout() does.
+    This is so for backwards compatibility with FLTK 1.3.x.
+    Therefore using 0 (zero, NULL) as the timeout \p data value is discouraged
+    unless you're sure that you don't need to use
+    <kbd>Fl::has_timeout(callback, (void *)0);</kbd> or
+    <kbd>Fl::remove_timeout(callback, (void *)0);</kbd>.
+
+  \param[in]  cb    Timer callback
+  \param[in]  data  User data
+
+  \returns      whether the timer was found in the queue
+  \retval   0   not found
+  \retval   1   found
+*/
+int Fl::has_timeout(Fl_Timeout_Handler cb, void *data) {
+  return Fl_Timeout::has_timeout(cb, data);
+}
+
+/**
+  Removes a timeout callback from the timer queue.
+
+  This method removes all matching timeouts, not just the first one.
+  This may change in the future.
+
+  If the \p data argument is \p NULL (the default!) only the callback
+  \p cb must match, i.e. all timer entries with this callback are removed.
+
+  It is harmless to remove a timeout callback that no longer exists.
+
+  \param[in]  cb    Timer callback to be removed (must match)
+  \param[in]  data  Wildcard if NULL (default), must match otherwise
+*/
+void Fl::remove_timeout(Fl_Timeout_Handler cb, void *data) {
+  Fl_Timeout::remove_timeout(cb, data);
 }
 
 
@@ -569,6 +672,17 @@ int Fl::ready()
   return system_driver()->ready();
 }
 
+/** Hide all visible window to make FLTK leav Fl::run().
+ Fl:run() will run as long as there are visible windows. Call hide_all_windows()
+ will hide all windows, effectively terminating the Fl::run() loop.
+ \see Fl::run()
+ */
+void Fl::hide_all_windows() {
+  while (Fl::first_window()) {
+    Fl::first_window()->hide();
+  }
+}
+
 int Fl::program_should_quit_ = 0;
 
 ////////////////////////////////////////////////////////////////
@@ -578,21 +692,15 @@ int Fl::program_should_quit_ = 0;
 Fl_X* Fl_X::first;
 #endif
 
+/** Returns the Fl_Window that corresponds to the given window reference,
+  or \c NULL if not found.
+  \deprecated Kept in the X11, Windows, and macOS platforms for compatibility
+    with FLTK versions before 1.4.
+    Please use fl_x11_find(Window), fl_wl_find(struct wld_window*),
+    fl_win32_find(HWND) or fl_mac_find(FLWindow*) with FLTK 1.4.0 and above.
+*/
 Fl_Window* fl_find(Window xid) {
-  Fl_X *window;
-  for (Fl_X **pp = &Fl_X::first; (window = *pp); pp = &window->next) {
-    if (window->xid == xid) {
-      if (window != Fl_X::first && !Fl::modal()) {
-        // make this window be first to speed up searches
-        // this is not done if modal is true to avoid messing up modal stack
-        *pp = window->next;
-        window->next = Fl_X::first;
-        Fl_X::first = window;
-      }
-      return window->w;
-    }
-  }
-  return 0;
+  return Fl_Window_Driver::find((fl_uintptr_t)xid);
 }
 
 /**
@@ -611,7 +719,7 @@ Fl_Window* Fl::first_window() {
   \param[in] window must be shown and not NULL
 */
 Fl_Window* Fl::next_window(const Fl_Window* window) {
-  Fl_X* i = window ? Fl_X::i(window) : 0;
+  Fl_X* i = window ? Fl_X::flx(window) : 0;
   if (!i) {
     Fl::error("Fl::next_window() failed: window (%p) not shown.", window);
     return 0;
@@ -630,7 +738,7 @@ Fl_Window* Fl::next_window(const Fl_Window* window) {
  */
 void Fl::first_window(Fl_Window* window) {
   if (!window || !window->shown()) return;
-  fl_find( Fl_X::i(window)->xid );
+  Fl_Window_Driver::find( Fl_X::flx(window)->xid );
 }
 
 /**
@@ -845,6 +953,8 @@ Fl_Widget* fl_oldfocus; // kludge for Fl_Group...
     connected.
 
     \see Fl_Widget::take_focus()
+    \see Fl_Widget::needs_keyboard() const
+    \see Fl_Widget::needs_keyboard(bool)
 */
 void Fl::focus(Fl_Widget *o)
 {
@@ -852,8 +962,8 @@ void Fl::focus(Fl_Widget *o)
 
   // request an on-screen keyboard on touch screen devices if needed
   Fl_Widget *prevFocus = Fl::focus();
-  char hideKeyboard = ( prevFocus && (prevFocus->flags()&Fl_Widget::NEEDS_KEYBOARD) );
-  char showKeyboard = (o && (o->flags()&Fl_Widget::NEEDS_KEYBOARD));
+  char hideKeyboard = (prevFocus && prevFocus->needs_keyboard());
+  char showKeyboard = (o && o->needs_keyboard());
   if (hideKeyboard && !showKeyboard)
     Fl::screen_driver()->release_keyboard();
   if (showKeyboard && !hideKeyboard)
@@ -1081,6 +1191,14 @@ static int send_event(int event, Fl_Widget* to, Fl_Window* window) {
   return ret;
 }
 
+/**
+ \brief Give the reason for calling a callback.
+ \return the reason for the current callback
+ \see Fl_Widget::when(), Fl_Widget::do_callback(), Fl_Widget::callback()
+ */
+Fl_Callback_Reason Fl::callback_reason() {
+  return callback_reason_;
+}
 
 /**
  \brief Set a new event dispatch function.
@@ -1166,6 +1284,8 @@ int Fl::handle(int e, Fl_Window* window)
  another dispatch function. In that case, the user dispatch function must
  decide when to call Fl::handle_(int, Fl_Window*)
 
+ Callbacks can set \p FL_REASON_CLOSED and \p FL_REASON_CANCELLED.
+
  \param e the event type (Fl::event_number() is not yet set)
  \param window the window that caused this event
  \return 0 if the event was not handled
@@ -1183,7 +1303,7 @@ int Fl::handle_(int e, Fl_Window* window)
 
   case FL_CLOSE:
     if ( grab() || (modal() && window != modal()) ) return 0;
-    wi->do_callback();
+    wi->do_callback(FL_REASON_CLOSED);
     return 1;
 
   case FL_SHOW:
@@ -1333,7 +1453,7 @@ int Fl::handle_(int e, Fl_Window* window)
     // make Escape key close windows:
     if (event_key()==FL_Escape) {
       wi = modal(); if (!wi) wi = window;
-      wi->do_callback();
+      wi->do_callback(FL_REASON_CANCELLED);
       return 1;
     }
 
@@ -1508,7 +1628,7 @@ void Fl_Widget::damage(uchar fl) {
     damage(fl, x(), y(), w(), h());
   } else {
     // damage entire window by deleting the region:
-    Fl_X* i = Fl_X::i((Fl_Window*)this);
+    Fl_X* i = Fl_X::flx((Fl_Window*)this);
     if (!i) return; // window not mapped, so ignore it
     if (i->region) {
       fl_graphics_driver->XDestroyRegion(i->region);
@@ -1528,7 +1648,7 @@ void Fl_Widget::damage(uchar fl, int X, int Y, int W, int H) {
     if (!wi) return;
     fl = FL_DAMAGE_CHILD;
   }
-  Fl_X* i = Fl_X::i((Fl_Window*)wi);
+  Fl_X* i = Fl_X::flx((Fl_Window*)wi);
   if (!i) return; // window not mapped, so ignore it
 
   // clip the damage to the window and quit if none:
@@ -1838,6 +1958,8 @@ bool Fl::option(Fl_Option opt)
 
       opt_prefs.get("ShowZoomFactor", tmp, 1);                  // default: on
       options_[OPTION_SHOW_SCALING] = tmp;
+      opt_prefs.get("UseZenity", tmp, 1);                      // default: on
+      options_[OPTION_FNFC_USES_ZENITY] = tmp;
     }
     { // next, check the user preferences
       // override system options only, if the option is set ( >= 0 )
@@ -1862,6 +1984,8 @@ bool Fl::option(Fl_Option opt)
 
       opt_prefs.get("ShowZoomFactor", tmp, -1);
       if (tmp >= 0) options_[OPTION_SHOW_SCALING] = tmp;
+      opt_prefs.get("UseZenity", tmp, -1);
+      if (tmp >= 0) options_[OPTION_FNFC_USES_ZENITY] = tmp;
     }
     { // now, if the developer has registered this app, we could ask for per-application preferences
     }
@@ -1929,11 +2053,11 @@ int Fl::dnd()
 }
 
 int Fl::event_key(int k) {
-  return system_driver()->event_key(k);
+  return screen_driver()->event_key(k);
 }
 
 int Fl::get_key(int k) {
-  return system_driver()->get_key(k);
+  return screen_driver()->get_key(k);
 }
 
 void Fl::get_mouse(int &x, int &y) {
@@ -1969,9 +2093,11 @@ int Fl::clipboard_contains(const char *type)
  Fl::remove_fd() gets rid of <I>all</I> the callbacks for a given
  file descriptor.
 
- Under UNIX/Linux/MacOS <I>any</I> file descriptor can be monitored (files,
+ Under UNIX/Linux/macOS <I>any</I> file descriptor can be monitored (files,
  devices, pipes, sockets, etc.). Due to limitations in Microsoft Windows,
  Windows applications can only monitor sockets.
+
+ Under macOS, Fl::add_fd() opens the display if that's not been done before.
  */
 void Fl::add_fd(int fd, int when, Fl_FD_Handler cb, void *d)
 {
@@ -2029,9 +2155,23 @@ void fl_close_display()
   Fl::screen_driver()->close_display();
 }
 
+#ifdef FL_DOXYGEN
+/** Prevent the FLTK library from using its Wayland backend and forces it to use its X11 backend.
+ Put this declaration somewhere in your code outside the body of any function  :
+ \code
+ FL_EXPORT bool fl_disable_wayland = true;
+ \endcode
+ This declaration makes sure source code developed for FLTK 1.3, including X11-specific code,
+ will build and run with FLTK 1.4 and its Wayland platform with this single source code level change.
+ This declaration has no effect on non-Wayland platforms.
+ Don't put this declaration if you want the Wayland backend to be used when it's available.
+ */
+FL_EXPORT bool fl_disable_wayland = true;
+#endif // FL_DOXYGEN
+
 FL_EXPORT Window fl_xid_(const Fl_Window *w) {
-  Fl_X *temp = Fl_X::i(w);
-  return temp ? temp->xid : 0;
+  Fl_X *temp = Fl_X::flx(w);
+  return temp ? (Window)temp->xid : 0;
 }
 /** \addtogroup group_macosx
  \{ */
@@ -2066,13 +2206,13 @@ int Fl::get_font_sizes(Fl_Font fnum, int*& sizep) {
   return Fl_Graphics_Driver::default_driver().get_font_sizes(fnum, sizep);
 }
 
-/** Current value of the GUI scaling factor for screen number \p n */
+/** Current value of the GUI scaling factor for screen number \p n (n ∈ [0 , Fl::screen_count()-1]) */
 float Fl::screen_scale(int n) {
   if (!Fl::screen_scaling_supported() || n < 0 || n >= Fl::screen_count()) return 1.;
   return Fl::screen_driver()->scale(n);
 }
 
-/** Sets the value of the GUI scaling factor for screen number \p n.
+/** Sets the value of the GUI scaling factor for screen number \p n (n ∈ [0 , Fl::screen_count()-1]).
  Also sets the scale factor value of all windows mapped to screen number \p n, if any.
  */
 void Fl::screen_scale(int n, float factor) {
@@ -2106,6 +2246,11 @@ int Fl::screen_scaling_supported() {
 */
 void Fl::keyboard_screen_scaling(int value) {
   Fl_Screen_Driver::keyboard_screen_scaling = value;
+}
+
+/** Run a command line on the computer */
+int Fl::system(const char *command) {
+  return Fl::system_driver()->system(command);
 }
 
 // Pointers you can use to change FLTK to another language.

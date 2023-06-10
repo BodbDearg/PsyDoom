@@ -23,14 +23,15 @@
 
 
 Fl_GDI_Image_Surface_Driver::Fl_GDI_Image_Surface_Driver(int w, int h, int high_res, Fl_Offscreen off) : Fl_Image_Surface_Driver(w, h, high_res, off) {
+  Fl_Display_Device::display_device(); // make sure fl_graphics_driver was initialized
   float d =  fl_graphics_driver->scale();
   if (!off && d != 1 && high_res) {
     w = int(w*d);
     h = int(h*d);
   }
   HDC gc = (HDC)Fl_Graphics_Driver::default_driver().gc();
-  offscreen = off ? off : CreateCompatibleBitmap( (gc ? gc : fl_GetDC(0) ) , w, h);
-  if (!offscreen) offscreen = CreateCompatibleBitmap(fl_GetDC(0), w, h);
+  offscreen = off ? off : (Fl_Offscreen)CreateCompatibleBitmap( (gc ? gc : fl_GetDC(0) ) , w, h);
+  if (!offscreen) offscreen = (Fl_Offscreen)CreateCompatibleBitmap(fl_GetDC(0), w, h);
   driver(Fl_Graphics_Driver::newMainGraphicsDriver());
   if (d != 1 && high_res) ((Fl_GDI_Graphics_Driver*)driver())->scale(d);
   origin.x = origin.y = 0;
@@ -38,13 +39,13 @@ Fl_GDI_Image_Surface_Driver::Fl_GDI_Image_Surface_Driver(int w, int h, int high_
 
 
 Fl_GDI_Image_Surface_Driver::~Fl_GDI_Image_Surface_Driver() {
-  if (offscreen && !external_offscreen) DeleteObject(offscreen);
+  if (offscreen && !external_offscreen) DeleteObject((HBITMAP)offscreen);
   delete driver();
 }
 
 
 void Fl_GDI_Image_Surface_Driver::set_current() {
-  HDC gc = fl_makeDC(offscreen);
+  HDC gc = fl_makeDC((HBITMAP)offscreen);
   driver()->gc(gc);
   SetWindowOrgEx(gc, origin.x, origin.y, NULL);
   Fl_Surface_Device::set_current();
