@@ -643,8 +643,8 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
                 continue;
 
             // Compute the texture coordinate to use and nudge slightly if it's close to the next integer coord (to account for float inprecision and prevent 'fuzzyness')
-            const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 1.0f / 8192.0f);
-            const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 - 1.0f / 8192.0f);
+            [[maybe_unused]] const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 1.0f / 8192.0f);
+            [[maybe_unused]] const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 - 1.0f / 8192.0f);
 
             // Get the foreground color for the triangle pixel if the triangle is textured.
             // If the pixel is transparent and masking is enabled then also skip it, otherwise modulate it by the primitive color...
@@ -820,8 +820,8 @@ static void draw(Core& core, const DrawTriangleGouraud& triangle) noexcept {
                 continue;
 
             // Compute the texture coordinate to use and nudge slightly if it's close to the next integer coord (to account for float inprecision and prevent 'fuzzyness')
-            const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 1.0f / 8192.0f);
-            const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 - 1.0f / 8192.0f);
+            [[maybe_unused]] const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 1.0f / 8192.0f);
+            [[maybe_unused]] const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 - 1.0f / 8192.0f);
 
             // Compute the triangle gouraud color at this pixel using the weights
             const uint8_t gColorR = (uint8_t) std::clamp(color1R * w1 + color2R * w2 + color3R * w3 + 0.5f, 0.0f, 255.0f);

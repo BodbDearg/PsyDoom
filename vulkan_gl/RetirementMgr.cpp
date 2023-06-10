@@ -241,7 +241,7 @@ IMPL_GET_LIST_FOR_RESOURCE_TYPE(DescriptorPool,         mDescriptorPools)
 IMPL_GET_LIST_FOR_RESOURCE_TYPE(DescriptorSet,          mDescriptorSets)
 IMPL_GET_LIST_FOR_RESOURCE_TYPE(DescriptorSetLayout,    mDescriptorSetLayouts)
 IMPL_GET_LIST_FOR_RESOURCE_TYPE(PipelineLayout,         mPipelineLayouts)
-IMPL_GET_LIST_FOR_RESOURCE_TYPE(Pipeline,               mPipelines);
+IMPL_GET_LIST_FOR_RESOURCE_TYPE(Pipeline,               mPipelines)
 IMPL_GET_LIST_FOR_RESOURCE_TYPE(MutableTexture,         mMutableTextures)
 IMPL_GET_LIST_FOR_RESOURCE_TYPE(RawBuffer,              mRawBuffers)
 IMPL_GET_LIST_FOR_RESOURCE_TYPE(RenderTexture,          mRenderTextures)

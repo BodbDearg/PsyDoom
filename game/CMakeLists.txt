@@ -576,7 +576,10 @@ add_psydoom_common_target_compile_options(${GAME_TGT_NAME})
 # Clang or GCC specific
 if (COMPILER_CLANG OR COMPILER_GCC)
     # Warnings
-    target_compile_options(${GAME_TGT_NAME} PUBLIC -Wno-format-security)        # Disable: format string is not a string literal (potentially insecure)
+    target_compile_options(${GAME_TGT_NAME} PUBLIC
+        -Wno-format-security        # Disable: format string is not a string literal (potentially insecure)
+        -Wno-stringop-truncation    # Disable: output may be truncated copying... (and other similar warnings)
+    )
 endif()
 
 # Setup target compile options
