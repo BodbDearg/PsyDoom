@@ -821,23 +821,24 @@ static void registerType_sector_t(sol::state& lua) noexcept {
     type["ceil_tex_offset_y"] = SOL_LERPED_SECTOR_FIXED_PROPERTY_AS_FLOAT(sector_t, ceilTexOffsetY);
     type["numlines"] = sol::readonly(&sector_t::linecount);
     type["hasthinker"] = sol::readonly_property([](const sector_t& sector){ return (sector.specialdata != nullptr); });
-    type.set_function("GetLine", GetLineInSector);
-    type.set_function("ForEachLine", ForEachLineInSector);
-    type.set_function("ForEachMobj", ForEachMobjInSector);
-    type.set_function("FindMobjWithType", FindMobjWithType);
-    type.set_function("ForEachSurroundingSector", ForEachSurroundingSector);
-    type.set_function("GetLowestSurroundingFloor", GetLowestSurroundingFloor);
-    type.set_function("GetLowestSurroundingCeiling", GetLowestSurroundingCeiling);
-    type.set_function("GetLowestSurroundingLightLevel", GetLowestSurroundingLightLevel);
-    type.set_function("GetHighestSurroundingFloor", GetHighestSurroundingFloor);
-    type.set_function("GetHighestSurroundingCeiling", GetHighestSurroundingCeiling);
-    type.set_function("GetHighestSurroundingLightLevel", GetHighestSurroundingLightLevel);
-    type.set_function("GetNextLowestSurroundingFloor", GetNextLowestSurroundingFloor);
-    type.set_function("GetNextLowestSurroundingCeiling", GetNextLowestSurroundingCeiling);
-    type.set_function("GetNextLowestSurroundingLightLevel", GetNextLowestSurroundingLightLevel);
-    type.set_function("GetNextHighestSurroundingFloor", GetNextHighestSurroundingFloor);
-    type.set_function("GetNextHighestSurroundingCeiling", GetNextHighestSurroundingCeiling);
-    type.set_function("GetNextHighestSurroundingLightLevel", GetNextHighestSurroundingLightLevel);
+
+    type.set_function("GetLine", &GetLineInSector);
+    type.set_function("ForEachLine", &ForEachLineInSector);
+    type.set_function("ForEachMobj", &ForEachMobjInSector);
+    type.set_function("FindMobjWithType", &FindMobjWithType);
+    type.set_function("ForEachSurroundingSector", &ForEachSurroundingSector);
+    type.set_function("GetLowestSurroundingFloor", &GetLowestSurroundingFloor);
+    type.set_function("GetLowestSurroundingCeiling", &GetLowestSurroundingCeiling);
+    type.set_function("GetLowestSurroundingLightLevel", &GetLowestSurroundingLightLevel);
+    type.set_function("GetHighestSurroundingFloor", &GetHighestSurroundingFloor);
+    type.set_function("GetHighestSurroundingCeiling", &GetHighestSurroundingCeiling);
+    type.set_function("GetHighestSurroundingLightLevel", &GetHighestSurroundingLightLevel);
+    type.set_function("GetNextLowestSurroundingFloor", &GetNextLowestSurroundingFloor);
+    type.set_function("GetNextLowestSurroundingCeiling", &GetNextLowestSurroundingCeiling);
+    type.set_function("GetNextLowestSurroundingLightLevel", &GetNextLowestSurroundingLightLevel);
+    type.set_function("GetNextHighestSurroundingFloor", &GetNextHighestSurroundingFloor);
+    type.set_function("GetNextHighestSurroundingCeiling", &GetNextHighestSurroundingCeiling);
+    type.set_function("GetNextHighestSurroundingLightLevel", &GetNextHighestSurroundingLightLevel);
 
     makeTypeReadOnly(type);
 }
@@ -922,11 +923,11 @@ static void registerType_player_t(sol::state& lua) noexcept {
     type["readyweapon"] = sol::readonly_property([](const player_t& p) noexcept { return (uint32_t) p.readyweapon; });
     type["pendingweapon"] = sol::readonly_property([](const player_t& p) noexcept { return (uint32_t) p.pendingweapon; });
 
-    type.set_function("GetPowerTicsLeft", Player_GetPowerTicsLeft);
-    type.set_function("HasCard", Player_HasCard);
-    type.set_function("IsWeaponOwned", Player_IsWeaponOwned);
-    type.set_function("GetAmmo", Player_GetAmmo);
-    type.set_function("GetMaxAmmo", Player_GetMaxAmmo);
+    type.set_function("GetPowerTicsLeft", &Player_GetPowerTicsLeft);
+    type.set_function("HasCard", &Player_HasCard);
+    type.set_function("IsWeaponOwned", &Player_IsWeaponOwned);
+    type.set_function("GetAmmo", &Player_GetAmmo);
+    type.set_function("GetMaxAmmo", &Player_GetMaxAmmo);
 
     makeTypeReadOnly(type);
 }
