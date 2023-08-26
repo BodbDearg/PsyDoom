@@ -71,6 +71,7 @@ bool            gbEnableVSync;
 int32_t         gOutputResolutionW;
 int32_t         gOutputResolutionH;
 int32_t         gOutputDisplayIndex;
+int32_t         gSectorLightPercentage;
 bool            gbExclusiveFullscreenMode;
 float           gLogicalDisplayW;
 bool            gbDisableVulkanRenderer;

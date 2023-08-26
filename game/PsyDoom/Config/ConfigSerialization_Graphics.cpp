@@ -67,6 +67,18 @@ void initCfgSerialization_Graphics() noexcept {
         -1
     );
 
+    cfg.sectorLightPercentage = makeConfigField(
+        "SectorLightPercentage",
+        "Manipulate light level of sectors.\n"
+        "Useful for older monitors or to make the game even more creepy.\n"
+        "\n"
+        "Example values:\n"
+        "75 - makes game 25% darker\n"
+        "125 - makes game 25% lighter\n",
+        gSectorLightPercentage,
+        100
+    );
+
     cfg.exclusiveFullscreenMode = makeConfigField(
         "ExclusiveFullscreenMode",
         "If fullscreen is enabled, whether to use an exclusive ('real') fullscreen mode instead of 'faking'\n"
