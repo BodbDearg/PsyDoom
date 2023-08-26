@@ -39,6 +39,7 @@
 #include "PsyDoom/MobjSpritePrecacher.h"
 #include "PsyDoom/ModMgr.h"
 #include "PsyDoom/ScriptingEngine.h"
+#include "PsyDoom/Config/Config.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -366,6 +367,13 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     }
 }
 
+static int16_t P_CalculateSectorLightLevel(uint8_t lightlevel) {
+    float sectorLightMultiplier = (float)Config::gSectorLightPercentage / 100;
+    float newLightLevel = lightlevel * sectorLightMultiplier;
+
+    return newLightLevel < 0 ? 0 : newLightLevel;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map sector data from the specified map lump number.
 // Also sets up the sky texture pointer.
@@ -451,7 +459,10 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
             pDstSec->floorheight = d_int_to_fixed(Endian::littleToHost(pSrcSec->floorheight));
             pDstSec->ceilingheight = d_int_to_fixed(Endian::littleToHost(pSrcSec->ceilingheight));
             pDstSec->colorid = Endian::littleToHost(pSrcSec->colorid);
-            pDstSec->lightlevel = Endian::littleToHost(pSrcSec->lightlevel);
+
+            int16_t lightlevel = P_CalculateSectorLightLevel(pSrcSec->lightlevel);
+            pDstSec->lightlevel = Endian::littleToHost(lightlevel);
+
             pDstSec->special = Endian::littleToHost(pSrcSec->special);
             pDstSec->thinglist = nullptr;
             pDstSec->tag = Endian::littleToHost(pSrcSec->tag);
