@@ -21,6 +21,11 @@ This is an audio bank that contains ADPCM encoded sounds for all possible enemie
 CREDITS: The GEC team behind the "PlayStation Doom: Master Edition" project has kindly donated the new sounds for the reimplemented Doom II enemies. If using this audio bank you should give credit to Team GEC in your README. For more on the "PlayStation Doom: Master Edition" project, see the Doomworld thread: https://www.doomworld.com/forum/topic/101161-gec-master-edition-psx-doom-for-the-playstation-1102019-beta-3-release-now-are-you-ready-for-more-action/
 
 ---------------------------------------
+DOOMSFX.LCD
+---------------------------------------
+DOOMSFX is the audio bank containing all sound effects. All of these sounds are loaded into memory when a level is started.  If you want to build a custom ALLMAPS.LCD you may also have to rebuild DOOMSFX.LCD - even with the stock effects - as it can help fix some sounds not loading correctly.
+
+---------------------------------------
 Build DOOMSND.WMD
 ---------------------------------------
 This folder contains Python scripts and data used to build 'DOOMSND.WMD'. It may be useful if you want to produce your own version of this file. See the script comments for more details.
