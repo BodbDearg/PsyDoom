@@ -2,7 +2,7 @@
 
 ############################################################################################################################################
 # This script builds 'ALLMAPS.LCD' which is an archive containing the sound samples for all possible enemies in PsyDoom.
-# This .LCD file can be redistributed with new user maps to provide all required audio for those maps. 
+# This .LCD file can be redistributed with new user maps to provide all required audio for those maps.
 #
 # Requirements:
 #   (1) The PsyDoom audio tool 'LcdTool' must be invokable on the command line (add it to the system path).
@@ -21,8 +21,6 @@ MODULE_FILE_PATH = "../DOOMSND.WMD"     # The Williams Module (.WMD) file contai
 # The first value of the pair is the patch sample index (in the .WMD file) and the second is the VAG file itself.
 soundList = [
     # Original PSX sounds
-    [ 12, "SAMP0012.vag" ],     # Fireball throw sound
-    [ 13, "SAMP0013.vag" ],     # Fireball explode sound
     [ 21, "SAMP0021.vag" ],     # Player pain
     [ 22, "SAMP0022.vag" ],     # Demon pain
     [ 23, "SAMP0023.vag" ],     # Zombie/imp pain
@@ -55,7 +53,6 @@ soundList = [
     [ 53, "SAMP0053.vag" ],     # Zombie idle
     [ 54, "SAMP0054.vag" ],     # Imp idle
     [ 55, "SAMP0055.vag" ],     # Demon idle
-    [ 56, "SAMP0056.vag" ],     # Rocket blast
     [ 58, "SAMP0058.vag" ],     # Cyberdemon hoof up
     [ 59, "SAMP0059.vag" ],     # Cyberdemon hoof thud
     [ 64, "SAMP0064.vag" ],     # Knight Of Hell sight

@@ -1,5 +1,6 @@
 # Changelist
 
+- [1.1.1](#111)
 - [1.1.0](#110)
 - [1.0.1](#101), [1.0.0](#100)
 - [0.8.3](#083), [0.8.2](#082), [0.8.1](#081), [0.8.0](#080)
@@ -11,6 +12,23 @@
 - [0.2.0](#020)
 - [0.1.1](#011), [0.1.0](#010)
 - [0.0.3](#003), [0.0.2](#002), [0.0.1](#001)
+
+----------------------------------------------------------------
+# 1.1.1
+
+## Feature changes & improvements
+- Add the ability to choose between exclusive and borderless windowed fullscreen modes.
+    - Previously PsyDoom only supported exclusive fullscreen.
+    - Borderless windowed is the new default, since it handles multi-tasking better and there is no real performance difference in most cases.
+- Upgraded various third party libraries used by PsyDoom (such as SDL) for better OS and device compatibility.
+- HUD: tweak message priority for renderer/uncapped-fps toggle.
+    - If toggling both at the same time then show a message for the renderer being toggled instead of uncapped fps being toggled.
+
+## Bug fixes
+- Windows: fix invalid handling of Unicode characters in save data filepaths.
+    - This bug prevented user preferences and save files from being written successfully.
+- Fix the Wolfenstein SS enemy not dropping ammo clips.
+- Vulkan renderer: fix excessive registry access while the Window is minimized.
 
 ----------------------------------------------------------------
 # 1.1.0
