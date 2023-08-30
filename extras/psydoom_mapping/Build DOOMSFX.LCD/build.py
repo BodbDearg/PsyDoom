@@ -14,10 +14,10 @@ import sys
 
 # Script paths
 LCD_TOOL_PATH = "LcdTool"               # Path to the 'LcdTool' which builds the .LCD file
-OUTPUT_LCD_PATH = "../ALLMAPS.LCD"      # The LCD file that is built
+OUTPUT_LCD_PATH = "../DOOMSFX.LCD"      # The LCD file that is built
 MODULE_FILE_PATH = "../DOOMSND.WMD"     # The Williams Module (.WMD) file containing all of the sequences and instruments for the game
 
-# All of the VAG sounds to be included in the built ALLMAPS.LCD file.
+# All of the VAG sounds to be included in the built DOOMSFX.LCD file.
 # The first value of the pair is the patch sample index (in the .WMD file) and the second is the VAG file itself.
 soundList = [
     # Original PSX sounds
