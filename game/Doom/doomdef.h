@@ -103,6 +103,7 @@ enum gametype_t : int32_t {
     gt_single,
     gt_coop,
     gt_deathmatch,
+SafetyRandomizer,
 #if PSYDOOM_MODS
     NUMGAMETYPES        // PsyDoom: adding for convenience
 #endif
