@@ -489,7 +489,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     mobj.spawnangle = mapthing.angle;
 
         // Custom Randomiser Backport
-    if (gameinfo.gamemode == SafetyRandomizer) {
+    if (gNetGame == SafetyRandomizer) {
         const mobjinfo_t& checkInfo = gMobjInfo[thingType];
         
         // Only randomize actual enemies (things that count toward your kill total)
