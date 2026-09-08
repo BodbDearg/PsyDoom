@@ -488,6 +488,35 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     mobj.spawntype = mapthing.type;
     mobj.spawnangle = mapthing.angle;
 
+        // Custom Randomiser Backport
+    if (gameinfo.gamemode == SafetyRandomizer) {
+        const mobjinfo_t& checkInfo = gMobjInfo[thingType];
+        
+        // Only randomize actual enemies (things that count toward your kill total)
+        if (checkInfo.flags & MF_COUNTKILL) {
+            
+            // Pool of standard PSX Doom monsters
+            const mobjtype_t monsterPool[] = {
+                MT_POSSESSED,  // Zombieman
+                MT_SHOTGUY,    // Shotgun Guy
+                MT_VILE,       // Imp
+                MT_DEMON,      // Pinky Demon
+                MT_SPECTRE,    // Spectre
+                MT_CACODEMON,  // Cacodemon
+                MT_BARON,      // Baron of Hell
+                MT_SKULL       // Lost Soul
+            };
+            
+            int numMonsters = sizeof(monsterPool) / sizeof(monsterPool[0]);
+            
+            // Roll using Doom's built-in pseudorandom table
+            int randomIndex = P_Random() % numMonsters;
+            
+            // Override the type before the engine handles stats and spawning
+            thingType = monsterPool[randomIndex];
+        }
+    }
+
     // Set the ambush flag (no activate on sound) if specified
     mobj.flags |= (mapthing.options & MTF_AMBUSH) ? MF_AMBUSH : 0;
 
